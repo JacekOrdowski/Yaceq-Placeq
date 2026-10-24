@@ -11,6 +11,8 @@ Gra jest pod adresem https://jacekordowski.github.io/Yaceq-Placeq/wersja-robocza
 
 ## Wersja 5 (24 października 2026)
 
+Zapis w repozytorium: `41977a7`
+
 ### Dodane
 - **Nowy Strażnik:** prawdziwe nogi z kolanami i stopami. Gdy chodzi, unosi nogi na zmianę, kolana uginają się na boki,
   pod uniesioną stopą świeci mały silniczek, a całe ciało pochyla się w stronę ruchu. Ma świecący wizjer i rdzeń na piersi.
