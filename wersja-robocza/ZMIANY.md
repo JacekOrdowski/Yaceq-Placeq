@@ -9,6 +9,48 @@ Gra jest pod adresem https://jacekordowski.github.io/Yaceq-Placeq/wersja-robocza
 
 ---
 
+## Wersja 5 (24 października 2026)
+
+### Dodane
+- **Nowy Strażnik:** prawdziwe nogi z kolanami i stopami. Gdy chodzi, unosi nogi na zmianę, kolana uginają się na boki,
+  pod uniesioną stopą świeci mały silniczek, a całe ciało pochyla się w stronę ruchu. Ma świecący wizjer i rdzeń na piersi.
+- **Strażnik zmienia się z ulepszeniami:**
+  - każda karta „Mocniejsza amunicja” daje nową amunicję w innym kolorze, większą i świecącą mocniej:
+    Iskry (błękitne), Plazma (niebieska), Pociski fuzyjne (różowe), Złote włócznie. W tym samym kolorze świecą wizjer, rdzeń i lufy,
+    a po wyborze karty pojawia się napis z nazwą nowej amunicji,
+  - pociski przebijające są dłuższe, jak włócznie,
+  - każda dodatkowa lufa to grubsze działa na rękach z większą liczbą luf,
+  - z każdą kartą Strażnik trochę rośnie, po 2 kartach dostaje naramienniki, po 4 antenę, a z kartą Super plecak odrzutowy.
+- Błysk wokół broni, która dostała kartę.
+- **Więcej szczegółów na wieżyczkach:** metalowe podstawy z nitami i mrugającą lampką, laser z żebrami chłodzącymi
+  i kryształem na końcu, działo z bębnem amunicji i hamulcem wylotowym, wieża piorunów z izolatorami i iskrami wokół kuli,
+  wyrzutnia z czterema rurami (rakiety wracają do rur w czasie ładowania), żółto-czarnym paskiem i anteną,
+  generator pola z dwoma kondensatorami, które ładują się razem z nim.
+- **Więcej szczegółów na meteorach:** nierówne kształty zamiast kółek, jasna i ciemna strona, kratery z jasnym brzegiem,
+  świecące pęknięcia rozżarzonej skały, drobne plamki. Meteory się obracają, a ich przód świeci od gorąca.
+  Kryształy są szlifowane, każda ścianka ma inny odcień, czerwone świecą w środku, czarne mają świecące pęknięcie.
+
+### Zmienione
+- **Karty pojawiają się rzadziej** (około 13 w bitwie zamiast około 20), ale **każda daje więcej**, na przykład:
+  amunicja +80% obrażeń (było +50%), szybkie strzelanie +50% (było +30%), wieżyczki +90% obrażeń (było +50%),
+  szybsze ładowanie wieżyczek o połowę (było o jedną czwartą), 2 rakiety więcej (było 1), piorun skacze na 3 meteory więcej (było 2).
+  Karta Super pojawia się już po 3 ulepszeniach jednej broni (było 4).
+- **Laser jest cienki i fioletowy** (wcześniej szeroki i zielony). Zamiast ulepszenia „Szerszy promień” jest „Krótsza przerwa”.
+- Wieża piorunów i jej pioruny są teraz niebieskobiałe, żeby nie myliły się z laserem.
+- **Meteory nie podchodzą do brzegów ekranu:** lecą co najmniej 46 od brzegu i odbijają się, zanim do niego dojdą, więc nie uciekają.
+- Strażnik rośnie w siłę z każdym poziomem trochę mocniej (bo poziomów jest mniej). Meteory twardnieją wolniej,
+  pierwszy rój leci później i jest mniejszy.
+
+### Do sprawdzenia
+- Wyniki programu (3 sprawdzenia po 60 bitew na każdym etapie):
+  - Strażnik stoi na środku: 0 wygranych na 1800 bitew (także gdy wszystkie karty idą w wieżyczki),
+  - dobry gracz i rozsądne karty: etap 1 98–100%, etap 5 82–87%,
+  - dobry gracz i karty na chybił trafił: etap 1 82–87%, etap 5 43–48%,
+  - słaby gracz i karty na chybił trafił: etap 1 80–87%, etap 5 42–52%.
+- Czy nowy wygląd Strażnika, amunicji, wieżyczek i meteorów podoba się dzieciom.
+
+---
+
 ## Wersja 4 (24 października 2026)
 
 Zapis w repozytorium: `7360c22`

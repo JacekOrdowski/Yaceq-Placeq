@@ -5,7 +5,7 @@
 (() => {
 'use strict';
 const HAS_DOM = typeof document !== 'undefined';
-const WERSJA = 4;          // numer wersji gry; opis zmian w wersja-robocza/ZMIANY.md
+const WERSJA = 5;          // numer wersji gry; opis zmian w wersja-robocza/ZMIANY.md
 
 /* ============================================================
    Helpers
@@ -36,7 +36,8 @@ const TIME_BOSS = 210;                     // the Asteroid comes at 3:30
 const ROBOT_SPEED = 650;                   // how fast the robot walks after the finger
 const ROBOT_GUN_Y = GROUND - 54;
 // meteors come in waves: from the left, from the right, onto the middle, or everywhere at once
-const ZONES = { lewa: [22, 150], srodek: [136, 264], prawa: [250, 378], wszedzie: [22, 378] };
+const ZONES = { lewa: [46, 152], srodek: [140, 260], prawa: [248, 354], wszedzie: [46, 354] };   // not too close to the screen sides
+const EDGE = 38;                           // meteors never drift closer than this to a side
 const domeY = x => { const u = (x - W / 2) / DOME_RX; return GROUND - DOME_H * Math.sqrt(Math.max(0, 1 - u * u)); };
 
 /* ============================================================
@@ -44,13 +45,13 @@ const domeY = x => { const u = (x - W / 2) / DOME_RX; return GROUND - DOME_H * M
    ============================================================ */
 const BAL = {
   baseHp: 3000,
-  hp0: 11, hpGrow: 45, hpPow: 1.1,         // meteor life: hp0 × (1 + t / hpGrow)^hpPow
+  hp0: 10, hpGrow: 45, hpPow: 1.0,         // meteor life: hp0 × (1 + t / hpGrow)^hpPow
   rate0: 0.9, rateGrow: 0.028,             // meteors per second: rate0 + rateGrow × t
   stageHp: 1.1, stageRate: 0.03,            // every next stage
   bossHp: 24000, bossSpeed: 7,
-  robotLvl: 0.04,                          // the robot's own growth per level
+  robotLvl: 0.085,                         // the robot's own growth per level
   side: 0.4,                               // strength of the turrets beside the robot (1 = as strong as in version 2)
-  xpNeed: L => Math.round(4 + 3.5 * L + 0.22 * L * L),
+  xpNeed: L => Math.round(6 + 2.5 * (3.5 * L + 0.22 * L * L)),   // about 12 cards in a battle
 };
 const KINDS = {
   meteor: { r: 13, hp: 1,   v: [52, 70],  dmg: 14, xp: 1 },
@@ -73,57 +74,67 @@ function spawnKind(t) {
    Weapons and cards
    Every card adds a star; after 4 stars the weapon's super card can come
    ============================================================ */
+// Cards come less often than in version 4, but each one gives more
 const WEAPONS = {
   robot: { name: 'Strażnik', short: 'Strażnik', color: '#6ff4ff', build: 'Robot, którego przesuwasz palcem. Strzela prosto w górę',
     ups: [
       { id: 'multi', name: 'Dodatkowa lufa', text: '+1 pocisk obok, lekko rozchylony', max: 3 },
-      { id: 'dmg', name: 'Mocniejsze pociski', text: 'Pociski Strażnika +50% obrażeń', max: 3 },
-      { id: 'rate', name: 'Szybkie strzelanie', text: 'Strażnik strzela o 30% szybciej', max: 3 },
-      { id: 'pierce', name: 'Przebijające pociski', text: 'Pocisk przebija o 1 meteor więcej', max: 2 },
-      { id: 'crit', name: 'Celne oko', text: '+15% szans na podwójne trafienie', max: 2 },
+      { id: 'dmg', name: 'Mocniejsza amunicja', text: 'Pociski +80% obrażeń i nowa, większa amunicja', max: 3 },
+      { id: 'rate', name: 'Szybkie strzelanie', text: 'Strażnik strzela o 50% szybciej', max: 2 },
+      { id: 'pierce', name: 'Przebijające pociski', text: 'Pocisk przebija 2 meteory więcej', max: 2 },
+      { id: 'crit', name: 'Celne oko', text: '+25% szans na podwójne trafienie', max: 2 },
     ],
     sup: { name: 'Deszcz pocisków', text: 'Co 4 sekundy wachlarz 10 pocisków' } },
-  laser: { name: 'Laser', short: 'Laser', color: '#59ff7a', build: 'Zielony promień rani wszystko na swojej drodze',
+  laser: { name: 'Laser', short: 'Laser', color: '#b56cff', build: 'Cienki fioletowy promień rani wszystko na swojej drodze',
     ups: [
-      { id: 'dmg', name: 'Mocniejszy laser', text: 'Laser +50% obrażeń', max: 3 },
-      { id: 'dur', name: 'Dłuższy promień', text: 'Laser świeci o 40% dłużej', max: 2 },
-      { id: 'wide', name: 'Szerszy promień', text: 'Promień o 60% szerszy', max: 2 },
+      { id: 'dmg', name: 'Mocniejszy laser', text: 'Laser +90% obrażeń', max: 3 },
+      { id: 'dur', name: 'Dłuższy promień', text: 'Laser świeci o 70% dłużej', max: 2 },
+      { id: 'cool', name: 'Krótsza przerwa', text: 'Przerwa między strzałami o 40% krótsza', max: 2 },
       { id: 'two', name: 'Drugi promień', text: 'Laser strzela dwoma promieniami', max: 1 },
     ],
     sup: { name: 'Laser bez przerwy', text: 'Laser świeci cały czas' } },
   pole: { name: 'Pole zwalniające', short: 'Pole', color: '#5cf0c0', build: 'Generator wystrzeliwuje pas, w którym meteory mocno zwalniają',
     ups: [
-      { id: 'dur', name: 'Dłuższe pole', text: 'Pole działa o 30% dłużej', max: 3 },
-      { id: 'charge', name: 'Szybsze ładowanie', text: 'Generator ładuje się o 25% szybciej', max: 2 },
-      { id: 'slow', name: 'Gęste pole', text: 'Meteory w polu są jeszcze wolniejsze', max: 2 },
-      { id: 'wide', name: 'Szersze pole', text: 'Pas pola o 40% szerszy', max: 2 },
+      { id: 'dur', name: 'Dłuższe pole', text: 'Pole działa o 50% dłużej', max: 2 },
+      { id: 'charge', name: 'Szybsze ładowanie', text: 'Generator ładuje się o 40% szybciej', max: 2 },
+      { id: 'slow', name: 'Gęste pole', text: 'Meteory w polu są jeszcze wolniejsze', max: 1 },
+      { id: 'wide', name: 'Szersze pole', text: 'Pas pola o 70% szerszy', max: 1 },
     ],
     sup: { name: 'Pole na stałe', text: 'Pole działa cały czas' } },
   dzialo: { name: 'Działo ogniowe', short: 'Działo', color: '#ff9a3c', build: 'Pociski wybuchają i podpalają meteory dookoła',
     ups: [
-      { id: 'dmg', name: 'Mocniejszy wybuch', text: 'Wybuchy +50% obrażeń', max: 3 },
-      { id: 'big', name: 'Większy wybuch', text: 'Wybuch o 30% większy', max: 2 },
+      { id: 'dmg', name: 'Mocniejszy wybuch', text: 'Wybuchy +90% obrażeń', max: 3 },
+      { id: 'big', name: 'Większy wybuch', text: 'Wybuch o 50% większy', max: 2 },
       { id: 'more', name: 'Drugi pocisk', text: '+1 pocisk w każdym strzale', max: 2 },
-      { id: 'fast', name: 'Szybkie ładowanie', text: 'Działo strzela o 25% częściej', max: 2 },
+      { id: 'fast', name: 'Szybkie ładowanie', text: 'Działo strzela o 50% częściej', max: 2 },
     ],
     sup: { name: 'Bombardowanie', text: 'Co 5 sekund 8 wybuchów naraz' } },
-  piorun: { name: 'Wieża piorunów', short: 'Piorun', color: '#c98bff', build: 'Piorun skacze z meteoru na meteor',
+  piorun: { name: 'Wieża piorunów', short: 'Piorun', color: '#8ec5ff', build: 'Piorun skacze z meteoru na meteor',
     ups: [
-      { id: 'jump', name: 'Dłuższy piorun', text: 'Piorun skacze na 2 meteory więcej', max: 3 },
-      { id: 'dmg', name: 'Mocniejszy piorun', text: 'Piorun +50% obrażeń', max: 3 },
-      { id: 'fast', name: 'Częstsze pioruny', text: 'Piorun uderza o 25% częściej', max: 2 },
+      { id: 'jump', name: 'Dłuższy piorun', text: 'Piorun skacze na 3 meteory więcej', max: 2 },
+      { id: 'dmg', name: 'Mocniejszy piorun', text: 'Piorun +90% obrażeń', max: 3 },
+      { id: 'fast', name: 'Częstsze pioruny', text: 'Piorun uderza o 50% częściej', max: 2 },
       { id: 'stun', name: 'Ogłuszenie', text: 'Trafiony meteor na chwilę staje', max: 1 },
     ],
     sup: { name: 'Burza', text: 'Uderzają 3 pioruny naraz' } },
   rakiety: { name: 'Wyrzutnia rakiet', short: 'Rakiety', color: '#ff6464', build: 'Rakiety same lecą do najtwardszych meteorów',
     ups: [
-      { id: 'more', name: 'Więcej rakiet', text: '+1 rakieta w każdej salwie', max: 3 },
-      { id: 'dmg', name: 'Mocniejsze rakiety', text: 'Rakiety +50% obrażeń', max: 3 },
-      { id: 'fast', name: 'Szybkie ładowanie', text: 'Wyrzutnia strzela o 25% częściej', max: 2 },
-      { id: 'big', name: 'Większy wybuch', text: 'Wybuch rakiety o 35% większy', max: 2 },
+      { id: 'more', name: 'Więcej rakiet', text: '+2 rakiety w każdej salwie', max: 2 },
+      { id: 'dmg', name: 'Mocniejsze rakiety', text: 'Rakiety +90% obrażeń', max: 3 },
+      { id: 'fast', name: 'Szybkie ładowanie', text: 'Wyrzutnia strzela o 50% częściej', max: 2 },
+      { id: 'big', name: 'Większy wybuch', text: 'Wybuch rakiety o 60% większy', max: 1 },
     ],
     sup: { name: 'Wielka salwa', text: 'Co 6 sekund 10 rakiet naraz' } },
 };
+const STARS_FOR_SUPER = 3;
+const LASER_W = 6;                         // the laser is a thin beam
+// The robot's ammunition changes with every "Mocniejsza amunicja" card: other colour, bigger, another kind
+const AMMO = [
+  { name: 'Iskry', col: '120,244,255' },
+  { name: 'Plazma', col: '90,160,255' },
+  { name: 'Pociski fuzyjne', col: '255,110,215' },
+  { name: 'Złote włócznie', col: '255,212,90' },
+];
 const TURRETS = ['laser', 'pole', 'dzialo', 'piorun', 'rakiety'];
 const COMBOS = [
   { id: 'zamroz', a: 'laser', b: 'pole', name: 'Laser i pole', text: 'Laser zadaje 2× większe obrażenia meteorom w polu' },
@@ -145,7 +156,7 @@ function newBattle(stage, opts = {}) {
     nums: [], booms: [], bolts: [], sparks: [], embers: [], ev: [],
     w: {}, combos: {}, dmg: {}, kills: 0, slowed: 0, cards: [],
     xp: 0, lvl: 1, need: BAL.xpNeed(1), pending: 0, rerolls: 1,
-    spawnAcc: 0, nextSurge: 45, surge: null, wave: null, lastZone: null, aim: W / 2, boss: null, bossDone: false,
+    spawnAcc: 0, nextSurge: 55, surge: null, wave: null, lastZone: null, aim: W / 2, boss: null, bossDone: false,
     domeFlash: 0, shake: 0, nextId: 1,
   };
   addWeapon(G, 'robot');
@@ -166,11 +177,11 @@ function addWeapon(G, key) {
 function spawnEnemy(G, kind, x, y) {
   const K = KINDS[kind], t = G.demo ? 25 : Math.min(G.t, TIME_BOSS);
   const hp = BAL.hp0 * Math.pow(1 + t / BAL.hpGrow, BAL.hpPow) * K.hp * G.hpMul;
-  const x0 = x ?? rand(22, W - 22), y0 = y ?? SPAWN_Y - rand(0, 60);
+  const x0 = clamp(x ?? rand(46, W - 46), EDGE + 6, W - EDGE - 6), y0 = y ?? SPAWN_Y - rand(0, 60);
   const vy = rand(K.v[0], K.v[1]);
   const e = { id: G.nextId++, kind, x: x0, y: y0, r: K.r, hp, max: hp, vx: rand(-5, 5), vy,   // almost straight down
     dmg: Math.round(K.dmg * (1 + t / 240)), xp: K.xp, slow: 0, stun: 0, burn: 0, burnT: 0, inc: 0, flash: 0,
-    pend: 0, pendT: 0, variant: randi(0, 2), slowShown: false, slowT: 0, slowAmt: 0, dead: false };
+    pend: 0, pendT: 0, variant: randi(0, 2), slowShown: false, slowT: 0, slowAmt: 0, dead: false, born: G.t, spin: rand(-1.6, 1.6), rot0: rand(0, TAU) };
   G.enemies.push(e);
   return e;
 }
@@ -192,7 +203,7 @@ function spawnUpdate(G, dt) {
   // a swarm every 35 seconds, from one side
   if (!G.boss && t >= G.nextSurge && t < TIME_BOSS - 15) {
     const zone = pick(['lewa', 'srodek', 'prawa']);
-    G.surge = { left: Math.round((8 + t / 12) * G.rateMul), zone, acc: 0 };
+    G.surge = { left: Math.round((5 + t / 12) * G.rateMul), zone, acc: 0 };
     G.nextSurge += 35; emit(G, `roj-${zone}`);
   }
   if (G.surge) {
@@ -221,7 +232,7 @@ function bossUpdate(G, dt) {
   B.spit -= dt;
   if (B.spit <= 0) {
     B.spit = 2.4;
-    for (let i = 0; i < 3; i++) spawnEnemy(G, Math.random() < 0.3 ? 'shard' : 'meteor', clamp(B.x + rand(-0.85, 0.85) * B.r, 22, W - 22), B.y + B.r * 0.75);
+    for (let i = 0; i < 3; i++) spawnEnemy(G, Math.random() < 0.3 ? 'shard' : 'meteor', B.x + rand(-0.8, 0.8) * B.r, B.y + B.r * 0.75);
   }
   popPending(G, B, dt);
   if (B.y + B.r * 0.86 >= DOME_TOP) { G.baseHp = 0; G.domeFlash = 1; G.shake = 1; }
@@ -292,7 +303,7 @@ function explode(G, x, y, rad, dmg, src, burn, second) {
     G.later.push({ at: G.t + 0.3, x, y, rad, dmg: dmg * 0.7, src, burn, second: true });
   if (src === 'rakiety' && G.combos.roj) {
     const near = G.enemies.filter(e => !e.dead && Math.hypot(e.x - x, e.y - y) < 130).slice(0, 3);
-    for (const e of near) lightning(G, x, y, e, 0, 28 * BAL.side * (1 + 0.5 * up(G.w.piorun, 'dmg')), 'piorun', 0);
+    for (const e of near) lightning(G, x, y, e, 0, 28 * BAL.side * (1 + 0.9 * up(G.w.piorun, 'dmg')), 'piorun', 0);
   }
 }
 function lightning(G, x0, y0, first, jumps, dmg, src, stun) {
@@ -353,8 +364,8 @@ const aimY = e => (e.isBoss ? e.y + e.r * 0.6 : e.y);
 const speedOf = e => (e.isBoss ? 0 : e.stun > 0 ? 0 : 1 - e.slow);
 
 /* ---------- weapons ---------- */
-function fireBullet(G, x, y, a, dmg, pierce, crit, tgt) {
-  G.bullets.push({ x, y, vx: Math.sin(a) * 950, vy: -Math.cos(a) * 950, dmg, pierce, crit, tgt, hits: [], dead: false });
+function fireBullet(G, x, y, a, dmg, pierce, crit, tgt, tier = 0) {
+  G.bullets.push({ x, y, vx: Math.sin(a) * 950, vy: -Math.cos(a) * 950, dmg, pierce, crit, tgt, tier, pl: pierce, hits: [], dead: false });
   if (tgt) tgt.inc += dmg;
 }
 // The robot walks after the finger and always shoots straight up: full power only right in front of it.
@@ -363,20 +374,21 @@ function updRobot(G, w, dt) {
   const tx = clamp(G.aim, 22, W - 22), x0 = w.x;
   w.x += clamp(tx - w.x, -ROBOT_SPEED * dt, ROBOT_SPEED * dt);
   w.vx = (w.x - x0) / dt; w.step += Math.abs(w.x - x0);
-  const interval = 0.3 / (1 + 0.3 * up(w, 'rate'));
+  const interval = 0.3 / (1 + 0.5 * up(w, 'rate'));
   // every new level makes the robot a little stronger by itself, whatever cards were picked
-  const n = 1 + up(w, 'multi'), dmg = 18 * (1 + 0.5 * up(w, 'dmg')) * (1 + BAL.robotLvl * (G.lvl - 1)), pierce = up(w, 'pierce'), crit = 0.15 * up(w, 'crit');
+  const n = 1 + up(w, 'multi'), dmg = 18 * (1 + 0.8 * up(w, 'dmg')) * (1 + BAL.robotLvl * (G.lvl - 1)), pierce = 2 * up(w, 'pierce'), crit = 0.25 * up(w, 'crit');
+  const tier = up(w, 'dmg');
   w.cd -= dt; w.kick = Math.max(0, w.kick - dt * 7);
   if (w.cd <= 0) {
     w.cd = Math.max(0, w.cd + interval);
-    for (let i = 0; i < n; i++) { const k = i - (n - 1) / 2; fireBullet(G, w.x + k * 7, ROBOT_GUN_Y, k * 0.035, dmg, pierce, crit, null); }
+    for (let i = 0; i < n; i++) { const k = i - (n - 1) / 2; fireBullet(G, w.x + k * 7, ROBOT_GUN_Y, k * 0.035, dmg, pierce, crit, null, tier); }
     w.volleys++; w.kick = 1; w.side ^= 1;
-    if (G.combos.iskra && G.w.piorun && w.volleys % 5 === 0) { const tg = lowest(G, false); if (tg) lightning(G, w.x, ROBOT_GUN_Y, tg, 3, 26 * BAL.side * (1 + 0.5 * up(G.w.piorun, 'dmg')), 'piorun', 0); }
+    if (G.combos.iskra && G.w.piorun && w.volleys % 5 === 0) { const tg = lowest(G, false); if (tg) lightning(G, w.x, ROBOT_GUN_Y, tg, 3, 26 * BAL.side * (1 + 0.9 * up(G.w.piorun, 'dmg')), 'piorun', 0); }
     emit(G, 'strzal');
   }
   if (w.sup) {
     w.supCd -= dt;
-    if (w.supCd <= 0) { w.supCd = 4; for (let i = 0; i < 10; i++) fireBullet(G, w.x, ROBOT_GUN_Y, -0.45 + 0.9 * i / 9, dmg, pierce + 1, crit, null); emit(G, 'salwa'); }
+    if (w.supCd <= 0) { w.supCd = 4; for (let i = 0; i < 10; i++) fireBullet(G, w.x, ROBOT_GUN_Y, -0.45 + 0.9 * i / 9, dmg, pierce + 1, crit, null, tier); emit(G, 'salwa'); }
   }
 }
 // The demo in the menu walks by itself after the most dangerous meteor
@@ -393,8 +405,8 @@ function cycle(G, w, dt, dur, cool, sound) {
 function updLaser(G, w, dt) {
   const n = 1 + up(w, 'two');
   while (w.beams.length < n) w.beams.push({ ang: w.beams.length ? 0.3 : -0.2 });
-  cycle(G, w, dt, 2.4 * (1 + 0.4 * up(w, 'dur')), 2.6, 'laser');
-  const ox = w.x, oy = GROUND - 40;
+  cycle(G, w, dt, 2.4 * (1 + 0.7 * up(w, 'dur')), 2.6 * Math.pow(0.6, up(w, 'cool')), 'laser');
+  const ox = w.x, oy = GROUND - 13;
   const t0 = lowest(G, false);
   for (let i = 0; i < n; i++) {
     const B = w.beams[i];
@@ -404,7 +416,7 @@ function updLaser(G, w, dt) {
     B.ang += clamp(want - B.ang, -dt * 2.4, dt * 2.4);
   }
   if (!w.on) return;
-  const width = 9 * (1 + 0.6 * up(w, 'wide')), dps = 60 * BAL.side * (1 + 0.5 * up(w, 'dmg'));
+  const width = LASER_W, dps = 60 * BAL.side * (1 + 0.9 * up(w, 'dmg'));
   for (const B of w.beams) {
     const dx = Math.sin(B.ang), dy = -Math.cos(B.ang);
     for (const e of G.enemies) {
@@ -420,7 +432,7 @@ function updLaser(G, w, dt) {
 // The generator charges, fires a shot up to the sky, and the field spreads from there to both sides.
 // The field does not hurt: it only slows meteors down, so the other weapons have more time.
 function updPole(G, w, dt) {
-  w.h = 80 * (1 + 0.4 * up(w, 'wide'));
+  w.h = 80 * (1 + 0.7 * up(w, 'wide'));
   w.kick = Math.max(0, w.kick - dt * 3);
   if (!w.state) { w.state = 'charge'; w.phase = w.chargeT = 1.5; }      // the first field comes soon after building
   w.phase -= dt;
@@ -431,18 +443,18 @@ function updPole(G, w, dt) {
   } else if (w.state === 'launch') {
     if (w.phase <= 0) { w.state = 'open'; w.phase = POLE.open; emit(G, 'pole'); }
   } else if (w.state === 'open') {
-    if (w.phase <= 0) { w.state = 'on'; w.phase = POLE.dur * (1 + 0.3 * up(w, 'dur')); }
+    if (w.phase <= 0) { w.state = 'on'; w.phase = POLE.dur * (1 + 0.5 * up(w, 'dur')); }
   } else if (w.state === 'on') {
     if (w.sup) w.phase = Math.max(w.phase, 1);
     if (w.phase <= 0) { w.state = 'close'; w.phase = POLE.close; }
   } else if (w.state === 'close' && w.phase <= 0) {
-    w.state = 'charge'; w.phase = w.chargeT = POLE.charge * Math.pow(0.75, up(w, 'charge')); w.whine = false;
+    w.state = 'charge'; w.phase = w.chargeT = POLE.charge * Math.pow(0.6, up(w, 'charge')); w.whine = false;
   }
   w.on = w.state === 'open' || w.state === 'on';
   const u = w.state === 'open' ? 1 - w.phase / POLE.open : 1;
   w.spread = w.state === 'open' ? 1 - (1 - u) * (1 - u) : w.state === 'on' || w.state === 'close' ? 1 : 0;
   if (!w.on) return;
-  const slow = Math.min(0.85, 0.7 + 0.075 * up(w, 'slow')), reach = 440 * w.spread;
+  const slow = Math.min(0.9, 0.7 + 0.12 * up(w, 'slow')), reach = 440 * w.spread;
   const y0 = FIELD_Y - w.h / 2, y1 = FIELD_Y + w.h / 2;
   for (const e of G.enemies) {
     if (e.dead || e.y + e.r < y0 || e.y - e.r > y1 || Math.abs(e.x - w.x) > reach) continue;
@@ -454,12 +466,12 @@ function updPole(G, w, dt) {
 }
 function updDzialo(G, w, dt) {
   w.cd -= dt; w.kick = Math.max(0, w.kick - dt * 5);
-  const n = 1 + up(w, 'more'), rad = 42 * (1 + 0.3 * up(w, 'big')), dmg = 40 * BAL.side * (1 + 0.5 * up(w, 'dmg'));
+  const n = 1 + up(w, 'more'), rad = 42 * (1 + 0.5 * up(w, 'big')), dmg = 40 * BAL.side * (1 + 0.9 * up(w, 'dmg'));
   if (w.cd <= 0) {
     const tg = clusterTarget(G);
     if (!tg) w.cd = 0.2;
     else {
-      w.cd = 1.7 * Math.pow(0.78, up(w, 'fast'));
+      w.cd = 1.7 * Math.pow(0.67, up(w, 'fast'));
       for (let i = 0; i < n; i++) {
         const e = i === 0 ? tg : clusterTarget(G) || tg, T = 0.5, f = speedOf(e);
         const tx = e.x + (e.vx || 0) * f * T, ty = (e.isBoss ? e.y : e.y + (e.vy || 0) * f * T);
@@ -486,8 +498,8 @@ function updPiorun(G, w, dt) {
   if (w.cd > 0) return;
   const tg = lowest(G, false);
   if (!tg) { w.cd = 0.2; return; }
-  w.cd = 1.25 * Math.pow(0.78, up(w, 'fast'));
-  const jumps = 3 + 2 * up(w, 'jump'), dmg = 30 * BAL.side * (1 + 0.5 * up(w, 'dmg')), stun = up(w, 'stun') ? 0.45 : 0;
+  w.cd = 1.25 * Math.pow(0.67, up(w, 'fast'));
+  const jumps = 3 + 3 * up(w, 'jump'), dmg = 30 * BAL.side * (1 + 0.9 * up(w, 'dmg')), stun = up(w, 'stun') ? 0.45 : 0;
   lightning(G, w.x, GROUND - 52, tg, jumps, dmg, 'piorun', stun);
   if (w.sup) {
     const V = visible(G);
@@ -497,7 +509,7 @@ function updPiorun(G, w, dt) {
 }
 function launchRocket(G, w, i, n, tgt) {
   G.rockets.push({ x: w.x + (i - (n - 1) / 2) * 5, y: GROUND - 40, vx: rand(-120, 120), vy: -250, tgt,
-    dmg: 55 * BAL.side * (1 + 0.5 * up(w, 'dmg')), rad: 34 * (1 + 0.35 * up(w, 'big')), t: 0, dead: false, smoke: 0 });
+    dmg: 55 * BAL.side * (1 + 0.9 * up(w, 'dmg')), rad: 34 * (1 + 0.6 * up(w, 'big')), t: 0, dead: false, smoke: 0 });
 }
 function updRakiety(G, w, dt) {
   w.cd -= dt; w.kick = Math.max(0, w.kick - dt * 4);
@@ -505,8 +517,8 @@ function updRakiety(G, w, dt) {
     const tg = strongest(G);
     if (!tg) w.cd = 0.2;
     else {
-      w.cd = 2.2 * Math.pow(0.78, up(w, 'fast'));
-      const n = 2 + up(w, 'more'), V = visible(G).sort((a, b) => b.hp - a.hp).slice(0, 6);
+      w.cd = 2.2 * Math.pow(0.67, up(w, 'fast'));
+      const n = 2 + 2 * up(w, 'more'), V = visible(G).sort((a, b) => b.hp - a.hp).slice(0, 6);
       for (let i = 0; i < n; i++) launchRocket(G, w, i, n, i === 0 ? tg : (V.length ? pick(V) : tg));
       w.kick = 1; emit(G, 'rakieta');
     }
@@ -532,7 +544,7 @@ function moveBullets(G, dt) {
     for (const e of G.enemies) {
       if (e.dead || b.hits.includes(e.id)) continue;
       if (Math.abs(e.x - nx) > 40 || e.y < ny - 40 || e.y > b.y + 40) continue;
-      if (segHit(b.x, b.y, nx, ny, e.x, e.y, e.r + 2)) {
+      if (segHit(b.x, b.y, nx, ny, e.x, e.y, e.r + 2 + b.tier)) {
         const c = Math.random() < b.crit;
         hurt(G, e, b.dmg * (c ? 2 : 1), 'robot', c);
         if (G.fx) G.sparks.push({ x: e.x + rand(-4, 4), y: e.y + e.r * 0.5, vx: rand(-60, 60), vy: rand(20, 90), t: 0, life: 0.18, col: '#bdfcff', s: 2 });
@@ -598,7 +610,7 @@ function step(G, dt) {
   for (const e of G.enemies) { e.slowT -= dt; e.slow = e.slowT > 0 ? e.slowAmt : 0; }
   if (G.boss) G.boss.slow = 0;
   if (G.w.pole) updPole(G, G.w.pole, dt);
-  for (const k in G.w) if (k !== 'pole') UPDATE[k](G, G.w[k], dt);
+  for (const k in G.w) { if (k !== 'pole') UPDATE[k](G, G.w[k], dt); G.w[k].flash = Math.max(0, (G.w[k].flash || 0) - dt * 1.5); }
   if (G.boss) bossUpdate(G, dt);
   for (const e of G.enemies) {
     if (e.dead) continue;
@@ -606,6 +618,7 @@ function step(G, dt) {
     if (e.stun > 0) e.stun -= dt;
     const f = speedOf(e);
     e.x += e.vx * f * dt; e.y += e.vy * f * dt;
+    if ((e.x < EDGE && e.vx < 0) || (e.x > W - EDGE && e.vx > 0)) e.vx = -e.vx;
     if (e.burnT > 0) { e.burnT -= dt; hurt(G, e, e.burn * dt, e.burnSrc, false, true); if (e.dead) continue; }
     popPending(G, e, dt);
     if (e.y + e.r * 0.5 >= domeY(e.x)) {
@@ -666,12 +679,12 @@ function makeOffer(G) {
   for (const k of TURRETS) if (!G.w[k] && built.length < 5) C.push({ type: 'build', w: k, weight: turrets < 2 ? 1.8 : 1 });
   if (turrets === 0) {          // the first card: two new turrets and one upgrade of the robot
     const u = pick(WEAPONS.robot.ups);
-    return shuffle([...shuffle(C).slice(0, 2), { type: 'up', w: 'robot', id: u.id, weight: 1 }]);
+    return shuffle([...shuffle(C).slice(0, 2), { type: 'up', w: 'robot', id: u.id, lvl: 0, weight: 1 }]);
   }
   for (const k of built) {
     const w = G.w[k];
-    for (const u of WEAPONS[k].ups) if (up(w, u.id) < u.max) C.push({ type: 'up', w: k, id: u.id, weight: 1 });
-    if (w.stars >= 4 && !w.sup) C.push({ type: 'super', w: k, weight: 4 });
+    for (const u of WEAPONS[k].ups) if (up(w, u.id) < u.max) C.push({ type: 'up', w: k, id: u.id, lvl: up(w, u.id), weight: 1 });
+    if (w.stars >= STARS_FOR_SUPER && !w.sup) C.push({ type: 'super', w: k, weight: 4 });
   }
   for (const c of COMBOS) if (G.w[c.a] && G.w[c.b] && !G.combos[c.id]) C.push({ type: 'combo', id: c.id, weight: 1.4 });
   if (G.baseHp < G.baseMax * 0.6) C.push({ type: 'heal', weight: G.baseHp < G.baseMax * 0.3 ? 2 : 0.8 });
@@ -688,15 +701,22 @@ function makeOffer(G) {
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function cardInfo(c) {
   if (c.type === 'build') return { title: WEAPONS[c.w].name, text: WEAPONS[c.w].build, tag: 'Nowa' };
-  if (c.type === 'up') { const u = WEAPONS[c.w].ups.find(x => x.id === c.id); return { title: u.name, text: u.text, tag: WEAPONS[c.w].short }; }
+  if (c.type === 'up') {
+    const u = WEAPONS[c.w].ups.find(x => x.id === c.id);
+    const text = c.w === 'robot' && c.id === 'dmg' ? `Pociski +80% obrażeń. Nowa amunicja: ${AMMO[Math.min(AMMO.length - 1, (c.lvl || 0) + 1)].name}` : u.text;
+    return { title: u.name, text, tag: WEAPONS[c.w].short };
+  }
   if (c.type === 'super') return { title: WEAPONS[c.w].sup.name, text: WEAPONS[c.w].sup.text, tag: 'Super' };
   if (c.type === 'combo') { const k = COMBOS.find(x => x.id === c.id); return { title: k.name, text: k.text, tag: 'Połączenie' }; }
   return { title: 'Naprawa bazy', text: `Baza odzyskuje ${Math.round(HEAL * 100)}% życia`, tag: 'Naprawa' };
 }
 function applyCard(G, c) {
   if (c.type === 'build') addWeapon(G, c.w);
-  else if (c.type === 'up') { const w = G.w[c.w]; w.ups[c.id] = up(w, c.id) + 1; w.stars++; }
-  else if (c.type === 'super') G.w[c.w].sup = true;
+  else if (c.type === 'up') {
+    const w = G.w[c.w]; w.ups[c.id] = up(w, c.id) + 1; w.stars++; w.flash = 1;
+    if (c.w === 'robot' && c.id === 'dmg') emit(G, `amunicja-${w.ups.dmg}`);
+  }
+  else if (c.type === 'super') { G.w[c.w].sup = true; G.w[c.w].flash = 1; }
   else if (c.type === 'combo') G.combos[c.id] = true;
   else G.baseHp = Math.min(G.baseMax, G.baseHp + G.baseMax * HEAL);
   G.cards.push(c.type === 'up' ? `${c.w}.${c.id}` : c.type === 'heal' ? 'heal' : `${c.type}.${c.w || c.id}`);
@@ -970,33 +990,73 @@ function flameFrames(r, len) {
   }
   return { frames: out, w: wu, h: hu, ax: cx, ay: cy };
 }
+// a lumpy outline instead of a perfect circle
+function lumpyPts(cx, cy, r, R, n = 11) {
+  const pts = [];
+  for (let i = 0; i < n; i++) { const a = i / n * TAU, rr = r * (0.86 + R() * 0.16); pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]); }
+  return pts;
+}
+function smoothPath(x, pts) {
+  const n = pts.length, mid = (p, q) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2], m0 = mid(pts[n - 1], pts[0]);
+  x.beginPath(); x.moveTo(m0[0], m0[1]);
+  for (let i = 0; i < n; i++) { const p = pts[i], m = mid(p, pts[(i + 1) % n]); x.quadraticCurveTo(p[0], p[1], m[0], m[1]); }
+  x.closePath();
+}
+// A rock: dark with a light side, craters with a shiny rim, glowing cracks of hot stone, specks, and a white outline
 function rockSprite(r, variant) {
-  const [c, x] = spriteCanvas(4 * r, 4 * r), cx = 2 * r, cy = 2 * r;
+  const [c, x] = spriteCanvas(4 * r, 4 * r), cx = 2 * r, cy = 2 * r, R = seeded(31 + variant * 17 + Math.round(r));
   rockGlow(x, cx, cy, r);
-  x.fillStyle = '#0b0b0c'; x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.fill();
-  x.strokeStyle = '#f2f2f2'; x.lineWidth = Math.max(1, r * 0.09);
-  x.beginPath(); x.arc(cx, cy, r * 0.96, 0, TAU); x.stroke();
-  const R = seeded(31 + variant * 17);
-  const craters = [[0.25, 0.2, 0.36], [-0.42, -0.25, 0.2], [0.05, -0.55, 0.15], [-0.3, 0.5, 0.13]];
+  const pts = lumpyPts(cx, cy, r, R);
+  smoothPath(x, pts);
+  const g = x.createRadialGradient(cx - r * 0.4, cy - r * 0.4, r * 0.1, cx, cy, r * 1.05);
+  g.addColorStop(0, '#3a3a41'); g.addColorStop(0.55, '#17171a'); g.addColorStop(1, '#070708');
+  x.fillStyle = g; x.fill();
+  x.save(); x.clip();
+  const craters = [[0.3, 0.22, 0.3], [-0.38, -0.2, 0.21], [0.05, -0.52, 0.14], [-0.3, 0.46, 0.13], [0.52, -0.22, 0.1]];
   for (const [ux, uy, ur] of craters) {
-    const jx = ux + (R() - 0.5) * 0.25, jy = uy + (R() - 0.5) * 0.25, rr = ur * (0.8 + R() * 0.4);
-    x.beginPath(); x.ellipse(cx + jx * r, cy + jy * r, rr * r, rr * r * 0.8, 0.4, 0, TAU); x.stroke();
+    const jx = cx + (ux + (R() - 0.5) * 0.2) * r, jy = cy + (uy + (R() - 0.5) * 0.2) * r, rr = ur * r * (0.8 + R() * 0.4);
+    x.fillStyle = 'rgba(0,0,0,0.6)'; x.beginPath(); x.ellipse(jx, jy, rr, rr * 0.8, 0.4, 0, TAU); x.fill();
+    x.strokeStyle = 'rgba(215,215,225,0.6)'; x.lineWidth = Math.max(0.8, r * 0.05);
+    x.beginPath(); x.ellipse(jx, jy, rr, rr * 0.8, 0.4, 0.15, Math.PI * 0.95); x.stroke();
   }
+  for (let i = 0; i < 2; i++) {
+    let px = cx + (R() - 0.5) * r * 0.8, py = cy + (R() - 0.5) * r * 0.8, a = R() * TAU;
+    x.beginPath(); x.moveTo(px, py);
+    for (let j = 0; j < 4; j++) { a += (R() - 0.5) * 1.4; px += Math.cos(a) * r * 0.22; py += Math.sin(a) * r * 0.22; x.lineTo(px, py); }
+    x.strokeStyle = 'rgba(255,110,35,0.55)'; x.lineWidth = r * 0.13; x.stroke();
+    x.strokeStyle = 'rgba(255,215,150,0.95)'; x.lineWidth = r * 0.045; x.stroke();
+  }
+  x.fillStyle = 'rgba(255,255,255,0.2)';
+  for (let i = 0; i < 7; i++) { x.beginPath(); x.arc(cx + (R() - 0.5) * 1.5 * r, cy + (R() - 0.5) * 1.5 * r, r * 0.035, 0, TAU); x.fill(); }
+  x.restore();
+  smoothPath(x, pts);
+  x.strokeStyle = '#f2f2f2'; x.lineWidth = Math.max(1, r * 0.085); x.stroke();
   return { c, w: 4 * r, h: 4 * r, ax: cx, ay: cy };
 }
+// Crystals cut into facets: red ones glow inside, black ones have a glowing crack
 function crystalSprite(r, red) {
   const [c, x] = spriteCanvas(4 * r, 4 * r), cx = 2 * r, cy = 2 * r;
   rockGlow(x, cx, cy, r * 0.9);
-  const P = red ? [[0, -1.2], [0.85, -0.45], [0.9, 0.5], [0, 1.15], [-0.85, 0.55], [-0.8, -0.6]] : [[0, -1.35], [0.75, -0.15], [0.15, 1.25], [-0.7, 0.1]];
-  x.beginPath(); P.forEach(([u, v], i) => (i ? x.lineTo : x.moveTo).call(x, cx + u * r, cy + v * r)); x.closePath();
-  x.fillStyle = red ? '#c51f2e' : '#0c0d0f'; x.fill();
-  x.strokeStyle = red ? '#ff8c8c' : '#e9ecf0'; x.lineWidth = Math.max(1, r * 0.09); x.stroke();
+  const P = (red ? [[0, -1.2], [0.85, -0.45], [0.9, 0.5], [0, 1.15], [-0.85, 0.55], [-0.8, -0.6]] : [[0, -1.35], [0.75, -0.15], [0.15, 1.25], [-0.7, 0.1]]).map(([u, v]) => [cx + u * r, cy + v * r]);
+  const core = [cx + (red ? -0.15 : 0.05) * r, cy + (red ? -0.1 : -0.05) * r];
+  const shades = red ? ['#ff6b6b', '#e0303f', '#b31b2a', '#8a1220', '#c62434', '#f04a55'] : ['#3b4048', '#1c1f24', '#0d0e10', '#272b31'];
+  P.forEach((p, i) => {   // one triangle per facet, each in another shade
+    const q = P[(i + 1) % P.length];
+    x.beginPath(); x.moveTo(core[0], core[1]); x.lineTo(p[0], p[1]); x.lineTo(q[0], q[1]); x.closePath();
+    x.fillStyle = shades[i % shades.length]; x.fill();
+    x.strokeStyle = red ? 'rgba(255,170,170,0.35)' : 'rgba(200,210,220,0.25)'; x.lineWidth = Math.max(0.6, r * 0.04); x.stroke();
+  });
   if (red) {
-    x.fillStyle = 'rgba(255,120,120,0.55)';
-    x.beginPath(); x.moveTo(cx, cy - 1.2 * r); x.lineTo(cx - 0.8 * r, cy - 0.6 * r); x.lineTo(cx - 0.2 * r, cy + 0.1 * r); x.closePath(); x.fill();
+    glowDot(x, core[0], core[1], r * 0.8, 'rgba(255,120,120,0.6)');
+    x.fillStyle = '#fff';   // a small twinkle
+    x.beginPath(); x.moveTo(cx - 0.45 * r, cy - 0.75 * r); x.lineTo(cx - 0.38 * r, cy - 0.55 * r); x.lineTo(cx - 0.45 * r, cy - 0.35 * r); x.lineTo(cx - 0.52 * r, cy - 0.55 * r); x.closePath(); x.fill();
   } else {
-    x.beginPath(); x.moveTo(cx + 0.05 * r, cy - 0.9 * r); x.lineTo(cx - 0.25 * r, cy - 0.2 * r); x.lineTo(cx + 0.2 * r, cy - 0.05 * r); x.lineTo(cx - 0.1 * r, cy + 0.7 * r); x.stroke();
+    x.beginPath(); x.moveTo(cx + 0.05 * r, cy - 1 * r); x.lineTo(cx - 0.25 * r, cy - 0.25 * r); x.lineTo(cx + 0.2 * r, cy - 0.05 * r); x.lineTo(cx - 0.1 * r, cy + 0.8 * r);
+    x.strokeStyle = 'rgba(140,210,255,0.6)'; x.lineWidth = r * 0.16; x.stroke();
+    x.strokeStyle = '#eaf6ff'; x.lineWidth = r * 0.06; x.stroke();
   }
+  x.beginPath(); P.forEach((p, i) => (i ? x.lineTo : x.moveTo).call(x, p[0], p[1])); x.closePath();
+  x.strokeStyle = red ? '#ffb0b0' : '#eef1f5'; x.lineWidth = Math.max(1, r * 0.09); x.stroke();
   return { c, w: 4 * r, h: 4 * r, ax: cx, ay: cy };
 }
 function bossSprite() {
@@ -1052,52 +1112,142 @@ function drawPad(x, cx, cy, lit) {
   x.fillStyle = '#121316'; x.beginPath(); x.ellipse(cx, cy + 1, 17, 4, 0, 0, TAU); x.fill();
   if (lit) { glowDot(x, cx, cy - 4, 22, 'rgba(235,240,250,0.55)'); x.fillStyle = '#e8edf5'; x.fillRect(cx - 9, cy - 3, 18, 2.5); }
 }
+const hexRgb = h => `${parseInt(h.slice(1, 3), 16)},${parseInt(h.slice(3, 5), 16)},${parseInt(h.slice(5, 7), 16)}`;
+// a ring of light when a weapon gets a card
+function upgradeFlash(x, cx, cy, f, col) {
+  if (!(f > 0)) return;
+  const r = 16 + (1 - f) * 42;
+  const old = x.globalCompositeOperation;
+  x.globalCompositeOperation = 'lighter';
+  x.strokeStyle = `rgba(${col},${0.9 * f})`; x.lineWidth = 1 + 3 * f;
+  x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.stroke();
+  glowDot(x, cx, cy, r, `rgba(${col},0.55)`, f);
+  x.globalCompositeOperation = old;
+}
+// The robot walks with bending knees and leans into the walk. With its cards it changes:
+// the colour follows its ammunition, it grows a little, gets shoulder pads, an antenna, and a jetpack with the super card.
 function drawRobot(x, cx, cy, w, tm) {
-  const a = w ? clamp(-w.vx / 4000, -0.12, 0.12) : 0, kick = w ? w.kick : 0, bob = Math.sin(tm * 3) * 0.8;
-  // legs: they step while the robot walks
-  const walking = w && Math.abs(w.vx) > 20, st = walking ? Math.sin(w.step * 0.22) * 4 : 0;
-  x.fillStyle = '#16191e';
-  x.beginPath(); x.moveTo(cx - 11 + st, cy); x.lineTo(cx - 7, cy - 16); x.lineTo(cx - 2, cy - 16); x.lineTo(cx - 4 + st, cy); x.fill();
-  x.beginPath(); x.moveTo(cx + 11 - st, cy); x.lineTo(cx + 7, cy - 16); x.lineTo(cx + 2, cy - 16); x.lineTo(cx + 4 - st, cy); x.fill();
-  x.fillStyle = '#5ff0ff'; x.fillRect(cx - 13 + st, cy - 2, 9, 2.5); x.fillRect(cx + 4 - st, cy - 2, 9, 2.5);
-  // body
-  rrect(x, cx - 12, cy - 36 + bob, 24, 22, 7); x.fillStyle = '#1d2229'; x.fill();
-  glowDot(x, cx, cy - 26 + bob, 9, 'rgba(110,245,255,0.9)');
-  x.fillStyle = '#c9fbff'; x.beginPath(); x.arc(cx, cy - 26 + bob, 2.6, 0, TAU); x.fill();
-  rrect(x, cx - 6, cy - 44 + bob, 12, 9, 4); x.fillStyle = '#20262e'; x.fill();
-  x.fillStyle = '#7ff6ff'; x.fillRect(cx - 4, cy - 41 + bob, 8, 2);
-  // two arm cannons pointing up
-  for (const s of [-1, 1]) {
-    x.save(); x.translate(cx + s * 14, cy - 30 + bob); x.rotate(a);
-    const k = (w && w.side === (s > 0 ? 1 : 0)) ? kick * 4 : 0;
-    rrect(x, -5, -22 + k, 10, 24, 4); x.fillStyle = '#dff9ff'; x.fill();
-    x.fillStyle = '#8ef3ff'; x.fillRect(-5, -10 + k, 10, 3);
-    glowDot(x, 0, -22 + k, 9, 'rgba(120,240,255,0.85)');
+  const tier = w ? up(w, 'dmg') : 0, stars = w ? w.stars : 0, multi = w ? up(w, 'multi') : 0, col = AMMO[tier].col;
+  const S = 1 + 0.045 * Math.min(stars, 7), vx = w ? w.vx : 0, walking = Math.abs(vx) > 25, ph = w ? w.step * 0.13 : 0;
+  const lean = clamp(-vx / 3500, -0.16, 0.16), bob = walking ? Math.abs(Math.sin(ph)) * 2.2 : Math.sin(tm * 2.5) * 0.7;
+  const kick = w ? w.kick : 0;
+  x.save(); x.translate(cx, cy); x.scale(S, S); x.lineCap = 'round'; x.lineJoin = 'round';
+  x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(0, 0.5, 15, 3, 0, 0, TAU); x.fill();
+  // legs seen from the front: while walking they lift in turns, knees bend outward and the feet step sideways
+  const dir = Math.sign(vx) || 1;
+  for (const side of [-1, 1]) {
+    const p = ph + (side > 0 ? Math.PI : 0), lift = walking ? Math.max(0, Math.sin(p)) * 6 : 0;
+    const hx = side * 5, hy = -19 - bob * 0.3;
+    const fx = hx + side * 1.5 + (walking ? Math.cos(p) * 3.5 * dir : side * 0.8), fy = -1.5 - lift;
+    const kx = (hx + fx) / 2 + side * (2 + lift * 0.45), ky = (hy + fy) / 2 + 0.5;
+    x.strokeStyle = '#141820'; x.lineWidth = 5.5;
+    x.beginPath(); x.moveTo(hx, hy); x.lineTo(kx, ky); x.lineTo(fx, fy); x.stroke();
+    x.strokeStyle = '#323a46'; x.lineWidth = 1.8; x.beginPath(); x.moveTo(hx, hy); x.lineTo(kx, ky); x.stroke();
+    x.fillStyle = '#3d4552'; x.beginPath(); x.arc(kx, ky, 2.7, 0, TAU); x.fill();
+    x.fillStyle = `rgba(${col},0.9)`; x.beginPath(); x.arc(kx, ky, 1, 0, TAU); x.fill();
+    rrect(x, fx - 5, fy - 1.8, 10, 4, 2); x.fillStyle = '#1b2029'; x.fill();
+    x.fillStyle = `rgba(${col},0.95)`; x.fillRect(fx - 4, fy + 1.4, 8, 1.3);
+    if (lift > 0.5) glowDot(x, fx, fy + 3, 4, `rgba(${col},0.6)`, lift / 6);   // little thruster under the lifted foot
+  }
+  // upper body
+  x.translate(0, -20 - bob); x.rotate(lean);
+  if (w && w.sup) {   // jetpack with two flames
+    rrect(x, -9, -17, 18, 14, 4); x.fillStyle = '#20252e'; x.fill();
+    for (const s of [-5, 5]) { glowDot(x, s, 1, 7 + Math.sin(tm * 25 + s) * 2, `rgba(${col},0.9)`); x.fillStyle = '#fff'; x.fillRect(s - 1, -3, 2, 3); }
+  }
+  x.beginPath(); x.moveTo(-11, 0); x.lineTo(-13, -14); x.quadraticCurveTo(-13, -19, -8, -19); x.lineTo(8, -19); x.quadraticCurveTo(13, -19, 13, -14); x.lineTo(11, 0); x.closePath();
+  const tg = x.createLinearGradient(-13, 0, 13, 0);
+  tg.addColorStop(0, '#161a21'); tg.addColorStop(0.5, '#2c333e'); tg.addColorStop(1, '#14181f');
+  x.fillStyle = tg; x.fill();
+  x.strokeStyle = 'rgba(255,255,255,0.1)'; x.lineWidth = 0.8;
+  x.beginPath(); x.moveTo(-9, -5); x.lineTo(-4, -5); x.moveTo(4, -5); x.lineTo(9, -5); x.moveTo(-10, -15); x.lineTo(10, -15); x.stroke();
+  x.fillStyle = '#0f1218'; x.fillRect(-11, -3, 22, 3);
+  x.fillStyle = `rgba(${col},0.8)`; x.fillRect(-2, -3, 4, 3);
+  glowDot(x, 0, -10, 10, `rgba(${col},0.85)`);
+  x.strokeStyle = `rgba(${col},0.95)`; x.lineWidth = 1.2; x.beginPath(); x.arc(0, -10, 4.6, 0, TAU); x.stroke();
+  x.fillStyle = '#fff'; x.beginPath(); x.arc(0, -10, 2.3, 0, TAU); x.fill();
+  // head with a glowing visor
+  rrect(x, -7, -29, 14, 10, 4); x.fillStyle = '#232a35'; x.fill();
+  x.fillStyle = 'rgba(255,255,255,0.12)'; x.fillRect(-5, -28.3, 10, 1);
+  rrect(x, -5.5, -26.2, 11, 3.6, 1.8); x.fillStyle = `rgba(${col},0.95)`; x.fill();
+  glowDot(x, 0, -24.4, 8, `rgba(${col},0.5)`);
+  if (stars >= 4) {
+    x.strokeStyle = '#3a424e'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(4, -29); x.lineTo(6.5, -37); x.stroke();
+    glowDot(x, 6.5, -37, 3.5, `rgba(${col},0.95)`, 0.5 + 0.5 * Math.sin(tm * 6));
+  }
+  if (stars >= 2) for (const s of [-1, 1]) {   // shoulder pads
+    rrect(x, s * 13 - 5.5, -21.5, 11, 6.5, 3); x.fillStyle = '#323a46'; x.fill();
+    x.fillStyle = `rgba(${col},0.9)`; x.fillRect(s * 13 - 4, -19.6, 8, 1.3);
+  }
+  // arm cannons: thicker and with more barrels for every extra barrel card
+  for (const side of [-1, 1]) {
+    const k = (w && w.side === (side > 0 ? 1 : 0)) ? kick * 4 : 0, bw = 9 + multi * 2.6, nb = 1 + multi;
+    x.save(); x.translate(side * 14, -14);
+    rrect(x, -bw / 2, -20 + k, bw, 22, 4);
+    const ag = x.createLinearGradient(-bw / 2, 0, bw / 2, 0);
+    ag.addColorStop(0, '#aeb9c4'); ag.addColorStop(0.45, '#f4fbff'); ag.addColorStop(1, '#8794a1');
+    x.fillStyle = ag; x.fill();
+    x.fillStyle = 'rgba(0,0,0,0.25)'; x.fillRect(-bw / 2, -3 + k, bw, 1.2);
+    x.fillStyle = `rgba(${col},0.95)`; x.fillRect(-bw / 2, -9 + k, bw, 2.6);
+    for (let i = 0; i < nb; i++) { const bx = (i - (nb - 1) / 2) * 3; x.fillStyle = '#1d232c'; x.fillRect(bx - 1.2, -23 + k, 2.4, 3.5); }
+    glowDot(x, 0, -22 + k, 7 + kick * 5, `rgba(${col},0.8)`);
     x.restore();
   }
+  x.restore();
+  if (w) upgradeFlash(x, cx, cy - 26 * S, w.flash, col);
+}
+// pedestal under every turret: shiny metal, rivets and a blinking light in the weapon's colour
+function turretBase(x, cx, cy, accent, tm) {
+  x.beginPath(); x.moveTo(cx - 16, cy); x.lineTo(cx - 11, cy - 10); x.lineTo(cx + 11, cy - 10); x.lineTo(cx + 16, cy); x.closePath();
+  const g = x.createLinearGradient(0, cy - 10, 0, cy);
+  g.addColorStop(0, '#363c46'); g.addColorStop(1, '#14171b');
+  x.fillStyle = g; x.fill();
+  x.strokeStyle = 'rgba(255,255,255,0.16)'; x.lineWidth = 0.8; x.beginPath(); x.moveTo(cx - 11, cy - 10); x.lineTo(cx + 11, cy - 10); x.stroke();
+  x.strokeStyle = 'rgba(0,0,0,0.4)'; x.beginPath(); x.moveTo(cx - 13.5, cy - 4.5); x.lineTo(cx + 13.5, cy - 4.5); x.stroke();
+  x.fillStyle = '#626a75';
+  for (const rx of [-9, -3, 3, 9]) { x.beginPath(); x.arc(cx + rx, cy - 7.3, 0.8, 0, TAU); x.fill(); }
+  const blink = 0.5 + 0.5 * Math.sin(tm * 3 + cx);
+  glowDot(x, cx + 12.5, cy - 2.5, 4, `rgba(${accent},0.9)`, blink);
+  x.fillStyle = `rgb(${accent})`; x.fillRect(cx + 11.9, cy - 3.1, 1.3, 1.3);
 }
 function drawTurret(x, key, cx, cy, w, tm) {
   const kick = w ? w.kick : 0;
-  x.fillStyle = '#17191d';
-  x.beginPath(); x.moveTo(cx - 14, cy); x.lineTo(cx - 9, cy - 9); x.lineTo(cx + 9, cy - 9); x.lineTo(cx + 14, cy); x.fill();
   if (key === 'laser') {
-    const a = w && w.beams[0] ? w.beams[0].ang : -0.3;
-    x.save(); x.translate(cx, cy - 12); x.rotate(a);
-    rrect(x, -7, -30, 14, 34, 6); x.fillStyle = '#1b231d'; x.fill();
-    x.strokeStyle = '#59ff7a'; x.lineWidth = 2.4;
-    for (const yy of [-22, -16, -10]) { x.beginPath(); x.moveTo(-6, yy); x.lineTo(6, yy - 3); x.stroke(); }
-    glowDot(x, 0, -30, 11, w && w.on ? 'rgba(130,255,140,1)' : 'rgba(130,255,140,0.6)');
-    x.fillStyle = '#e8ffe8'; x.fillRect(-5, -32, 10, 3);
+    const a = w && w.beams[0] ? w.beams[0].ang : -0.3, on = !!(w && w.on);
+    turretBase(x, cx, cy, '181,108,255', tm);
+    x.fillStyle = '#1e1a26'; x.beginPath(); x.arc(cx, cy - 11, 7.5, Math.PI, 0); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,0.12)'; x.lineWidth = 0.8; x.beginPath(); x.arc(cx, cy - 11, 7, Math.PI * 1.1, Math.PI * 1.6); x.stroke();
+    x.save(); x.translate(cx, cy - 13); x.rotate(a);
+    rrect(x, -5.5, -30, 11, 32, 4);
+    const bg2 = x.createLinearGradient(-5.5, 0, 5.5, 0);
+    bg2.addColorStop(0, '#221d2c'); bg2.addColorStop(0.5, '#4a3f5e'); bg2.addColorStop(1, '#1c1824');
+    x.fillStyle = bg2; x.fill();
+    for (const yy of [-25, -20, -15]) {   // cooling fins that light up while it fires
+      x.fillStyle = '#16121c'; x.fillRect(-7.5, yy, 15, 2.4);
+      x.fillStyle = on ? 'rgba(210,160,255,0.95)' : 'rgba(120,80,170,0.7)'; x.fillRect(-7.5, yy + 2.4, 15, 0.8);
+    }
+    rrect(x, 5.2, -12, 4, 12, 2); x.fillStyle = '#2d2640'; x.fill();
+    x.fillStyle = 'rgba(200,140,255,0.95)'; x.fillRect(6.2, on ? -10.5 : -4, 2, on ? 9 : 2.5);
+    x.beginPath(); x.moveTo(0, -38); x.lineTo(3.6, -32.5); x.lineTo(0, -29.5); x.lineTo(-3.6, -32.5); x.closePath();
+    x.fillStyle = '#ecdcff'; x.fill();
+    glowDot(x, 0, -33, on ? 12 : 7, 'rgba(190,120,255,0.95)', on ? 1 : 0.6);
     x.restore();
   } else if (key === 'pole') {
-    // the field generator: the bar on its mast fills while it charges, then it fires
+    turretBase(x, cx, cy, '92,240,192', tm);
+    for (const s of [-1, 1]) {   // two capacitors beside the mast
+      rrect(x, cx + s * 9 - 2.5, cy - 22, 5, 12, 2); x.fillStyle = '#20262c'; x.fill();
+      x.fillStyle = 'rgba(110,245,210,0.85)'; x.fillRect(cx + s * 9 - 1, cy - 12 - 9 * (w && w.state === 'charge' ? w.charge : 1), 2, 9 * (w && w.state === 'charge' ? w.charge : 1));
+    }
     const ch = !w || !w.state ? 1 : w.state === 'charge' ? w.charge : w.state === 'launch' ? 1 : 0.2;
-    x.fillStyle = '#1b1f22'; rrect(x, cx - 4.5, cy - 37, 9, 30, 3); x.fill();
-    x.fillStyle = '#0b2a24'; x.fillRect(cx - 2, cy - 34, 4, 24);
-    x.fillStyle = '#6ff5d2'; x.fillRect(cx - 2, cy - 10 - 24 * ch, 4, 24 * ch);
-    if (ch > 0.05) glowDot(x, cx, cy - 10 - 24 * ch, 7, 'rgba(120,255,215,0.9)', ch);
-    x.beginPath(); x.moveTo(cx - 6, cy - 9); x.lineTo(cx, cy - 16); x.lineTo(cx + 6, cy - 9); x.fillStyle = '#5cf0c0'; x.fill();
-    rrect(x, cx - 16, cy - 45, 32, 10, 5); x.fillStyle = '#1b1f22'; x.fill();
+    x.fillStyle = '#1b1f22'; rrect(x, cx - 4.5, cy - 37, 9, 28, 3); x.fill();
+    x.fillStyle = '#0b2a24'; x.fillRect(cx - 2, cy - 34, 4, 23);
+    x.fillStyle = '#6ff5d2'; x.fillRect(cx - 2, cy - 11 - 23 * ch, 4, 23 * ch);
+    if (ch > 0.05) glowDot(x, cx, cy - 11 - 23 * ch, 7, 'rgba(120,255,215,0.9)', ch);
+    rrect(x, cx - 16, cy - 45, 32, 10, 5);
+    const hg = x.createLinearGradient(0, cy - 45, 0, cy - 35);
+    hg.addColorStop(0, '#323a40'); hg.addColorStop(1, '#161a1d');
+    x.fillStyle = hg; x.fill();
+    x.fillStyle = 'rgba(255,255,255,0.15)'; x.fillRect(cx - 12, cy - 44, 24, 0.8);
     const eye = Math.min(1, 0.3 + 0.7 * ch + kick);
     for (const s of [-1, 1]) { glowDot(x, cx + s * 10, cy - 40, 8 + 6 * eye, 'rgba(160,255,220,0.95)', eye); x.fillStyle = '#eafff7'; x.beginPath(); x.arc(cx + s * 10, cy - 40, 3, 0, TAU); x.fill(); }
     if (w && w.state === 'charge') {   // a ring around the head fills up while the generator charges
@@ -1105,37 +1255,76 @@ function drawTurret(x, key, cx, cy, w, tm) {
       x.strokeStyle = 'rgba(110,255,210,0.18)'; x.beginPath(); x.arc(cx, cy - 40, 21, 0, TAU); x.stroke();
       x.strokeStyle = ch > 0.97 && tm % 0.2 < 0.1 ? '#ffffff' : '#6ff5d2';
       x.beginPath(); x.arc(cx, cy - 40, 21, -Math.PI / 2, -Math.PI / 2 + TAU * ch); x.stroke();
-    }
-    if (w && w.state === 'charge' && ch > 0.55) {   // energy streams into the generator just before the shot
-      const k = (ch - 0.55) / 0.45;
-      for (let i = 0; i < 7; i++) {
-        const u = (tm * 1.7 + i / 7) % 1, a = i * TAU / 7 + 0.4, d = 30 * (1 - u);
-        glowDot(x, cx + Math.cos(a) * d, cy - 40 + Math.sin(a) * d * 0.7, 4.5, 'rgba(150,255,220,0.95)', k * u);
+      if (ch > 0.55) {   // energy streams into the generator just before the shot
+        const k = (ch - 0.55) / 0.45;
+        for (let i = 0; i < 7; i++) {
+          const u = (tm * 1.7 + i / 7) % 1, a = i * TAU / 7 + 0.4, d = 30 * (1 - u);
+          glowDot(x, cx + Math.cos(a) * d, cy - 40 + Math.sin(a) * d * 0.7, 4.5, 'rgba(150,255,220,0.95)', k * u);
+        }
       }
     }
     if (kick > 0) glowDot(x, cx, cy - 41, 12 + 30 * kick, 'rgba(170,255,225,0.9)', kick);
   } else if (key === 'dzialo') {
-    const a = w ? w.ang : -0.4;
-    x.save(); x.translate(cx, cy - 12); x.rotate(a);
-    rrect(x, -8, -26 + kick * 5, 16, 30, 4); x.fillStyle = '#1a2030'; x.fill();
-    x.strokeStyle = '#ff9a3c'; x.lineWidth = 2.2; x.beginPath(); x.moveTo(-8, -6 + kick * 5); x.lineTo(8, -14 + kick * 5); x.stroke();
-    x.fillStyle = '#ffcf8a'; x.fillRect(-7, -28 + kick * 5, 14, 3);
-    glowDot(x, 0, -26 + kick * 5, 10, 'rgba(255,170,80,0.8)');
+    const a = w ? w.ang : -0.4, r = kick * 5;
+    turretBase(x, cx, cy, '255,154,60', tm);
+    x.fillStyle = '#262b33'; x.beginPath(); x.arc(cx - 10.5, cy - 15, 6, 0, TAU); x.fill();   // ammo drum
+    x.strokeStyle = '#4c535d'; x.lineWidth = 1; x.stroke();
+    x.fillStyle = '#5f6772'; for (let i = 0; i < 4; i++) { const b = i * Math.PI / 2 + 0.4; x.beginPath(); x.arc(cx - 10.5 + Math.cos(b) * 3.6, cy - 15 + Math.sin(b) * 3.6, 0.8, 0, TAU); x.fill(); }
+    x.save(); x.translate(cx, cy - 13); x.rotate(a);
+    rrect(x, -6.5, -26 + r, 13, 29, 3);
+    const cg = x.createLinearGradient(-6.5, 0, 6.5, 0);
+    cg.addColorStop(0, '#1d222a'); cg.addColorStop(0.5, '#414955'); cg.addColorStop(1, '#181c22');
+    x.fillStyle = cg; x.fill();
+    x.fillStyle = '#525a66'; for (const yy of [-19, -11]) x.fillRect(-7, yy + r, 14, 2);
+    rrect(x, -8, -31 + r, 16, 6.5, 2); x.fillStyle = '#2b3139'; x.fill();   // muzzle brake with slots
+    x.fillStyle = '#0d0f12'; x.fillRect(-6, -29.5 + r, 3, 3.4); x.fillRect(3, -29.5 + r, 3, 3.4);
+    x.fillStyle = `rgba(255,${Math.round(150 - kick * 40)},60,${0.45 + kick * 0.55})`; x.fillRect(-4, -6 + r, 8, 1.8); x.fillRect(-4, -3 + r, 8, 1.8);
+    glowDot(x, 0, -30 + r, 7 + kick * 12, 'rgba(255,170,80,0.9)', 0.35 + kick * 0.65);
     x.restore();
   } else if (key === 'piorun') {
-    x.fillStyle = '#1d1a24';
-    for (let i = 0; i < 4; i++) { rrect(x, cx - 9 + i, cy - 16 - i * 8, 18 - 2 * i, 6, 3); x.fill(); }
-    x.strokeStyle = '#c98bff'; x.lineWidth = 1.6;
-    for (let i = 0; i < 4; i++) { x.beginPath(); x.moveTo(cx - 8 + i, cy - 13 - i * 8); x.lineTo(cx + 8 - i, cy - 13 - i * 8); x.stroke(); }
-    glowDot(x, cx, cy - 52, 13 + kick * 6, 'rgba(210,160,255,0.95)');
-    x.fillStyle = '#f4e8ff'; x.beginPath(); x.arc(cx, cy - 52, 4.5, 0, TAU); x.fill();
+    turretBase(x, cx, cy, '142,197,255', tm);
+    x.fillStyle = '#3a414c'; x.fillRect(cx - 1.5, cy - 50, 3, 40);
+    for (let i = 0; i < 5; i++) {   // insulator discs
+      const yy = cy - 14 - i * 7.5, ww = 19 - i * 2.2;
+      x.fillStyle = '#1f232b'; x.beginPath(); x.ellipse(cx, yy, ww / 2, 3.2, 0, 0, TAU); x.fill();
+      x.strokeStyle = 'rgba(150,200,255,0.85)'; x.lineWidth = 1.1; x.beginPath(); x.ellipse(cx, yy - 0.6, ww / 2 - 1, 2, 0, Math.PI, TAU); x.stroke();
+    }
+    const oy = cy - 56;
+    x.strokeStyle = '#4a525e'; x.lineWidth = 1.2; x.beginPath(); x.arc(cx, oy, 8, 0, TAU); x.stroke();
+    glowDot(x, cx, oy, 14 + kick * 9, 'rgba(160,205,255,0.95)');
+    x.fillStyle = '#eef6ff'; x.beginPath(); x.arc(cx, oy, 4.5, 0, TAU); x.fill();
+    x.strokeStyle = 'rgba(205,232,255,0.9)'; x.lineWidth = 0.9;   // little sparks crackle around the orb
+    const R = seeded(Math.floor(tm * 18) * 7 + Math.round(cx));
+    for (let i = 0; i < 3; i++) {
+      let b = R() * TAU, px = cx + Math.cos(b) * 5, py = oy + Math.sin(b) * 5;
+      x.beginPath(); x.moveTo(px, py);
+      for (let j = 0; j < 3; j++) { b += (R() - 0.5) * 1.3; px += Math.cos(b) * 3.6; py += Math.sin(b) * 3.6; x.lineTo(px, py); }
+      x.stroke();
+    }
   } else if (key === 'rakiety') {
-    x.save(); x.translate(cx, cy - 14); x.rotate(-0.25 + kick * 0.1);
-    rrect(x, -12, -18, 24, 20, 4); x.fillStyle = '#251a1c'; x.fill();
-    for (const s of [-7, 0, 7]) { x.fillStyle = '#ff6464'; x.beginPath(); x.arc(s, -18, 3.2, Math.PI, 0); x.fill(); x.fillStyle = '#ffd0d0'; x.fillRect(s - 2, -16, 4, 3); }
+    turretBase(x, cx, cy, '255,100,100', tm);
+    x.save(); x.translate(cx, cy - 13); x.rotate(-0.22 + kick * 0.08);
+    rrect(x, -13, -21, 26, 22, 3);
+    const rg = x.createLinearGradient(0, -21, 0, 1);
+    rg.addColorStop(0, '#343a43'); rg.addColorStop(1, '#191c21');
+    x.fillStyle = rg; x.fill();
+    x.save(); rrect(x, -13, -3, 26, 4, 1); x.clip();   // yellow and black stripes
+    x.fillStyle = '#ffcf3a'; x.fillRect(-13, -3, 26, 4);
+    x.fillStyle = '#16181c'; for (let i = -16; i < 16; i += 5) { x.beginPath(); x.moveTo(i, 1); x.lineTo(i + 2.5, 1); x.lineTo(i + 6.5, -3); x.lineTo(i + 4, -3); x.closePath(); x.fill(); }
+    x.restore();
+    const iv = 2.2 * Math.pow(0.67, w ? up(w, 'fast') : 0), loaded = w && w.cd !== undefined ? clamp(1 - w.cd / iv, 0, 1) : 1;
+    let n = 0;
+    for (const ty of [-15.5, -8]) for (const tx of [-6, 6]) {   // four tubes; rockets come back as it reloads
+      x.fillStyle = '#0c0e11'; x.beginPath(); x.arc(tx, ty, 4, 0, TAU); x.fill();
+      if (loaded >= (n + 1) / 4 - 0.01) { x.fillStyle = '#ff6464'; x.beginPath(); x.arc(tx, ty, 2.7, 0, TAU); x.fill(); x.fillStyle = '#ffe1e1'; x.beginPath(); x.arc(tx - 0.7, ty - 0.7, 0.9, 0, TAU); x.fill(); }
+      n++;
+    }
+    x.strokeStyle = '#414852'; x.lineWidth = 1; x.beginPath(); x.moveTo(10, -21); x.lineTo(13, -31); x.stroke();
+    glowDot(x, 13, -31, 3.5, 'rgba(255,90,90,0.95)', tm % 1 < 0.5 ? 1 : 0.25);
     x.restore();
   }
   if (w && w.sup) glowDot(x, cx, cy - 20, 34, 'rgba(190,110,255,0.35)');
+  if (w) upgradeFlash(x, cx, cy - 22, w.flash, hexRgb(WEAPONS[key].color));
 }
 
 /* ---------- the slowing field: an energy wall with a honeycomb ---------- */
@@ -1269,7 +1458,14 @@ function render(G, real) {
     // the faster the meteor really falls, the longer its flame (slowed ones get a short one)
     const stretch = clamp(0.45 + speedOf(e) * e.vy / 110, 0.5, 1.5);
     ctx.drawImage(F.frames[Math.floor(tm * 14 + e.id * 3.7) % FLAME_FRAMES], -F.ax, -F.ay * stretch, F.w, F.h * stretch);
+    const rot = a + e.rot0 + e.spin * (G.t - e.born), rc = Math.cos(rot) * base, rs = Math.sin(rot) * base;
+    ctx.setTransform(rc, rs, -rs, rc, ox + e.x * base, oy + e.y * base);
     ctx.drawImage(S.c, -S.ax, -S.ay, S.w, S.h);
+    ctx.setTransform(c, s, -s, c, ox + e.x * base, oy + e.y * base);
+    ctx.globalCompositeOperation = 'lighter';   // the front of the rock glows from the heat
+    ctx.strokeStyle = 'rgba(255,170,90,0.55)'; ctx.lineWidth = e.r * 0.16;
+    ctx.beginPath(); ctx.arc(0, 0, e.r * 0.9, Math.PI * 0.18, Math.PI * 0.82); ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
     if (e.flash > 0) { ctx.globalAlpha = 0.55; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, e.r, 0, TAU); ctx.fill(); ctx.globalAlpha = 1; }
     if (e.burnT > 0) { ctx.globalAlpha = 0.6; glowDot(ctx, 0, -2, e.r * 1.3, 'rgba(255,120,30,0.9)'); ctx.globalAlpha = 1; }
     if (e.slow > 0) glowDot(ctx, 0, 0, e.r * 1.9, 'rgba(110,255,210,0.5)', Math.min(1, e.slowT + 0.3));
@@ -1292,21 +1488,29 @@ function render(G, real) {
   ctx.globalCompositeOperation = 'lighter';
   const LZ = G.w.laser;
   if (LZ && LZ.on) {
-    const wd = 9 * (1 + 0.6 * up(LZ, 'wide')), ox2 = LZ.x, oy2 = GROUND - 40;
     for (const Bm of LZ.beams) {
-      const ex = ox2 + Math.sin(Bm.ang) * 1500, ey = oy2 - Math.cos(Bm.ang) * 1500, fl = 1 + Math.sin(tm * 40) * 0.12;
-      ctx.strokeStyle = 'rgba(60,255,110,0.22)'; ctx.lineWidth = wd * 2.6 * fl; ctx.beginPath(); ctx.moveTo(ox2, oy2); ctx.lineTo(ex, ey); ctx.stroke();
-      ctx.strokeStyle = 'rgba(90,255,130,0.7)'; ctx.lineWidth = wd; ctx.stroke();
-      ctx.strokeStyle = 'rgba(225,255,225,0.95)'; ctx.lineWidth = wd * 0.35; ctx.stroke();
-      glowDot(ctx, ox2 + Math.sin(Bm.ang) * 10, oy2 - Math.cos(Bm.ang) * 10, 16, 'rgba(150,255,160,0.9)');
+      const dx = Math.sin(Bm.ang), dy = -Math.cos(Bm.ang), ox2 = LZ.x + dx * 35, oy2 = GROUND - 13 + dy * 35;
+      const fl = 1 + Math.sin(tm * 40) * 0.15;
+      ctx.beginPath(); ctx.moveTo(ox2, oy2); ctx.lineTo(ox2 + dx * 1500, oy2 + dy * 1500);
+      ctx.strokeStyle = 'rgba(165,85,255,0.3)'; ctx.lineWidth = 4.5 * fl; ctx.stroke();
+      ctx.strokeStyle = 'rgba(200,140,255,0.85)'; ctx.lineWidth = 1.8; ctx.stroke();
+      ctx.strokeStyle = 'rgba(252,240,255,0.95)'; ctx.lineWidth = 0.7; ctx.stroke();
+      glowDot(ctx, ox2, oy2, 9, 'rgba(200,140,255,0.9)');
     }
   }
+  // the robot's bullets: colour, size and kind follow its ammunition; piercing ones are longer, like lances
   ctx.lineCap = 'round';
-  ctx.strokeStyle = 'rgba(140,248,255,0.95)'; ctx.lineWidth = 2.6;
-  ctx.beginPath();
-  for (const b of G.bullets) { ctx.moveTo(b.x, b.y); ctx.lineTo(b.x - b.vx * 0.022, b.y - b.vy * 0.022); }
-  ctx.stroke();
-  ctx.strokeStyle = 'rgba(60,200,255,0.3)'; ctx.lineWidth = 6; ctx.stroke();
+  for (let tier = 0; tier < AMMO.length; tier++) {
+    const list = G.bullets.filter(b => b.tier === tier);
+    if (!list.length) continue;
+    const col = AMMO[tier].col, len = 0.02 + tier * 0.007, wd = 2.4 + tier * 1.1;
+    ctx.beginPath();
+    for (const b of list) { const L = len * (1 + 0.4 * b.pl); ctx.moveTo(b.x, b.y); ctx.lineTo(b.x - b.vx * L, b.y - b.vy * L); }
+    ctx.strokeStyle = `rgba(${col},0.32)`; ctx.lineWidth = wd * 2.8; ctx.stroke();
+    ctx.strokeStyle = `rgba(${col},0.95)`; ctx.lineWidth = wd; ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = wd * 0.35; ctx.stroke();
+    if (tier >= 1) for (const b of list) glowDot(ctx, b.x, b.y, 4 + tier * 2.6, `rgba(${col},0.9)`);
+  }
   for (const b of G.bolts) {
     const al = 1 - b.t / 0.22;
     ctx.beginPath();
@@ -1316,8 +1520,8 @@ function render(G, real) {
       for (let j = 1; j < 5; j++) ctx.lineTo(x0 + (x1 - x0) * j / 5 + rand(-7, 7), y0 + (y1 - y0) * j / 5 + rand(-7, 7));
       ctx.lineTo(x1, y1);
     }
-    ctx.strokeStyle = `rgba(190,120,255,${0.45 * al})`; ctx.lineWidth = 7; ctx.stroke();
-    ctx.strokeStyle = `rgba(245,230,255,${al})`; ctx.lineWidth = 2; ctx.stroke();
+    ctx.strokeStyle = `rgba(110,170,255,${0.45 * al})`; ctx.lineWidth = 7; ctx.stroke();
+    ctx.strokeStyle = `rgba(235,245,255,${al})`; ctx.lineWidth = 2; ctx.stroke();
   }
   for (const b of G.booms) {
     if (b.t < 0) continue;
@@ -1401,7 +1605,7 @@ function iconFor(key, kind) {
   return (ICON[id] = c.toDataURL());
 }
 function paintIcon(x, key) {
-  const fake = { ang: -0.35, kick: 0, on: true, beams: [{ ang: -0.35 }], side: 0, sup: false };
+  const fake = { ang: -0.35, kick: 0, on: true, beams: [{ ang: -0.35 }], side: 0, sup: false, ups: {}, stars: 0, vx: 0, step: 0, flash: 0 };
   if (key === 'robot') drawRobot(x, 0, 0, fake, 0);
   else drawTurret(x, key, 0, 0, fake, 0);
 }
@@ -1445,7 +1649,7 @@ function banner(html, kind) {
 /* ---------- level up ---------- */
 function starsHtml(w) {
   let s = '';
-  for (let i = 0; i < 4; i++) s += `<i class="${w && w.stars > i ? 'on' : ''}"></i>`;
+  for (let i = 0; i < STARS_FOR_SUPER; i++) s += `<i class="${w && w.stars > i ? 'on' : ''}"></i>`;
   return s + `<i class="sup ${w && w.sup ? 'on' : ''}"></i>`;
 }
 function slotsHtml() {
@@ -1523,14 +1727,16 @@ function updateHud() {
   }
 }
 function handleEvents() {
+  const keep = [];
   for (const e of G.ev) {
+    if (e.startsWith('amunicja-')) { if (!$('scrCards').hidden) keep.push(e); else banner(`Nowa amunicja:<br>${AMMO[+e.slice(9)].name}!`, 'hint'); continue; }
     if (e.startsWith('roj-')) { banner(`Rój meteorów<br>${{ lewa: 'z lewej!', prawa: 'z prawej!', srodek: 'na środek!' }[e.slice(4)]}`, 'warn'); Sound.play('roj'); continue; }
     else if (e === 'boss') { banner('Nadlatuje Asteroida!', 'boss'); Sound.music('turbo-walka'); }
     else if (e === 'wygrana') Sound.music(null);
     else if (e === 'przegrana') Sound.music(null);
     Sound.play(e);
   }
-  G.ev.length = 0;
+  G.ev = keep;
 }
 
 /* ---------- main loop ---------- */
