@@ -4,6 +4,7 @@ Nowa gra, na razie bez zadań z matematyki: najpierw ma być po prostu grywalna.
 (bez energii, reklam, zakupów i losowych skrzynek). Nazwa „Wersja robocza” jest tymczasowa.
 
 Najnowsza wersja jest na górze. Numer wersji widać w grze, na dole menu.
+Do każdej wersji można wrócić: przy każdej podany jest identyfikator zapisu w repozytorium (np. `7360c22`).
 Gra jest pod adresem https://jacekordowski.github.io/Yaceq-Placeq/wersja-robocza/
 
 ---
