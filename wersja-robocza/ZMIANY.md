@@ -10,6 +10,8 @@ Gra jest pod adresem https://jacekordowski.github.io/Yaceq-Placeq/wersja-robocza
 
 ## Wersja 3 (24 października 2026)
 
+Zapis w repozytorium: `ce162b8`
+
 ### Dodane
 - **Sterowanie palcem:** Strażnik chodzi w lewo i w prawo tam, gdzie jest palec. Dotykać można w dowolnym miejscu ekranu,
   liczy się tylko lewo i prawo. Na komputerze działają strzałki albo klawisze A i D.
