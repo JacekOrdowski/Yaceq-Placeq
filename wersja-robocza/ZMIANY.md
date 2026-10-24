@@ -10,6 +10,8 @@ Gra jest pod adresem https://jacekordowski.github.io/Yaceq-Placeq/wersja-robocza
 
 ## Wersja 4 (24 października 2026)
 
+Zapis w repozytorium: `7360c22`
+
 ### Dodane
 - **Żywe płomienie za meteorami:** ogon płonie i migocze (10 klatek, języki ognia falują i się kołyszą), a z meteorów
   sypią się iskry. Im szybciej meteor leci, tym dłuższy ma płomień. Spowolniony w polu ma krótki płomień.
