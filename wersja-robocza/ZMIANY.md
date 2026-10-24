@@ -9,6 +9,22 @@ Gra jest pod adresem https://jacekordowski.github.io/Yaceq-Placeq/wersja-robocza
 
 ---
 
+## Wersja 6 (24 października 2026)
+
+### Dodane
+- **Kopuła to płynne pole siłowe:** jej brzeg drga i faluje jak ciecz, w środku płyną dwie warstwy w przeciwne strony,
+  a po powierzchni przesuwają się światła.
+- **Uderzenie meteoru zamraża pole:** kopuła na chwilę przestaje falować, bieleje jak lód, w miejscu uderzenia ugina się,
+  błyska i pęka. Świeże pęknięcia gasną po nieco ponad sekundzie, a pole znowu staje się płynne.
+- **Pęknięcia zostają, gdy baza słabnie:** im mniej życia, tym więcej trwałych pęknięć w szkle kopuły
+  (do 16 przy prawie zniszczonej bazie). Karta Naprawa usuwa część pęknięć.
+  Przy życiu poniżej 30% kopuła zaczyna migotać.
+
+### Do sprawdzenia
+- Czy kopuła nie zasłania za bardzo bazy i wieżyczek, gdy jest bardzo popękana.
+
+---
+
 ## Wersja 5 (24 października 2026)
 
 Zapis w repozytorium: `41977a7`

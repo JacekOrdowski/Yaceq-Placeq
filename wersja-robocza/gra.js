@@ -5,7 +5,7 @@
 (() => {
 'use strict';
 const HAS_DOM = typeof document !== 'undefined';
-const WERSJA = 5;          // numer wersji gry; opis zmian w wersja-robocza/ZMIANY.md
+const WERSJA = 6;          // numer wersji gry; opis zmian w wersja-robocza/ZMIANY.md
 
 /* ============================================================
    Helpers
@@ -157,7 +157,7 @@ function newBattle(stage, opts = {}) {
     w: {}, combos: {}, dmg: {}, kills: 0, slowed: 0, cards: [],
     xp: 0, lvl: 1, need: BAL.xpNeed(1), pending: 0, rerolls: 1,
     spawnAcc: 0, nextSurge: 55, surge: null, wave: null, lastZone: null, aim: W / 2, boss: null, bossDone: false,
-    domeFlash: 0, shake: 0, nextId: 1,
+    domeFlash: 0, domeFreeze: 0, impacts: [], cracks: [], shake: 0, nextId: 1,
   };
   addWeapon(G, 'robot');
   return G;
@@ -362,6 +362,31 @@ function clusterTarget(G) {
 }
 const aimY = e => (e.isBoss ? e.y + e.r * 0.6 : e.y);
 const speedOf = e => (e.isBoss ? 0 : e.stun > 0 ? 0 : 1 - e.slow);
+
+/* ---------- the dome: a hit freezes the field and cracks it; the weaker the base, the more lasting cracks ---------- */
+const crackCount = G => Math.floor((1 - Math.max(0, G.baseHp) / G.baseMax) * 16);
+function crackShape(branches, size) {
+  const lines = [];
+  for (let i = 0; i < branches; i++) {
+    let a = (i / branches) * TAU + rand(-0.4, 0.4), px = 0, py = 0;
+    const pts = [[0, 0]], n = randi(3, 5);
+    for (let j = 0; j < n; j++) {
+      a += rand(-0.6, 0.6);
+      const l = rand(5, 11) * size * (1 - j * 0.12);
+      px += Math.cos(a) * l; py += Math.sin(a) * l * 0.7; pts.push([px, py]);
+      if (Math.random() < 0.35) lines.push([[px, py], [px + Math.cos(a + 1) * l * 0.5, py + Math.sin(a + 1) * l * 0.35]]);
+    }
+    lines.push(pts);
+  }
+  return lines;
+}
+function domeHit(G, x) {
+  G.domeFreeze = 1;
+  G.impacts.push({ x, y: domeY(x), t: 0, shape: crackShape(randi(4, 6), 1.4) });
+  if (G.impacts.length > 12) G.impacts.shift();
+  const want = crackCount(G);
+  while (G.cracks.length < want) G.cracks.push({ x: x + rand(-10, 10), y: domeY(x) + rand(4, 24), shape: crackShape(randi(3, 5), 1.5) });
+}
 
 /* ---------- weapons ---------- */
 function fireBullet(G, x, y, a, dmg, pierce, crit, tgt, tier = 0) {
@@ -625,7 +650,7 @@ function step(G, dt) {
       e.dead = true;
       if (!G.demo) G.baseHp -= e.dmg;
       G.domeFlash = Math.min(1, G.domeFlash + 0.3);
-      if (G.fx) { G.booms.push({ x: e.x, y: domeY(e.x), rad: e.r * 2.2, t: 0, life: 0.35, col: 'fire' }); emit(G, 'uderzenie'); }
+      if (G.fx) { G.booms.push({ x: e.x, y: domeY(e.x), rad: e.r * 2.2, t: 0, life: 0.35, col: 'fire' }); domeHit(G, e.x); emit(G, 'uderzenie'); }
     }
   }
   moveBullets(G, dt);
@@ -645,6 +670,7 @@ function step(G, dt) {
 // visual effects keep moving also during the victory and the defeat
 function stepFx(G, dt) {
   G.domeFlash = Math.max(0, G.domeFlash - dt * 2.5);
+  G.domeFreeze = Math.max(0, G.domeFreeze - dt * 1.4);
   G.shake = Math.max(0, G.shake - dt * 2);
   if (!dt) return;
   for (const n of G.nums) n.t += dt;
@@ -655,6 +681,8 @@ function stepFx(G, dt) {
   G.booms = G.booms.filter(b => b.t < b.life);
   G.bolts = G.bolts.filter(b => b.t < 0.22);
   G.sparks = G.sparks.filter(s => s.t < s.life);
+  for (const im of G.impacts) im.t += dt;
+  G.impacts = G.impacts.filter(im => im.t < 1.4);
   // embers flying off the burning meteors and the Asteroid
   if (G.fx) {
     for (const e of G.embers) { e.t += dt; e.x += e.vx * dt; e.y += e.vy * dt; }
@@ -718,7 +746,7 @@ function applyCard(G, c) {
   }
   else if (c.type === 'super') { G.w[c.w].sup = true; G.w[c.w].flash = 1; }
   else if (c.type === 'combo') G.combos[c.id] = true;
-  else G.baseHp = Math.min(G.baseMax, G.baseHp + G.baseMax * HEAL);
+  else { G.baseHp = Math.min(G.baseMax, G.baseHp + G.baseMax * HEAL); G.cracks.length = Math.min(G.cracks.length, crackCount(G)); }   // a repaired dome loses cracks
   G.cards.push(c.type === 'up' ? `${c.w}.${c.id}` : c.type === 'heal' ? 'heal' : `${c.type}.${c.w || c.id}`);
   if (G.pending > 0) G.pending--;
 }
@@ -1407,6 +1435,63 @@ function drawField(P, tm) {
   }
 }
 
+/* ---------- the dome: a trembling, flowing force field ---------- */
+function drawDome(G, tm) {
+  const fr = G.domeFreeze || 0, fluid = 1 - fr, df = G.domeFlash, hpF = Math.max(0, G.baseHp) / G.baseMax;
+  const flick = !G.demo && hpF < 0.3 && Math.random() < 0.1 ? 0.45 : 1;   // a weak dome flickers
+  const N = 48, pts = [];
+  for (let i = 0; i <= N; i++) {
+    const th = Math.PI * i / N, xs = W / 2 - DOME_RX * Math.cos(th);
+    // the surface ripples like liquid; after a hit it stiffens, and gives way where the meteor struck
+    let d = 2.4 * fluid * (Math.sin(th * 9 + tm * 3.1) * 0.6 + Math.sin(th * 15 - tm * 4.7) * 0.4);
+    for (const im of G.impacts) if (im.t < 0.35) { const k = (xs - im.x) / 28; d -= 4.5 * (1 - im.t / 0.35) * Math.exp(-k * k); }
+    pts.push([W / 2 - (DOME_RX + d) * Math.cos(th), GROUND - (DOME_H + d * 0.45) * Math.sin(th)]);
+  }
+  const path = () => { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); };
+  const col = `${Math.round(120 + 115 * fr)},${Math.round(212 + 35 * fr)},255`;   // cyan while flowing, icy white while frozen
+  path();
+  const g = ctx.createLinearGradient(0, DOME_TOP, 0, GROUND);
+  g.addColorStop(0, `rgba(${col},${(0.15 + fr * 0.22 + df * 0.12) * flick})`); g.addColorStop(1, `rgba(${col},${(0.04 + fr * 0.1) * flick})`);
+  ctx.fillStyle = g; ctx.fill();
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (const [sc, sp, al] of [[0.9, 1.3, 0.24], [0.78, -1.7, 0.16]]) {   // inner layers flowing the other way
+    ctx.beginPath();
+    for (let i = 0; i <= N; i++) {
+      const th = Math.PI * i / N, d = 3 * fluid * Math.sin(th * 7 + tm * sp * 2);
+      const x = W / 2 - (DOME_RX * sc + d) * Math.cos(th), y = GROUND - (DOME_H * sc + d * 0.5) * Math.sin(th);
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    }
+    ctx.strokeStyle = `rgba(${col},${al * (0.45 + 0.55 * fluid) * flick})`; ctx.lineWidth = 1.2; ctx.stroke();
+  }
+  for (let i = 0; i < 3; i++) {   // lights sliding over the surface
+    const p = pts[Math.round(((tm * 0.17 + i / 3) % 1) * N)];
+    glowDot(ctx, p[0], p[1], 22, `rgba(${col},0.35)`, fluid * flick);
+  }
+  path();
+  ctx.strokeStyle = `rgba(${col},${(0.2 + fr * 0.25) * flick})`; ctx.lineWidth = 6; ctx.stroke();
+  ctx.strokeStyle = `rgba(232,250,255,${Math.min(1, 0.55 + fr * 0.4 + df * 0.3) * flick})`; ctx.lineWidth = 1.6 + fr; ctx.stroke();
+  ctx.restore();
+  if (!G.cracks.length && !G.impacts.length) return;
+  // cracks stay inside the glass of the dome
+  ctx.save();
+  path(); ctx.closePath(); ctx.clip();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const crack = (cx, cy, shape, al, wd) => {
+    ctx.beginPath();
+    for (const line of shape) line.forEach(([x, y], i) => (i ? ctx.lineTo(cx + x, cy + y) : ctx.moveTo(cx + x, cy + y)));
+    ctx.strokeStyle = `rgba(150,225,255,${al * 0.35})`; ctx.lineWidth = wd * 3.2; ctx.stroke();
+    ctx.strokeStyle = `rgba(246,252,255,${al})`; ctx.lineWidth = wd; ctx.stroke();
+  };
+  for (const c of G.cracks) crack(c.x, c.y, c.shape, (0.45 + 0.4 * fr) * flick, 0.9);
+  for (const im of G.impacts) {
+    const al = 1 - im.t / 1.4;
+    glowDot(ctx, im.x, im.y, 28 * (1 - im.t * 0.4), 'rgba(225,246,255,0.9)', al * (im.t < 0.4 ? 1 : 0.45));
+    crack(im.x, im.y, im.shape, al, 1.25);
+  }
+  ctx.restore();
+}
+
 /* ---------- the scene ---------- */
 function render(G, real) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1535,13 +1620,7 @@ function render(G, real) {
   ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'source-over';
   // dome, base, turrets
-  ctx.beginPath();
-  for (let i = 0; i <= 40; i++) { const xx = W / 2 - DOME_RX + (2 * DOME_RX) * i / 40; i ? ctx.lineTo(xx, domeY(xx)) : ctx.moveTo(xx, domeY(xx)); }
-  const df = G.domeFlash;
-  const dg = ctx.createLinearGradient(0, DOME_TOP, 0, GROUND);
-  dg.addColorStop(0, `rgba(170,215,240,${0.14 + df * 0.25})`); dg.addColorStop(1, `rgba(170,215,240,${0.03 + df * 0.1})`);
-  ctx.fillStyle = dg; ctx.fill();
-  ctx.strokeStyle = `rgba(185,225,250,${0.45 + df * 0.5})`; ctx.lineWidth = 2 + df * 2; ctx.stroke();
+  drawDome(G, tm);
   // the house in the middle
   ctx.fillStyle = '#2b2f36';
   ctx.fillRect(W / 2 - 34, GROUND - 26, 68, 26);
