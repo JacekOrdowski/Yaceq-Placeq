@@ -11,6 +11,8 @@ Gra jest pod adresem https://jacekordowski.github.io/Yaceq-Placeq/wersja-robocza
 
 ## Wersja 6 (24 października 2026)
 
+Zapis w repozytorium: `c48e1fa`
+
 ### Dodane
 - **Kopuła to płynne pole siłowe:** jej brzeg drga i faluje jak ciecz, w środku płyną dwie warstwy w przeciwne strony,
   a po powierzchni przesuwają się światła.
