@@ -4,7 +4,7 @@
 (() => {
 'use strict';
 const HAS_DOM = typeof document !== 'undefined';
-const WERSJA = 1;          // numer wersji gry; opis zmian w wersja-robocza/ZMIANY.md
+const WERSJA = 2;          // numer wersji gry; opis zmian w wersja-robocza/ZMIANY.md
 
 /* ============================================================
    Helpers
@@ -23,9 +23,10 @@ const big = n => n >= 1e6 ? `${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1).replace('.', 
    Logical units: the world is always 400 wide and the ground line is fixed,
    so on every phone the meteors have the same way down to the dome
    ============================================================ */
-const W = 400, GROUND = 740, BOTTOM = 860;
+const W = 400, GROUND = 740, BOTTOM = 784;   // below the ground only a thin strip: the rest of the screen is sky
 const DOME_H = 100, DOME_RX = 232, DOME_TOP = GROUND - DOME_H;
 const FIELD_Y = 430;                       // middle of the slowing field
+const POLE = { charge: 3.5, dur: 5, launch: 0.35, open: 0.28, close: 0.3, linger: 3 };   // the field generator: seconds of each phase; meteors stay slow a while after leaving the field
 const SPAWN_Y = -40;
 const VISIBLE_Y = 40;                      // turrets aim only at meteors below this line
 const SLOT_X = [52, 124, 200, 276, 348];   // turret pads; the robot stands in the middle one
@@ -38,7 +39,7 @@ const domeY = x => { const u = (x - W / 2) / DOME_RX; return GROUND - DOME_H * M
    ============================================================ */
 const BAL = {
   baseHp: 3000,
-  hp0: 14, hpGrow: 45, hpPow: 1.1,         // meteor life: hp0 × (1 + t / hpGrow)^hpPow
+  hp0: 13, hpGrow: 45, hpPow: 1.1,         // meteor life: hp0 × (1 + t / hpGrow)^hpPow
   rate0: 0.9, rateGrow: 0.028,             // meteors per second: rate0 + rateGrow × t
   stageHp: 1.1, stageRate: 0.03,            // every next stage
   bossHp: 16000, bossSpeed: 7,
@@ -83,10 +84,10 @@ const WEAPONS = {
       { id: 'two', name: 'Drugi promień', text: 'Laser strzela dwoma promieniami', max: 1 },
     ],
     sup: { name: 'Laser bez przerwy', text: 'Laser świeci cały czas' } },
-  pole: { name: 'Pole spowalniające', short: 'Pole', color: '#5cf0c0', build: 'Pas w poprzek nieba: meteory w nim zwalniają i tracą życie',
+  pole: { name: 'Pole zwalniające', short: 'Pole', color: '#5cf0c0', build: 'Generator wystrzeliwuje pas, w którym meteory mocno zwalniają',
     ups: [
       { id: 'dur', name: 'Dłuższe pole', text: 'Pole działa o 30% dłużej', max: 3 },
-      { id: 'dmg', name: 'Parzące pole', text: 'Pole +60% obrażeń', max: 3 },
+      { id: 'charge', name: 'Szybsze ładowanie', text: 'Generator ładuje się o 25% szybciej', max: 2 },
       { id: 'slow', name: 'Gęste pole', text: 'Meteory w polu są jeszcze wolniejsze', max: 2 },
       { id: 'wide', name: 'Szersze pole', text: 'Pas pola o 40% szerszy', max: 2 },
     ],
@@ -135,7 +136,7 @@ function newBattle(stage, opts = {}) {
     baseMax: BAL.baseHp, baseHp: BAL.baseHp,
     enemies: [], bullets: [], shells: [], rockets: [], later: [],
     nums: [], booms: [], bolts: [], sparks: [], ev: [],
-    w: {}, combos: {}, dmg: {}, kills: 0, cards: [],
+    w: {}, combos: {}, dmg: {}, kills: 0, slowed: 0, cards: [],
     xp: 0, lvl: 1, need: BAL.xpNeed(1), pending: 0, rerolls: 1,
     spawnAcc: 0, nextSurge: 45, surge: null, boss: null, bossDone: false,
     domeFlash: 0, shake: 0, nextId: 1,
@@ -163,7 +164,7 @@ function spawnEnemy(G, kind, x, y) {
   const land = clamp(x0 + rand(-110, 110), 22, W - 22);       // a little slanted, but always onto the dome
   const e = { id: G.nextId++, kind, x: x0, y: y0, r: K.r, hp, max: hp, vx: (land - x0) * vy / (DOME_TOP + 20 - y0), vy,
     dmg: Math.round(K.dmg * (1 + t / 240)), xp: K.xp, slow: 0, stun: 0, burn: 0, burnT: 0, inc: 0, flash: 0,
-    pend: 0, pendT: 0, variant: randi(0, 2), slowShown: false, dead: false };
+    pend: 0, pendT: 0, variant: randi(0, 2), slowShown: false, slowT: 0, slowAmt: 0, dead: false };
   G.enemies.push(e);
   return e;
 }
@@ -400,20 +401,40 @@ function updLaser(G, w, dt) {
     if (BO) { const rx = BO.x - ox, ry = BO.y - oy; if (rx * dx + ry * dy > 0 && Math.abs(rx * dy - ry * dx) < BO.r) hurt(G, BO, dps * dt * (G.combos.zamroz && BO.slow > 0 ? 2 : 1), 'laser', false, true); }
   }
 }
+// The generator charges, fires a shot up to the sky, and the field spreads from there to both sides.
+// The field does not hurt: it only slows meteors down, so the other weapons have more time.
 function updPole(G, w, dt) {
-  cycle(G, w, dt, 3.5 * (1 + 0.3 * up(w, 'dur')), 4.5, 'pole');
-  w.h = 64 * (1 + 0.4 * up(w, 'wide'));
+  w.h = 80 * (1 + 0.4 * up(w, 'wide'));
+  w.kick = Math.max(0, w.kick - dt * 3);
+  if (!w.state) { w.state = 'charge'; w.phase = w.chargeT = 1.5; }      // the first field comes soon after building
+  w.phase -= dt;
+  if (w.state === 'charge') {
+    w.charge = clamp(1 - w.phase / w.chargeT, 0, 1);
+    if (!w.whine && w.phase < 1) { w.whine = true; emit(G, 'ladowanie'); }
+    if (w.phase <= 0) { w.state = 'launch'; w.phase = POLE.launch; w.charge = 0; w.kick = 1; emit(G, 'pole-strzal'); }
+  } else if (w.state === 'launch') {
+    if (w.phase <= 0) { w.state = 'open'; w.phase = POLE.open; emit(G, 'pole'); }
+  } else if (w.state === 'open') {
+    if (w.phase <= 0) { w.state = 'on'; w.phase = POLE.dur * (1 + 0.3 * up(w, 'dur')); }
+  } else if (w.state === 'on') {
+    if (w.sup) w.phase = Math.max(w.phase, 1);
+    if (w.phase <= 0) { w.state = 'close'; w.phase = POLE.close; }
+  } else if (w.state === 'close' && w.phase <= 0) {
+    w.state = 'charge'; w.phase = w.chargeT = POLE.charge * Math.pow(0.75, up(w, 'charge')); w.whine = false;
+  }
+  w.on = w.state === 'open' || w.state === 'on';
+  const u = w.state === 'open' ? 1 - w.phase / POLE.open : 1;
+  w.spread = w.state === 'open' ? 1 - (1 - u) * (1 - u) : w.state === 'on' || w.state === 'close' ? 1 : 0;
   if (!w.on) return;
-  const slow = Math.min(0.75, 0.45 + 0.12 * up(w, 'slow')), dps = 55 * (1 + 0.6 * up(w, 'dmg'));
+  const slow = Math.min(0.85, 0.7 + 0.075 * up(w, 'slow')), reach = 440 * w.spread;
   const y0 = FIELD_Y - w.h / 2, y1 = FIELD_Y + w.h / 2;
   for (const e of G.enemies) {
-    if (e.dead || e.y + e.r < y0 || e.y - e.r > y1) continue;
-    e.slow = Math.max(e.slow, slow);
-    hurt(G, e, dps * dt, 'pole', false, true);
-    if (!e.slowShown && G.fx && !e.dead) { e.slowShown = true; if (Math.random() < 0.35) G.nums.push({ x: e.x, y: e.y - 14, v: 'Wolniej', t: 0, slow: true }); }
+    if (e.dead || e.y + e.r < y0 || e.y - e.r > y1 || Math.abs(e.x - w.x) > reach) continue;
+    e.slow = Math.max(e.slow, slow); e.slowAmt = slow; e.slowT = POLE.linger;
+    if (!e.slowShown) { e.slowShown = true; G.slowed++; if (G.fx && Math.random() < 0.35) G.nums.push({ x: e.x, y: e.y - 14, v: 'Wolniej', t: 0, slow: true }); }
   }
   const B = G.boss;
-  if (B && B.y + B.r > y0) { B.slow = slow; hurt(G, B, dps * dt * 3, 'pole', false, true); }   // the field burns a long strip of the big Asteroid
+  if (B && B.y + B.r > y0) B.slow = slow;
 }
 function updDzialo(G, w, dt) {
   w.cd -= dt; w.kick = Math.max(0, w.kick - dt * 5);
@@ -557,7 +578,7 @@ function step(G, dt) {
   if (G.over || G.pending) return;
   G.t += dt;
   spawnUpdate(G, dt);
-  for (const e of G.enemies) e.slow = 0;
+  for (const e of G.enemies) { e.slowT -= dt; e.slow = e.slowT > 0 ? e.slowAmt : 0; }
   if (G.boss) G.boss.slow = 0;
   if (G.w.pole) updPole(G, G.w.pole, dt);
   for (const k in G.w) if (k !== 'pole') UPDATE[k](G, G.w[k], dt);
@@ -667,7 +688,7 @@ function store() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }
    Sound: effects made in code, music from Śmierdzipacha's folder
    ============================================================ */
 const Sound = (() => {
-  let ctx = null, master, musicBus, sfxBus, noise, unlocked = false, silent = null, cur = null, want = null;
+  let ctx = null, master, musicBus, sfxBus, noise, zaps = [], unlocked = false, silent = null, cur = null, want = null;
   const buffers = {}, loading = {}, lastAt = {};
   const LOOPS = { 'neon-walka': [0.5, 26.1], 'turbo-walka': [0.5, 27.928549], 'chill-bieg': [0.5, 46.214308] };
   function init() {
@@ -681,7 +702,35 @@ const Sound = (() => {
     sfxBus = ctx.createGain(); sfxBus.gain.value = save.sfx ? 0.8 : 0; sfxBus.connect(master);
     noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
     const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    zaps = [11, 23, 37].map(makeZap);
     return true;
+  }
+  // An electric discharge, made once: a sharp snap, a crackle of tiny sparks that thins out, and the buzz of the arc
+  function makeZap(seed) {
+    const sr = ctx.sampleRate, n = Math.floor(sr * 0.3), buf = ctx.createBuffer(1, n, sr), d = buf.getChannelData(0), R = seeded(seed);
+    const snap = Math.floor(sr * 0.012);
+    for (let i = 0; i < snap; i++) d[i] += (R() * 2 - 1) * (1 - i / snap);
+    for (let i = 0; i < n;) {
+      const t = i / n, len = Math.floor(sr * (0.0006 + R() * 0.0035)), amp = (0.45 + R() * 0.55) * Math.pow(1 - t, 1.4);
+      for (let j = 0; j < len && i + j < n; j++) d[i + j] += (R() * 2 - 1) * amp * (1 - j / len);
+      i += Math.floor(sr * (0.001 + R() * 0.009 * (0.3 + 2.5 * t)));
+    }
+    const f = 85 + R() * 45, step = Math.floor(sr * 0.005);
+    let a = 0, ph = 0;
+    for (let k = 0; k < n; k++) {
+      if (k % step === 0) a = 0.12 + R() * 0.4;
+      ph += f / sr;
+      d[k] += (2 * (ph % 1) - 1) * a * Math.pow(1 - k / n, 2.2) * 0.55;
+    }
+    for (let k = 0; k < n; k++) d[k] = Math.tanh(d[k] * 1.8) * 0.85;
+    return buf;
+  }
+  function zap(t, vol) {
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), gn = ctx.createGain();
+    s.buffer = pick(zaps); s.playbackRate.value = rand(0.85, 1.2);
+    f.type = 'highpass'; f.frequency.value = 500;
+    gn.gain.value = vol;
+    s.connect(f); f.connect(gn); gn.connect(sfxBus); s.start(t);
   }
   // A short silent WAV through an <audio> element lets iPhone sound play even with the ring switch set to silent
   function silentWav() {
@@ -735,11 +784,13 @@ const Sound = (() => {
       case 'pop': hiss(t, 0.07, 0.06, 'bandpass', rand(900, 1500), 1.5); break;
       case 'wybuch': hiss(t, 0.3, 0.18, 'lowpass', 700); tone('sine', 120, t, 0.22, 0.2, 45); break;
       case 'uderzenie': tone('sine', 90, t, 0.25, 0.32, 40); hiss(t, 0.2, 0.12, 'lowpass', 400); break;
-      case 'piorun': tone('sawtooth', 900, t, 0.12, 0.05, 160, 2500); hiss(t, 0.12, 0.08, 'highpass', 3000); break;
+      case 'piorun': zap(t, 0.3); break;
       case 'rakieta': hiss(t, 0.35, 0.08, 'bandpass', 1800, 0.8); break;
       case 'dzialo': tone('sine', 220, t, 0.12, 0.12, 80); break;
       case 'laser': tone('sawtooth', 300, t, 0.35, 0.04, 900, 1800); break;
-      case 'pole': tone('sine', 280, t, 0.4, 0.07, 620); break;
+      case 'ladowanie': tone('sine', 180, t, 1.0, 0.045, 950); tone('triangle', 183, t, 1.0, 0.03, 960); break;
+      case 'pole-strzal': hiss(t, 0.35, 0.14, 'bandpass', 900, 0.7); tone('sine', 160, t, 0.25, 0.18, 60); tone('square', 600, t, 0.3, 0.035, 1800, 2500); break;
+      case 'pole': tone('sine', 520, t, 0.45, 0.07, 500); tone('sine', 780, t + 0.03, 0.4, 0.05, 760); hiss(t, 0.35, 0.05, 'highpass', 4000); break;
       case 'poziom': [0, 4, 7, 12].forEach((s, i) => tone('triangle', 523.25 * Math.pow(2, s / 12), t + i * 0.07, 0.22, 0.12)); break;
       case 'karta': tone('triangle', 784, t, 0.12, 0.1); tone('triangle', 1175, t + 0.07, 0.2, 0.1); break;
       case 'roj': [0, 0.18].forEach(d => tone('square', 440, t + d, 0.12, 0.06, 330, 1500)); break;
@@ -984,11 +1035,30 @@ function drawTurret(x, key, cx, cy, w, tm) {
     x.fillStyle = '#e8ffe8'; x.fillRect(-5, -32, 10, 3);
     x.restore();
   } else if (key === 'pole') {
-    x.fillStyle = '#1b1f22'; x.fillRect(cx - 2, cy - 34, 4, 26);
-    x.beginPath(); x.moveTo(cx - 5, cy - 9); x.lineTo(cx, cy - 16); x.lineTo(cx + 5, cy - 9); x.fillStyle = '#5cf0c0'; x.fill();
-    rrect(x, cx - 15, cy - 42, 30, 9, 4.5); x.fillStyle = '#1b1f22'; x.fill();
-    const on = w && w.on ? 1 : 0.55;
-    for (const s of [-1, 1]) { glowDot(x, cx + s * 10, cy - 37.5, 9, `rgba(160,255,220,${on})`); x.fillStyle = '#eafff7'; x.beginPath(); x.arc(cx + s * 10, cy - 37.5, 3, 0, TAU); x.fill(); }
+    // the field generator: the bar on its mast fills while it charges, then it fires
+    const ch = !w || !w.state ? 1 : w.state === 'charge' ? w.charge : w.state === 'launch' ? 1 : 0.2;
+    x.fillStyle = '#1b1f22'; rrect(x, cx - 4.5, cy - 37, 9, 30, 3); x.fill();
+    x.fillStyle = '#0b2a24'; x.fillRect(cx - 2, cy - 34, 4, 24);
+    x.fillStyle = '#6ff5d2'; x.fillRect(cx - 2, cy - 10 - 24 * ch, 4, 24 * ch);
+    if (ch > 0.05) glowDot(x, cx, cy - 10 - 24 * ch, 7, 'rgba(120,255,215,0.9)', ch);
+    x.beginPath(); x.moveTo(cx - 6, cy - 9); x.lineTo(cx, cy - 16); x.lineTo(cx + 6, cy - 9); x.fillStyle = '#5cf0c0'; x.fill();
+    rrect(x, cx - 16, cy - 45, 32, 10, 5); x.fillStyle = '#1b1f22'; x.fill();
+    const eye = Math.min(1, 0.3 + 0.7 * ch + kick);
+    for (const s of [-1, 1]) { glowDot(x, cx + s * 10, cy - 40, 8 + 6 * eye, 'rgba(160,255,220,0.95)', eye); x.fillStyle = '#eafff7'; x.beginPath(); x.arc(cx + s * 10, cy - 40, 3, 0, TAU); x.fill(); }
+    if (w && w.state === 'charge') {   // a ring around the head fills up while the generator charges
+      x.lineCap = 'round'; x.lineWidth = 3;
+      x.strokeStyle = 'rgba(110,255,210,0.18)'; x.beginPath(); x.arc(cx, cy - 40, 21, 0, TAU); x.stroke();
+      x.strokeStyle = ch > 0.97 && tm % 0.2 < 0.1 ? '#ffffff' : '#6ff5d2';
+      x.beginPath(); x.arc(cx, cy - 40, 21, -Math.PI / 2, -Math.PI / 2 + TAU * ch); x.stroke();
+    }
+    if (w && w.state === 'charge' && ch > 0.55) {   // energy streams into the generator just before the shot
+      const k = (ch - 0.55) / 0.45;
+      for (let i = 0; i < 7; i++) {
+        const u = (tm * 1.7 + i / 7) % 1, a = i * TAU / 7 + 0.4, d = 30 * (1 - u);
+        glowDot(x, cx + Math.cos(a) * d, cy - 40 + Math.sin(a) * d * 0.7, 4.5, 'rgba(150,255,220,0.95)', k * u);
+      }
+    }
+    if (kick > 0) glowDot(x, cx, cy - 41, 12 + 30 * kick, 'rgba(170,255,225,0.9)', kick);
   } else if (key === 'dzialo') {
     const a = w ? w.ang : -0.4;
     x.save(); x.translate(cx, cy - 12); x.rotate(a);
@@ -1035,16 +1105,39 @@ function render(G, real) {
     if (B.flash > 0) { ctx.globalAlpha = 0.25; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(B.x, B.y, B.r, 0, TAU); ctx.fill(); ctx.globalAlpha = 1; }
     ctx.globalCompositeOperation = 'source-over';
   }
-  // the slowing field
+  // the slowing field: the shot from the generator, then the band spreading to both sides
   const P = G.w.pole;
-  if (P && P.on) {
-    const y0 = FIELD_Y - P.h / 2, pulse = 0.75 + Math.sin(tm * 6) * 0.08;
-    const g = ctx.createLinearGradient(0, y0, 0, y0 + P.h);
-    g.addColorStop(0, `rgba(110,255,200,${0.42 * pulse})`); g.addColorStop(0.5, `rgba(70,220,170,${0.2 * pulse})`); g.addColorStop(1, `rgba(110,255,200,${0.42 * pulse})`);
+  if (P && P.state === 'launch') {
+    const u = 1 - P.phase / POLE.launch, e = 1 - (1 - u) * (1 - u), y = GROUND - 45 + (FIELD_Y - GROUND + 45) * e;
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(110,255,205,0.35)'; ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(P.x, Math.min(GROUND - 45, y + 90)); ctx.lineTo(P.x, y); ctx.stroke();
+    ctx.strokeStyle = 'rgba(220,255,240,0.9)'; ctx.lineWidth = 3; ctx.stroke();
+    glowDot(ctx, P.x, y, 30, 'rgba(150,255,220,0.95)'); glowDot(ctx, P.x, y, 10, 'rgba(245,255,250,1)');
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  if (P && (P.on || P.state === 'close')) {
     const L = -view.ox / view.s, R = W + view.ox / view.s;
-    ctx.fillStyle = g; ctx.fillRect(L, y0, R - L, P.h);
-    ctx.fillStyle = 'rgba(150,255,215,0.85)'; ctx.fillRect(L, y0, R - L, 2); ctx.fillRect(L, y0 + P.h - 2, R - L, 2);
-    for (const ex of [4, W - 4]) { ctx.fillStyle = '#1b1f22'; ctx.beginPath(); ctx.arc(ex, FIELD_Y, 7, 0, TAU); ctx.fill(); glowDot(ctx, ex, FIELD_Y, 10, 'rgba(160,255,220,0.9)'); }
+    const fade = P.state === 'close' ? P.phase / POLE.close : 1, h = P.h * (0.25 + 0.75 * fade), y0 = FIELD_Y - h / 2;
+    const reach = 440 * P.spread, x0 = Math.max(L, P.x - reach), x1 = Math.min(R, P.x + reach);
+    const pulse = (0.75 + Math.sin(tm * 6) * 0.08) * fade;
+    const g = ctx.createLinearGradient(0, y0, 0, y0 + h);
+    g.addColorStop(0, `rgba(110,255,200,${0.42 * pulse})`); g.addColorStop(0.5, `rgba(70,220,170,${0.2 * pulse})`); g.addColorStop(1, `rgba(110,255,200,${0.42 * pulse})`);
+    ctx.fillStyle = g; ctx.fillRect(x0, y0, x1 - x0, h);
+    ctx.fillStyle = `rgba(150,255,215,${0.85 * fade})`; ctx.fillRect(x0, y0, x1 - x0, 2); ctx.fillRect(x0, y0 + h - 2, x1 - x0, 2);
+    ctx.globalCompositeOperation = 'lighter';
+    // light ripples running along the band
+    for (let i = 0; i < 4; i++) {
+      const rx = L + ((tm * 90 + i * (R - L) / 4) % (R - L));
+      if (rx > x0 && rx < x1) glowDot(ctx, rx, FIELD_Y, h * 0.7, 'rgba(120,255,210,0.35)', fade);
+    }
+    if (P.state === 'open') {
+      const u = 1 - P.phase / POLE.open;
+      glowDot(ctx, P.x, FIELD_Y, 60 * (1 - u) + 20, 'rgba(200,255,235,0.95)', 1 - u);
+      for (const fx of [x0, x1]) { ctx.fillStyle = 'rgba(210,255,240,0.9)'; ctx.fillRect(fx - 1.5, y0 - 6, 3, h + 12); glowDot(ctx, fx, FIELD_Y, h * 0.8, 'rgba(150,255,220,0.8)'); }
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    if (P.spread >= 1) for (const ex of [4, W - 4]) { ctx.fillStyle = '#1b1f22'; ctx.beginPath(); ctx.arc(ex, FIELD_Y, 7, 0, TAU); ctx.fill(); glowDot(ctx, ex, FIELD_Y, 10, 'rgba(160,255,220,0.9)', fade); }
   }
   // meteors
   const base = view.k, ox = (view.ox + sx) * view.dpr, oy = (view.oy + sy) * view.dpr;
@@ -1055,6 +1148,7 @@ function render(G, real) {
     ctx.drawImage(S.c, -S.ax, -S.ay, S.w, S.h);
     if (e.flash > 0) { ctx.globalAlpha = 0.55; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, e.r, 0, TAU); ctx.fill(); ctx.globalAlpha = 1; }
     if (e.burnT > 0) { ctx.globalAlpha = 0.6; glowDot(ctx, 0, -2, e.r * 1.3, 'rgba(255,120,30,0.9)'); ctx.globalAlpha = 1; }
+    if (e.slow > 0) glowDot(ctx, 0, 0, e.r * 1.9, 'rgba(110,255,210,0.5)', Math.min(1, e.slowT + 0.3));
     if (e.stun > 0) { ctx.strokeStyle = 'rgba(220,180,255,0.9)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0, 0, e.r + 3, 0, TAU); ctx.stroke(); }
   }
   toWorld(sx, sy);
@@ -1275,7 +1369,8 @@ function showResult() {
   $('resStage').textContent = `Etap ${G.stage}`;
   $('resStats').innerHTML = `<div><b>${mmss(G.t)}</b><span>czas</span></div><div><b>${G.kills}</b><span>meteory</span></div><div><b>${Math.round(100 * G.baseHp / G.baseMax)}%</b><span>życie bazy</span></div>`;
   const rows = Object.keys(G.w).map(k => ({ k, d: G.dmg[k] || 0, t: Math.max(1, G.t - G.w[k].built) })).sort((a, b) => b.d - a.d);
-  $('resTable').innerHTML = rows.map(r => `<tr><td><img src="${iconFor(r.k)}" alt=""><span>${WEAPONS[r.k].name}</span><span class="stars">${starsHtml(G.w[r.k])}</span></td><td>${big(r.d)}</td><td>${big(r.d / r.t)}</td></tr>`).join('');
+  $('resTable').innerHTML = rows.map(r => `<tr><td><img src="${iconFor(r.k)}" alt=""><span>${WEAPONS[r.k].name}</span><span class="stars">${starsHtml(G.w[r.k])}</span></td>`
+    + (r.k === 'pole' ? `<td>${big(G.slowed)}<small>spowolnione meteory</small></td><td>–</td></tr>` : `<td>${big(r.d)}</td><td>${big(r.d / r.t)}</td></tr>`)).join('');
   $('btnNext').hidden = !win;
   $('btnNext').textContent = `Etap ${G.stage + 1}`;
   show('scrResult');

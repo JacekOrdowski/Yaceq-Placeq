@@ -8,6 +8,34 @@ Gra jest pod adresem https://jacekordowski.github.io/Yaceq-Placeq/wersja-robocza
 
 ---
 
+## Wersja 2 (24 października 2026)
+
+### Dodane
+- **Generator pola widać przy pracy:** pierścień wokół jego głowicy i pasek na maszcie pokazują ładowanie, a tuż przed strzałem
+  wpada do niego energia. Potem generator wystrzeliwuje świecący pocisk w górę, pole rozwija się od tego miejsca w obie strony,
+  a na koniec gaśnie.
+- Spowolnione meteory świecą na zielono i zostają wolniejsze jeszcze przez 3 sekundy po wyjściu z pola.
+- Nowe ulepszenie pola: **Szybsze ładowanie** (generator ładuje się o 25% szybciej).
+- W tabeli po bitwie pole pokazuje, ile meteorów spowolniło.
+- Dźwięki generatora: ładowanie, strzał i rozwinięcie pola.
+
+### Zmienione
+- **Grunt jest niżej:** pod bazą został tylko wąski pasek, a nad nią jest więcej nieba, więc meteory widać wcześniej.
+- **Pole spowalniające to teraz Pole zwalniające:** już nie parzy (nie zadaje obrażeń), za to mocniej zwalnia
+  (o 70% zamiast 45%, z ulepszeniami do 85%), jest szersze, działa dłużej (5 s zamiast 3,5 s) i ładuje się krócej (3,5 s).
+- **Dźwięk pioruna** to teraz trzask wyładowania elektrycznego: ostre trzaśnięcie, iskrzenie i brzęczenie łuku, w 3 odmianach.
+- Meteory są trochę słabsze, żeby wyrównać brak obrażeń od pola.
+
+### Usunięte
+- Ulepszenie „Parzące pole”.
+
+### Do sprawdzenia
+- Jak brzmi nowy dźwięk pioruna na telefonie (sprawdzony tylko na wykresie dźwięku: trzask na początku, potem gasnące iskrzenie).
+- Trudność według programu (60 bitew na etap): etap 1 95–97%, etap 3 67–92%, etap 5 42–47%, etap 6 15–45%.
+  Pole się opłaca: na etapie 1 z polem wygrywa się tak samo często jak bez niego.
+
+---
+
 ## Wersja 1 (24 października 2026)
 
 Zapis w repozytorium: `bb29de7`
