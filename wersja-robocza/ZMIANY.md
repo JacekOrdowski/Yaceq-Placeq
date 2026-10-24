@@ -8,6 +8,36 @@ Gra jest pod adresem https://jacekordowski.github.io/Yaceq-Placeq/wersja-robocza
 
 ---
 
+## Wersja 3 (24 października 2026)
+
+### Dodane
+- **Sterowanie palcem:** Strażnik chodzi w lewo i w prawo tam, gdzie jest palec. Dotykać można w dowolnym miejscu ekranu,
+  liczy się tylko lewo i prawo. Na komputerze działają strzałki albo klawisze A i D.
+- **Meteory lecą falami:** z lewej, z prawej, na środek albo wszędzie naraz (fal „wszędzie naraz” jest więcej im dalej w bitwie).
+  Rój meteorów też leci z jednej strony, a napis mówi z której.
+- Strażnik sam robi się trochę silniejszy z każdym poziomem (o 4%), niezależnie od wybranych kart.
+- Napis na początku bitwy: „Przesuwaj palcem w lewo i w prawo!”.
+
+### Zmienione
+- **Strażnik strzela prosto w górę** i już nie celuje sam. Pełna moc jest tylko na wprost. Dodatkowe lufy dają pociski obok,
+  lekko rozchylone. Deszcz pocisków: co 4 sekundy wachlarz 10 pocisków (było co 3 sekundy 14).
+- Strażnik strzela szybciej i mocniej (seria co 0,3 s zamiast 0,36 s, 18 obrażeń zamiast 15).
+- **Wieżyczki obok są słabsze:** laser, działo, piorun, rakiety i połączenia zadają 40% tego co wcześniej. Pole zwalniające bez zmian.
+- Meteory spadają prawie pionowo (wcześniej ukośnie).
+- Pierwsza karta to dwie wieżyczki i jedno ulepszenie Strażnika (wcześniej trzy wieżyczki).
+- Asteroida ma więcej życia (24 000 zamiast 16 000), bo Strażnik bije mocniej. Meteory na starcie są trochę słabsze.
+
+### Do sprawdzenia
+- Wyniki programu (3 sprawdzenia po 60 bitew na każdym etapie):
+  - Strażnik stoi na środku: przegrywa praktycznie zawsze, nawet gdy wszystkie karty idą w wieżyczki
+    (1 wygrana na 180 bitew etapu 1, poza tym ani jednej),
+  - dobry gracz (rusza się co 0,2 s) i rozsądne karty: etap 1 97–100%, etap 5 85–95%,
+  - dobry gracz i karty na chybił trafił: etap 1 77–85%, etap 5 25–35%,
+  - słaby gracz (rusza się co 0,5 s i nie zawsze trafia w miejsce) i karty na chybił trafił: etap 1 68–77%, etap 5 32–37%.
+- Czy palcem steruje się wygodnie i czy Strażnik nie chodzi za wolno albo za szybko.
+
+---
+
 ## Wersja 2 (24 października 2026)
 
 Zapis w repozytorium: `b1df586`

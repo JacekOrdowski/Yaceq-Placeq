@@ -1,10 +1,11 @@
 /* Wersja robocza: nowa gra na telefon (na razie bez zadań, najpierw grywalność).
-   Baza pod kopułą broni się przed deszczem meteorów. Wieżyczki strzelają same, a gracz po każdym nowym poziomie
-   wybiera jedną z trzech kart: nową wieżyczkę albo ulepszenie. Na końcu etapu przylatuje Asteroida. */
+   Baza pod kopułą broni się przed deszczem meteorów. Gracz przesuwa palcem robota, który strzela prosto w górę,
+   wieżyczki pomagają z boku, a po każdym nowym poziomie gracz wybiera jedną z trzech kart: nową wieżyczkę albo ulepszenie.
+   Na końcu etapu przylatuje Asteroida. */
 (() => {
 'use strict';
 const HAS_DOM = typeof document !== 'undefined';
-const WERSJA = 2;          // numer wersji gry; opis zmian w wersja-robocza/ZMIANY.md
+const WERSJA = 3;          // numer wersji gry; opis zmian w wersja-robocza/ZMIANY.md
 
 /* ============================================================
    Helpers
@@ -32,6 +33,10 @@ const VISIBLE_Y = 40;                      // turrets aim only at meteors below 
 const SLOT_X = [52, 124, 200, 276, 348];   // turret pads; the robot stands in the middle one
 const ROBOT_SLOT = 2, BUILD_ORDER = [1, 3, 0, 4];
 const TIME_BOSS = 210;                     // the Asteroid comes at 3:30
+const ROBOT_SPEED = 650;                   // how fast the robot walks after the finger
+const ROBOT_GUN_Y = GROUND - 54;
+// meteors come in waves: from the left, from the right, onto the middle, or everywhere at once
+const ZONES = { lewa: [22, 150], srodek: [136, 264], prawa: [250, 378], wszedzie: [22, 378] };
 const domeY = x => { const u = (x - W / 2) / DOME_RX; return GROUND - DOME_H * Math.sqrt(Math.max(0, 1 - u * u)); };
 
 /* ============================================================
@@ -39,10 +44,12 @@ const domeY = x => { const u = (x - W / 2) / DOME_RX; return GROUND - DOME_H * M
    ============================================================ */
 const BAL = {
   baseHp: 3000,
-  hp0: 13, hpGrow: 45, hpPow: 1.1,         // meteor life: hp0 × (1 + t / hpGrow)^hpPow
+  hp0: 11, hpGrow: 45, hpPow: 1.1,         // meteor life: hp0 × (1 + t / hpGrow)^hpPow
   rate0: 0.9, rateGrow: 0.028,             // meteors per second: rate0 + rateGrow × t
   stageHp: 1.1, stageRate: 0.03,            // every next stage
-  bossHp: 16000, bossSpeed: 7,
+  bossHp: 24000, bossSpeed: 7,
+  robotLvl: 0.04,                          // the robot's own growth per level
+  side: 0.4,                               // strength of the turrets beside the robot (1 = as strong as in version 2)
   xpNeed: L => Math.round(4 + 3.5 * L + 0.22 * L * L),
 };
 const KINDS = {
@@ -67,15 +74,15 @@ function spawnKind(t) {
    Every card adds a star; after 4 stars the weapon's super card can come
    ============================================================ */
 const WEAPONS = {
-  robot: { name: 'Strażnik', short: 'Strażnik', color: '#6ff4ff', build: 'Robot w środku bazy, strzela seriami pocisków',
+  robot: { name: 'Strażnik', short: 'Strażnik', color: '#6ff4ff', build: 'Robot, którego przesuwasz palcem. Strzela prosto w górę',
     ups: [
-      { id: 'multi', name: 'Dodatkowa lufa', text: '+1 pocisk w każdej serii', max: 3 },
+      { id: 'multi', name: 'Dodatkowa lufa', text: '+1 pocisk obok, lekko rozchylony', max: 3 },
       { id: 'dmg', name: 'Mocniejsze pociski', text: 'Pociski Strażnika +50% obrażeń', max: 3 },
       { id: 'rate', name: 'Szybkie strzelanie', text: 'Strażnik strzela o 30% szybciej', max: 3 },
       { id: 'pierce', name: 'Przebijające pociski', text: 'Pocisk przebija o 1 meteor więcej', max: 2 },
       { id: 'crit', name: 'Celne oko', text: '+15% szans na podwójne trafienie', max: 2 },
     ],
-    sup: { name: 'Deszcz pocisków', text: 'Co 3 sekundy wachlarz 14 pocisków' } },
+    sup: { name: 'Deszcz pocisków', text: 'Co 4 sekundy wachlarz 10 pocisków' } },
   laser: { name: 'Laser', short: 'Laser', color: '#59ff7a', build: 'Zielony promień rani wszystko na swojej drodze',
     ups: [
       { id: 'dmg', name: 'Mocniejszy laser', text: 'Laser +50% obrażeń', max: 3 },
@@ -138,7 +145,7 @@ function newBattle(stage, opts = {}) {
     nums: [], booms: [], bolts: [], sparks: [], ev: [],
     w: {}, combos: {}, dmg: {}, kills: 0, slowed: 0, cards: [],
     xp: 0, lvl: 1, need: BAL.xpNeed(1), pending: 0, rerolls: 1,
-    spawnAcc: 0, nextSurge: 45, surge: null, boss: null, bossDone: false,
+    spawnAcc: 0, nextSurge: 45, surge: null, wave: null, lastZone: null, aim: W / 2, boss: null, bossDone: false,
     domeFlash: 0, shake: 0, nextId: 1,
   };
   addWeapon(G, 'robot');
@@ -151,7 +158,7 @@ function addWeapon(G, key) {
   const used = Object.values(G.w).map(w => w.slot);
   const slot = key === 'robot' ? ROBOT_SLOT : BUILD_ORDER.find(s => !used.includes(s));
   G.w[key] = { key, slot, x: SLOT_X[slot], ups: {}, stars: 0, sup: false, cd: 0.4, supCd: 2, ang: 0, kick: 0,
-    on: false, phase: 0.4, h: 64, beams: [], volleys: 0, side: 0, built: G.t };
+    on: false, phase: 0.4, h: 64, beams: [], volleys: 0, side: 0, built: G.t, vx: 0, step: 0 };
   if (!(key in G.dmg)) G.dmg[key] = 0;
 }
 
@@ -159,10 +166,9 @@ function addWeapon(G, key) {
 function spawnEnemy(G, kind, x, y) {
   const K = KINDS[kind], t = G.demo ? 25 : Math.min(G.t, TIME_BOSS);
   const hp = BAL.hp0 * Math.pow(1 + t / BAL.hpGrow, BAL.hpPow) * K.hp * G.hpMul;
-  const x0 = x ?? rand(18, W - 18), y0 = y ?? SPAWN_Y - rand(0, 60);
+  const x0 = x ?? rand(22, W - 22), y0 = y ?? SPAWN_Y - rand(0, 60);
   const vy = rand(K.v[0], K.v[1]);
-  const land = clamp(x0 + rand(-110, 110), 22, W - 22);       // a little slanted, but always onto the dome
-  const e = { id: G.nextId++, kind, x: x0, y: y0, r: K.r, hp, max: hp, vx: (land - x0) * vy / (DOME_TOP + 20 - y0), vy,
+  const e = { id: G.nextId++, kind, x: x0, y: y0, r: K.r, hp, max: hp, vx: rand(-5, 5), vy,   // almost straight down
     dmg: Math.round(K.dmg * (1 + t / 240)), xp: K.xp, slow: 0, stun: 0, burn: 0, burnT: 0, inc: 0, flash: 0,
     pend: 0, pendT: 0, variant: randi(0, 2), slowShown: false, slowT: 0, slowAmt: 0, dead: false };
   G.enemies.push(e);
@@ -172,19 +178,29 @@ function spawnUpdate(G, dt) {
   const t = G.demo ? 25 : G.t;
   let rate = (BAL.rate0 + BAL.rateGrow * Math.min(t, TIME_BOSS)) * G.rateMul;
   if (G.boss) rate *= 0.35;
+  // the next wave: left, middle or right (never the same side twice in a row), now and then everywhere at once
+  if (!G.wave || (G.wave.t -= dt) <= 0) {
+    const all = G.t > 25 && Math.random() < Math.min(0.3, 0.1 + G.t / 1000);
+    const sides = ['lewa', 'srodek', 'prawa'].filter(z => z !== G.lastZone);
+    const zone = all ? 'wszedzie' : pick(sides);
+    G.wave = { zone, t: rand(3.5, 6) };
+    if (zone !== 'wszedzie') G.lastZone = zone;
+  }
   G.spawnAcc += rate * dt;
-  while (G.spawnAcc >= 1) { G.spawnAcc -= 1; spawnEnemy(G, spawnKind(t)); }
+  while (G.spawnAcc >= 1) { G.spawnAcc -= 1; const Z = ZONES[G.wave.zone]; spawnEnemy(G, spawnKind(t), rand(Z[0], Z[1])); }
   if (G.demo) return;
-  // a swarm every 35 seconds
+  // a swarm every 35 seconds, from one side
   if (!G.boss && t >= G.nextSurge && t < TIME_BOSS - 15) {
-    G.surge = { left: Math.round((8 + t / 12) * G.rateMul), cx: rand(90, 310), acc: 0 };
-    G.nextSurge += 35; emit(G, 'roj');
+    const zone = pick(['lewa', 'srodek', 'prawa']);
+    G.surge = { left: Math.round((8 + t / 12) * G.rateMul), zone, acc: 0 };
+    G.nextSurge += 35; emit(G, `roj-${zone}`);
   }
   if (G.surge) {
     G.surge.acc += dt * 7;
     while (G.surge.acc >= 1 && G.surge.left > 0) {
       G.surge.acc -= 1; G.surge.left--;
-      spawnEnemy(G, Math.random() < 0.2 ? 'shard' : 'meteor', clamp(G.surge.cx + rand(-70, 70), 18, W - 18));
+      const Z = ZONES[G.surge.zone];
+      spawnEnemy(G, Math.random() < 0.2 ? 'shard' : 'meteor', rand(Z[0], Z[1]));
     }
     if (G.surge.left <= 0) G.surge = null;
   }
@@ -205,7 +221,7 @@ function bossUpdate(G, dt) {
   B.spit -= dt;
   if (B.spit <= 0) {
     B.spit = 2.4;
-    for (let i = 0; i < 3; i++) spawnEnemy(G, Math.random() < 0.3 ? 'shard' : 'meteor', clamp(B.x + rand(-0.75, 0.75) * B.r, 18, W - 18), B.y + B.r * 0.75);
+    for (let i = 0; i < 3; i++) spawnEnemy(G, Math.random() < 0.3 ? 'shard' : 'meteor', clamp(B.x + rand(-0.85, 0.85) * B.r, 22, W - 22), B.y + B.r * 0.75);
   }
   popPending(G, B, dt);
   if (B.y + B.r * 0.86 >= DOME_TOP) { G.baseHp = 0; G.domeFlash = 1; G.shake = 1; }
@@ -276,7 +292,7 @@ function explode(G, x, y, rad, dmg, src, burn, second) {
     G.later.push({ at: G.t + 0.3, x, y, rad, dmg: dmg * 0.7, src, burn, second: true });
   if (src === 'rakiety' && G.combos.roj) {
     const near = G.enemies.filter(e => !e.dead && Math.hypot(e.x - x, e.y - y) < 130).slice(0, 3);
-    for (const e of near) lightning(G, x, y, e, 0, 28 * (1 + 0.5 * up(G.w.piorun, 'dmg')), 'piorun', 0);
+    for (const e of near) lightning(G, x, y, e, 0, 28 * BAL.side * (1 + 0.5 * up(G.w.piorun, 'dmg')), 'piorun', 0);
   }
 }
 function lightning(G, x0, y0, first, jumps, dmg, src, stun) {
@@ -341,33 +357,33 @@ function fireBullet(G, x, y, a, dmg, pierce, crit, tgt) {
   G.bullets.push({ x, y, vx: Math.sin(a) * 950, vy: -Math.cos(a) * 950, dmg, pierce, crit, tgt, hits: [], dead: false });
   if (tgt) tgt.inc += dmg;
 }
+// The robot walks after the finger and always shoots straight up: full power only right in front of it.
+// Extra barrels add bullets beside, a little spread out, but never enough to cover the whole sky.
 function updRobot(G, w, dt) {
-  const interval = 0.36 / (1 + 0.3 * up(w, 'rate'));
-  const n = 1 + up(w, 'multi'), dmg = 15 * (1 + 0.5 * up(w, 'dmg')), pierce = up(w, 'pierce'), crit = 0.15 * up(w, 'crit');
-  const ox = W / 2, oy = GROUND - 44;
+  const tx = clamp(G.aim, 22, W - 22), x0 = w.x;
+  w.x += clamp(tx - w.x, -ROBOT_SPEED * dt, ROBOT_SPEED * dt);
+  w.vx = (w.x - x0) / dt; w.step += Math.abs(w.x - x0);
+  const interval = 0.3 / (1 + 0.3 * up(w, 'rate'));
+  // every new level makes the robot a little stronger by itself, whatever cards were picked
+  const n = 1 + up(w, 'multi'), dmg = 18 * (1 + 0.5 * up(w, 'dmg')) * (1 + BAL.robotLvl * (G.lvl - 1)), pierce = up(w, 'pierce'), crit = 0.15 * up(w, 'crit');
   w.cd -= dt; w.kick = Math.max(0, w.kick - dt * 7);
-  const tg = lowest(G, true);
-  let want = 0;
-  if (tg) {
-    const ty = aimY(tg), d = Math.hypot(tg.x - ox, ty - oy), lt = d / 950, f = speedOf(tg);
-    const px = tg.x + (tg.vx || 0) * f * lt, py = ty + (tg.vy || 0) * f * lt;
-    want = Math.atan2(px - ox, oy - py);
-  }
-  w.ang += clamp(want - w.ang, -dt * 9, dt * 9);
   if (w.cd <= 0) {
-    if (!tg) w.cd = 0;
-    else {
-      w.cd = Math.max(0, w.cd + interval);
-      for (let i = 0; i < n; i++) fireBullet(G, ox + Math.sin(w.ang) * 22, oy - Math.cos(w.ang) * 22, w.ang + (i - (n - 1) / 2) * 0.055, dmg, pierce, crit, i === 0 ? tg : null);
-      w.volleys++; w.kick = 1; w.side ^= 1;
-      if (G.combos.iskra && G.w.piorun && w.volleys % 5 === 0) lightning(G, ox, oy - 10, tg, 3, 26 * (1 + 0.5 * up(G.w.piorun, 'dmg')), 'piorun', 0);
-      emit(G, 'strzal');
-    }
+    w.cd = Math.max(0, w.cd + interval);
+    for (let i = 0; i < n; i++) { const k = i - (n - 1) / 2; fireBullet(G, w.x + k * 7, ROBOT_GUN_Y, k * 0.035, dmg, pierce, crit, null); }
+    w.volleys++; w.kick = 1; w.side ^= 1;
+    if (G.combos.iskra && G.w.piorun && w.volleys % 5 === 0) { const tg = lowest(G, false); if (tg) lightning(G, w.x, ROBOT_GUN_Y, tg, 3, 26 * BAL.side * (1 + 0.5 * up(G.w.piorun, 'dmg')), 'piorun', 0); }
+    emit(G, 'strzal');
   }
   if (w.sup) {
     w.supCd -= dt;
-    if (w.supCd <= 0) { w.supCd = 3; for (let i = 0; i < 14; i++) fireBullet(G, ox, oy, -1.05 + 2.1 * i / 13, dmg, pierce + 1, crit, null); emit(G, 'salwa'); }
+    if (w.supCd <= 0) { w.supCd = 4; for (let i = 0; i < 10; i++) fireBullet(G, w.x, ROBOT_GUN_Y, -0.45 + 0.9 * i / 9, dmg, pierce + 1, crit, null); emit(G, 'salwa'); }
   }
+}
+// The demo in the menu walks by itself after the most dangerous meteor
+function autoAim(G) {
+  let best = null, by = -1e9;
+  for (const e of G.enemies) if (!e.dead && e.y > 0 && e.y > by) { by = e.y; best = e; }
+  return best ? best.x : W / 2;
 }
 function cycle(G, w, dt, dur, cool, sound) {
   if (w.sup) { w.on = true; return; }
@@ -388,7 +404,7 @@ function updLaser(G, w, dt) {
     B.ang += clamp(want - B.ang, -dt * 2.4, dt * 2.4);
   }
   if (!w.on) return;
-  const width = 9 * (1 + 0.6 * up(w, 'wide')), dps = 60 * (1 + 0.5 * up(w, 'dmg'));
+  const width = 9 * (1 + 0.6 * up(w, 'wide')), dps = 60 * BAL.side * (1 + 0.5 * up(w, 'dmg'));
   for (const B of w.beams) {
     const dx = Math.sin(B.ang), dy = -Math.cos(B.ang);
     for (const e of G.enemies) {
@@ -438,7 +454,7 @@ function updPole(G, w, dt) {
 }
 function updDzialo(G, w, dt) {
   w.cd -= dt; w.kick = Math.max(0, w.kick - dt * 5);
-  const n = 1 + up(w, 'more'), rad = 42 * (1 + 0.3 * up(w, 'big')), dmg = 40 * (1 + 0.5 * up(w, 'dmg'));
+  const n = 1 + up(w, 'more'), rad = 42 * (1 + 0.3 * up(w, 'big')), dmg = 40 * BAL.side * (1 + 0.5 * up(w, 'dmg'));
   if (w.cd <= 0) {
     const tg = clusterTarget(G);
     if (!tg) w.cd = 0.2;
@@ -471,7 +487,7 @@ function updPiorun(G, w, dt) {
   const tg = lowest(G, false);
   if (!tg) { w.cd = 0.2; return; }
   w.cd = 1.25 * Math.pow(0.78, up(w, 'fast'));
-  const jumps = 3 + 2 * up(w, 'jump'), dmg = 30 * (1 + 0.5 * up(w, 'dmg')), stun = up(w, 'stun') ? 0.45 : 0;
+  const jumps = 3 + 2 * up(w, 'jump'), dmg = 30 * BAL.side * (1 + 0.5 * up(w, 'dmg')), stun = up(w, 'stun') ? 0.45 : 0;
   lightning(G, w.x, GROUND - 52, tg, jumps, dmg, 'piorun', stun);
   if (w.sup) {
     const V = visible(G);
@@ -481,7 +497,7 @@ function updPiorun(G, w, dt) {
 }
 function launchRocket(G, w, i, n, tgt) {
   G.rockets.push({ x: w.x + (i - (n - 1) / 2) * 5, y: GROUND - 40, vx: rand(-120, 120), vy: -250, tgt,
-    dmg: 55 * (1 + 0.5 * up(w, 'dmg')), rad: 34 * (1 + 0.35 * up(w, 'big')), t: 0, dead: false, smoke: 0 });
+    dmg: 55 * BAL.side * (1 + 0.5 * up(w, 'dmg')), rad: 34 * (1 + 0.35 * up(w, 'big')), t: 0, dead: false, smoke: 0 });
 }
 function updRakiety(G, w, dt) {
   w.cd -= dt; w.kick = Math.max(0, w.kick - dt * 4);
@@ -577,6 +593,7 @@ function moveRockets(G, dt) {
 function step(G, dt) {
   if (G.over || G.pending) return;
   G.t += dt;
+  if (G.demo) G.aim = autoAim(G);
   spawnUpdate(G, dt);
   for (const e of G.enemies) { e.slowT -= dt; e.slow = e.slowT > 0 ? e.slowAmt : 0; }
   if (G.boss) G.boss.slow = 0;
@@ -633,7 +650,10 @@ function stepFx(G, dt) {
 function makeOffer(G) {
   const C = [], built = Object.keys(G.w), turrets = built.length - 1;
   for (const k of TURRETS) if (!G.w[k] && built.length < 5) C.push({ type: 'build', w: k, weight: turrets < 2 ? 1.8 : 1 });
-  if (turrets === 0) return shuffle(C).slice(0, 3);          // the first card: always three new turrets
+  if (turrets === 0) {          // the first card: two new turrets and one upgrade of the robot
+    const u = pick(WEAPONS.robot.ups);
+    return shuffle([...shuffle(C).slice(0, 2), { type: 'up', w: 'robot', id: u.id, weight: 1 }]);
+  }
   for (const k of built) {
     const w = G.w[k];
     for (const u of WEAPONS[k].ups) if (up(w, u.id) < u.max) C.push({ type: 'up', w: k, id: u.id, weight: 1 });
@@ -999,19 +1019,20 @@ function drawPad(x, cx, cy, lit) {
   if (lit) { glowDot(x, cx, cy - 4, 22, 'rgba(235,240,250,0.55)'); x.fillStyle = '#e8edf5'; x.fillRect(cx - 9, cy - 3, 18, 2.5); }
 }
 function drawRobot(x, cx, cy, w, tm) {
-  const a = w ? w.ang : 0, kick = w ? w.kick : 0, bob = Math.sin(tm * 3) * 0.8;
+  const a = w ? clamp(-w.vx / 4000, -0.12, 0.12) : 0, kick = w ? w.kick : 0, bob = Math.sin(tm * 3) * 0.8;
+  // legs: they step while the robot walks
+  const walking = w && Math.abs(w.vx) > 20, st = walking ? Math.sin(w.step * 0.22) * 4 : 0;
   x.fillStyle = '#16191e';
-  // legs
-  x.beginPath(); x.moveTo(cx - 11, cy); x.lineTo(cx - 7, cy - 16); x.lineTo(cx - 2, cy - 16); x.lineTo(cx - 4, cy); x.fill();
-  x.beginPath(); x.moveTo(cx + 11, cy); x.lineTo(cx + 7, cy - 16); x.lineTo(cx + 2, cy - 16); x.lineTo(cx + 4, cy); x.fill();
-  x.fillStyle = '#5ff0ff'; x.fillRect(cx - 13, cy - 2, 9, 2.5); x.fillRect(cx + 4, cy - 2, 9, 2.5);
+  x.beginPath(); x.moveTo(cx - 11 + st, cy); x.lineTo(cx - 7, cy - 16); x.lineTo(cx - 2, cy - 16); x.lineTo(cx - 4 + st, cy); x.fill();
+  x.beginPath(); x.moveTo(cx + 11 - st, cy); x.lineTo(cx + 7, cy - 16); x.lineTo(cx + 2, cy - 16); x.lineTo(cx + 4 - st, cy); x.fill();
+  x.fillStyle = '#5ff0ff'; x.fillRect(cx - 13 + st, cy - 2, 9, 2.5); x.fillRect(cx + 4 - st, cy - 2, 9, 2.5);
   // body
   rrect(x, cx - 12, cy - 36 + bob, 24, 22, 7); x.fillStyle = '#1d2229'; x.fill();
   glowDot(x, cx, cy - 26 + bob, 9, 'rgba(110,245,255,0.9)');
   x.fillStyle = '#c9fbff'; x.beginPath(); x.arc(cx, cy - 26 + bob, 2.6, 0, TAU); x.fill();
   rrect(x, cx - 6, cy - 44 + bob, 12, 9, 4); x.fillStyle = '#20262e'; x.fill();
   x.fillStyle = '#7ff6ff'; x.fillRect(cx - 4, cy - 41 + bob, 8, 2);
-  // two arm cannons pointing at the target
+  // two arm cannons pointing up
   for (const s of [-1, 1]) {
     x.save(); x.translate(cx + s * 14, cy - 30 + bob); x.rotate(a);
     const k = (w && w.side === (s > 0 ? 1 : 0)) ? kick * 4 : 0;
@@ -1226,7 +1247,7 @@ function render(G, real) {
     drawPad(ctx, SLOT_X[s], GROUND, !w);
     if (w) drawTurret(ctx, w.key, SLOT_X[s], GROUND, w, tm);
   }
-  drawRobot(ctx, W / 2, GROUND, G.w.robot, tm);
+  drawRobot(ctx, G.w.robot.x, GROUND, G.w.robot, tm);
   // the life of the base
   if (!G.demo) {
     const f = G.baseHp / G.baseMax, ax = W / 2, ay = GROUND - 22, ar = 50, a0 = Math.PI * 1.2, a1 = Math.PI * 1.8;
@@ -1297,7 +1318,7 @@ function startBattle(stage) {
   $('hudStage').textContent = `Etap ${stage}`;
   speedLabel();
   Sound.music('neon-walka');
-  if (stage === 1 && save.played <= 2) setTimeout(() => banner('Wieżyczki strzelają same.<br>Ty wybierasz ulepszenia!', 'hint'), 600);
+  if (save.played <= 3) setTimeout(() => banner('Przesuwaj palcem<br>w lewo i w prawo!', 'hint'), 600);
 }
 function toMenu() {
   mode = 'menu'; G = null; paused = false;
@@ -1400,7 +1421,7 @@ function updateHud() {
 }
 function handleEvents() {
   for (const e of G.ev) {
-    if (e === 'roj') banner('Rój meteorów!', 'warn');
+    if (e.startsWith('roj-')) { banner(`Rój meteorów<br>${{ lewa: 'z lewej!', prawa: 'z prawej!', srodek: 'na środek!' }[e.slice(4)]}`, 'warn'); Sound.play('roj'); continue; }
     else if (e === 'boss') { banner('Nadlatuje Asteroida!', 'boss'); Sound.music('turbo-walka'); }
     else if (e === 'wygrana') Sound.music(null);
     else if (e === 'przegrana') Sound.music(null);
@@ -1414,6 +1435,7 @@ let last = 0;
 function frame(now) {
   const real = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now;
   if (mode === 'battle' && G) {
+    keyMove(real);
     if (!paused && !G.pending && !G.over) {
       let left = real * save.speed;
       while (left > 1e-6 && !G.pending && !G.over) { const h = Math.min(left, 1 / 60); step(G, h); left -= h; }
@@ -1460,6 +1482,19 @@ for (const b of document.querySelectorAll('[data-toggle]')) {
   b.addEventListener('click', () => { save[k] = !save[k]; store(); label(); Sound.unlock(); Sound.settings(); });
 }
 document.addEventListener('pointerdown', () => Sound.unlock(), { passive: true });
+// the robot walks to where the finger is (anywhere on the screen, only left and right matter)
+let dragging = false;
+const keys = {};
+function aimAt(clientX) { if (mode === 'battle' && G && !paused) G.aim = clamp((clientX - view.ox) / view.s, 22, W - 22); }
+canvas.addEventListener('pointerdown', e => { dragging = true; aimAt(e.clientX); try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* old browser */ } });
+canvas.addEventListener('pointermove', e => { if (dragging) aimAt(e.clientX); });
+for (const t of ['pointerup', 'pointercancel']) canvas.addEventListener(t, () => { dragging = false; });
+window.addEventListener('keydown', e => { keys[e.key] = true; });
+window.addEventListener('keyup', e => { keys[e.key] = false; });
+function keyMove(dt) {
+  const d = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.a ? 1 : 0);
+  if (d && G) G.aim = clamp(G.w.robot.x + d * 60, 22, W - 22);
+}
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { Sound.suspend(true); if (mode === 'battle' && G && !G.over && !G.pending) { paused = true; show('scrPause'); } }
   else Sound.suspend(false);
