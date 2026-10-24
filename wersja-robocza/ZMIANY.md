@@ -10,6 +10,8 @@ Gra jest pod adresem https://jacekordowski.github.io/Yaceq-Placeq/wersja-robocza
 
 ## Wersja 2 (24 października 2026)
 
+Zapis w repozytorium: `b1df586`
+
 ### Dodane
 - **Generator pola widać przy pracy:** pierścień wokół jego głowicy i pasek na maszcie pokazują ładowanie, a tuż przed strzałem
   wpada do niego energia. Potem generator wystrzeliwuje świecący pocisk w górę, pole rozwija się od tego miejsca w obie strony,
