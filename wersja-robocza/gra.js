@@ -5,7 +5,7 @@
 (() => {
 'use strict';
 const HAS_DOM = typeof document !== 'undefined';
-const WERSJA = 3;          // numer wersji gry; opis zmian w wersja-robocza/ZMIANY.md
+const WERSJA = 4;          // numer wersji gry; opis zmian w wersja-robocza/ZMIANY.md
 
 /* ============================================================
    Helpers
@@ -142,7 +142,7 @@ function newBattle(stage, opts = {}) {
     hpMul: Math.pow(BAL.stageHp, stage - 1), rateMul: 1 + BAL.stageRate * (stage - 1),
     baseMax: BAL.baseHp, baseHp: BAL.baseHp,
     enemies: [], bullets: [], shells: [], rockets: [], later: [],
-    nums: [], booms: [], bolts: [], sparks: [], ev: [],
+    nums: [], booms: [], bolts: [], sparks: [], embers: [], ev: [],
     w: {}, combos: {}, dmg: {}, kills: 0, slowed: 0, cards: [],
     xp: 0, lvl: 1, need: BAL.xpNeed(1), pending: 0, rerolls: 1,
     spawnAcc: 0, nextSurge: 45, surge: null, wave: null, lastZone: null, aim: W / 2, boss: null, bossDone: false,
@@ -238,7 +238,7 @@ function numAt(G, e, v, crit) {
 function popPending(G, e, dt) {
   e.pendT -= dt;
   // tiny sums wait until they grow, so the sky is not full of "-1"
-  if (e.pend > 0 && e.pendT <= 0 && (e.pend >= 8 || e.pendT < -1)) { numAt(G, e, e.pend); e.pend = 0; e.pendT = 0.32; }
+  if (e.pend >= 8 && e.pendT <= 0) { numAt(G, e, e.pend); e.pend = 0; e.pendT = 0.32; }
 }
 // cont: continuous damage (laser, field, burning) — its numbers are added up and shown every third of a second
 function hurt(G, e, dmg, src, crit, cont) {
@@ -251,7 +251,7 @@ function hurt(G, e, dmg, src, crit, cont) {
 }
 function killEnemy(G, e) {
   e.dead = true; G.kills++;
-  if (e.pend > 0) numAt(G, e, e.pend);
+  if (e.pend >= 5) numAt(G, e, e.pend);
   if (G.fx) {
     const col = e.kind === 'red' ? '#ff5a5a' : e.kind === 'shard' ? '#cfd6e0' : '#ffb066';
     for (let i = 0; i < 5; i++) { const a = rand(0, TAU), v = rand(40, 130); G.sparks.push({ x: e.x, y: e.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, life: rand(0.25, 0.45), col, s: rand(1.5, 3) }); }
@@ -447,7 +447,7 @@ function updPole(G, w, dt) {
   for (const e of G.enemies) {
     if (e.dead || e.y + e.r < y0 || e.y - e.r > y1 || Math.abs(e.x - w.x) > reach) continue;
     e.slow = Math.max(e.slow, slow); e.slowAmt = slow; e.slowT = POLE.linger;
-    if (!e.slowShown) { e.slowShown = true; G.slowed++; if (G.fx && Math.random() < 0.35) G.nums.push({ x: e.x, y: e.y - 14, v: 'Wolniej', t: 0, slow: true }); }
+    if (!e.slowShown) { e.slowShown = true; G.slowed++; if (G.fx && Math.random() < 0.2) G.nums.push({ x: e.x, y: e.y - 14, v: 'Wolniej', t: 0, slow: true }); }
   }
   const B = G.boss;
   if (B && B.y + B.r > y0) B.slow = slow;
@@ -642,6 +642,20 @@ function stepFx(G, dt) {
   G.booms = G.booms.filter(b => b.t < b.life);
   G.bolts = G.bolts.filter(b => b.t < 0.22);
   G.sparks = G.sparks.filter(s => s.t < s.life);
+  // embers flying off the burning meteors and the Asteroid
+  if (G.fx) {
+    for (const e of G.embers) { e.t += dt; e.x += e.vx * dt; e.y += e.vy * dt; }
+    G.embers = G.embers.filter(e => e.t < e.life);
+    for (const e of G.enemies) {
+      if (G.embers.length >= 180 || Math.random() > dt * 5) continue;
+      G.embers.push({ x: e.x + rand(-0.5, 0.5) * e.r, y: e.y - e.r * rand(0.3, 1.2), vx: rand(-14, 14), vy: rand(-35, 5), t: 0, life: rand(0.3, 0.65), s: rand(1.1, 2.3) });
+    }
+    const B = G.boss;
+    if (B) for (let i = 0; i < 2 && G.embers.length < 220; i++) {
+      const a = Math.PI * rand(0.15, 0.85);
+      G.embers.push({ x: B.x + Math.cos(a) * B.r, y: B.y + Math.sin(a) * B.r, vx: rand(-20, 20), vy: rand(-40, 10), t: 0, life: rand(0.4, 0.8), s: rand(1.5, 3) });
+    }
+  }
 }
 
 /* ============================================================
@@ -867,7 +881,7 @@ const $ = id => document.getElementById(id);
 const canvas = $('scene'), ctx = canvas.getContext('2d');
 const view = { w: 0, h: 0, dpr: 1, s: 1, ox: 0, oy: 0, k: 1, top: 0 };
 const FONT = '"Lilita One", "Paytone One", "Arial Rounded MT Bold", system-ui, sans-serif';
-let bg = null, SPR = {};
+let bg = null, SPR = {}, FLAME = {}, HEX = {};
 
 function resize() {
   view.dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -924,24 +938,41 @@ function buildBackground() {
   bg = c;
 }
 
-function flameTail(x, cx, cy, r, len) {
-  const g = x.createLinearGradient(0, cy, 0, cy - len);
-  g.addColorStop(0, 'rgba(255,238,205,0.95)'); g.addColorStop(0.22, 'rgba(255,176,98,0.8)');
-  g.addColorStop(0.6, 'rgba(238,112,44,0.35)'); g.addColorStop(1, 'rgba(200,60,20,0)');
-  x.fillStyle = g;
-  x.beginPath();
-  x.moveTo(cx - r * 1.12, cy);
-  x.bezierCurveTo(cx - r * 1.05, cy - len * 0.45, cx - r * 0.25, cy - len * 0.82, cx, cy - len);
-  x.bezierCurveTo(cx + r * 0.25, cy - len * 0.82, cx + r * 1.05, cy - len * 0.45, cx + r * 1.12, cy);
-  x.arc(cx, cy, r * 1.12, 0, Math.PI);
-  x.fill();
+function rockGlow(x, cx, cy, r) {
   const gl = x.createRadialGradient(cx, cy, r * 0.5, cx, cy, r * 1.9);
   gl.addColorStop(0, 'rgba(255,225,180,0.6)'); gl.addColorStop(1, 'rgba(255,160,80,0)');
   x.fillStyle = gl; x.beginPath(); x.arc(cx, cy, r * 1.9, 0, TAU); x.fill();
 }
+// A flickering flame tail: several pictures with the flame tongues in other places, shown one after another
+const FLAME_FRAMES = 10;
+function flameFrames(r, len) {
+  const out = [], wu = 2.8 * r, hu = len + 1.3 * r, cx = wu / 2, cy = len, N = 16;
+  const LAYERS = [[1.12, 1, '255,105,30', '255,165,75', 0.55], [0.78, 0.8, '255,150,55', '255,210,125', 0.6], [0.42, 0.45, '255,230,170', '255,250,235', 0.9]];
+  for (let f = 0; f < FLAME_FRAMES; f++) {
+    const [c, x] = spriteCanvas(wu, hu), ph = f / FLAME_FRAMES * TAU;
+    x.globalCompositeOperation = 'lighter';
+    LAYERS.forEach(([k, lk, col0, col1, a], li) => {
+      const L = len * lk;
+      const g = x.createLinearGradient(0, cy, 0, cy - L);
+      g.addColorStop(0, `rgba(${col1},${a})`); g.addColorStop(0.45, `rgba(${col0},${a * 0.6})`); g.addColorStop(1, `rgba(${col0},0)`);
+      x.fillStyle = g;
+      const edge = (u, side) => {
+        const wob = Math.sin(u * 7 - ph * (1 + li * 0.5) + side * 1.3) * 0.16 + Math.sin(u * 13 + ph * 2 + side * 2) * 0.08;
+        return cx + side * r * k * Math.pow(1 - u, 0.6) * (1 + wob) + r * 0.25 * Math.sin(ph + u * 3) * u;
+      };
+      x.beginPath();
+      for (let i = 0; i <= N; i++) { const u = i / N; (i ? x.lineTo : x.moveTo).call(x, edge(u, -1), cy - L * u); }
+      for (let i = N; i >= 0; i--) { const u = i / N; x.lineTo(edge(u, 1), cy - L * u); }
+      x.arc(cx, cy, r * k, 0, Math.PI);
+      x.closePath(); x.fill();
+    });
+    out.push(c);
+  }
+  return { frames: out, w: wu, h: hu, ax: cx, ay: cy };
+}
 function rockSprite(r, variant) {
-  const [c, x] = spriteCanvas(4 * r, 7.5 * r), cx = 2 * r, cy = 5.5 * r;
-  flameTail(x, cx, cy, r, 5.3 * r);
+  const [c, x] = spriteCanvas(4 * r, 4 * r), cx = 2 * r, cy = 2 * r;
+  rockGlow(x, cx, cy, r);
   x.fillStyle = '#0b0b0c'; x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.fill();
   x.strokeStyle = '#f2f2f2'; x.lineWidth = Math.max(1, r * 0.09);
   x.beginPath(); x.arc(cx, cy, r * 0.96, 0, TAU); x.stroke();
@@ -951,11 +982,11 @@ function rockSprite(r, variant) {
     const jx = ux + (R() - 0.5) * 0.25, jy = uy + (R() - 0.5) * 0.25, rr = ur * (0.8 + R() * 0.4);
     x.beginPath(); x.ellipse(cx + jx * r, cy + jy * r, rr * r, rr * r * 0.8, 0.4, 0, TAU); x.stroke();
   }
-  return { c, w: 4 * r, h: 7.5 * r, ax: cx, ay: cy };
+  return { c, w: 4 * r, h: 4 * r, ax: cx, ay: cy };
 }
 function crystalSprite(r, red) {
-  const [c, x] = spriteCanvas(4 * r, 7.5 * r), cx = 2 * r, cy = 5.5 * r;
-  flameTail(x, cx, cy, r * 0.9, 4.6 * r);
+  const [c, x] = spriteCanvas(4 * r, 4 * r), cx = 2 * r, cy = 2 * r;
+  rockGlow(x, cx, cy, r * 0.9);
   const P = red ? [[0, -1.2], [0.85, -0.45], [0.9, 0.5], [0, 1.15], [-0.85, 0.55], [-0.8, -0.6]] : [[0, -1.35], [0.75, -0.15], [0.15, 1.25], [-0.7, 0.1]];
   x.beginPath(); P.forEach(([u, v], i) => (i ? x.lineTo : x.moveTo).call(x, cx + u * r, cy + v * r)); x.closePath();
   x.fillStyle = red ? '#c51f2e' : '#0c0d0f'; x.fill();
@@ -966,7 +997,7 @@ function crystalSprite(r, red) {
   } else {
     x.beginPath(); x.moveTo(cx + 0.05 * r, cy - 0.9 * r); x.lineTo(cx - 0.25 * r, cy - 0.2 * r); x.lineTo(cx + 0.2 * r, cy - 0.05 * r); x.lineTo(cx - 0.1 * r, cy + 0.7 * r); x.stroke();
   }
-  return { c, w: 4 * r, h: 7.5 * r, ax: cx, ay: cy };
+  return { c, w: 4 * r, h: 4 * r, ax: cx, ay: cy };
 }
 function bossSprite() {
   const r = 150, [c, x] = spriteCanvas(2.5 * r, 2.5 * r), cx = 1.25 * r, cy = 1.25 * r;
@@ -997,6 +1028,9 @@ function buildSprites() {
     shard: [crystalSprite(KINDS.shard.r, false)],
     boss: bossSprite(),
   };
+  FLAME = { meteor: flameFrames(KINDS.meteor.r, 5.3 * KINDS.meteor.r), big: flameFrames(KINDS.big.r, 5 * KINDS.big.r),
+    red: flameFrames(KINDS.red.r * 0.9, 4.4 * KINDS.red.r), shard: flameFrames(KINDS.shard.r * 0.85, 5 * KINDS.shard.r) };
+  HEX = {};
 }
 
 /* ---------- turrets and the robot ---------- */
@@ -1104,6 +1138,86 @@ function drawTurret(x, key, cx, cy, w, tm) {
   if (w && w.sup) glowDot(x, cx, cy - 20, 34, 'rgba(190,110,255,0.35)');
 }
 
+/* ---------- the slowing field: an energy wall with a honeycomb ---------- */
+const HEX_A = 9;
+function hexPath(x, cx, cy, a) {
+  x.beginPath();
+  for (let i = 0; i < 6; i++) { const ang = Math.PI / 6 + i * Math.PI / 3; (i ? x.lineTo : x.moveTo).call(x, cx + a * Math.cos(ang), cy + a * Math.sin(ang)); }
+  x.closePath();
+}
+// one wide picture of the honeycomb for each field height, made once
+function hexBand(h) {
+  if (HEX[h]) return HEX[h];
+  const per = Math.sqrt(3) * HEX_A, L = -view.ox / view.s - per, wu = W + 2 * view.ox / view.s + 3 * per;
+  const [c, x] = spriteCanvas(wu, h);
+  x.strokeStyle = 'rgba(160,255,228,0.38)'; x.lineWidth = 0.8;
+  for (let row = 0; (row - 1) * 1.5 * HEX_A < h; row++) {
+    const cy = h / 2 + (row % 2 ? 1 : -1) * Math.ceil(row / 2) * 1.5 * HEX_A, off = (Math.ceil(row / 2) % 2) ? per / 2 : 0;
+    for (let cx = off; cx < wu + per; cx += per) { hexPath(x, cx, cy, HEX_A * 0.9); x.stroke(); }
+  }
+  return (HEX[h] = { c, wu, per, L });
+}
+function drawField(P, tm) {
+  const L = -view.ox / view.s, R = W + view.ox / view.s;
+  const fade = P.state === 'close' ? P.phase / POLE.close : 1, h = P.h * (0.2 + 0.8 * fade), y0 = FIELD_Y - h / 2, y1 = y0 + h;
+  const reach = 440 * P.spread, x0 = Math.max(L, P.x - reach), x1 = Math.min(R, P.x + reach);
+  if (x1 <= x0) return;
+  const pulse = (0.85 + Math.sin(tm * 5) * 0.15) * fade;
+  ctx.save();
+  // glassy body: brighter at the edges, darker in the middle
+  const g = ctx.createLinearGradient(0, y0, 0, y1);
+  g.addColorStop(0, `rgba(90,255,200,${0.34 * pulse})`); g.addColorStop(0.3, `rgba(40,170,150,${0.14 * pulse})`);
+  g.addColorStop(0.7, `rgba(40,170,150,${0.14 * pulse})`); g.addColorStop(1, `rgba(90,255,200,${0.34 * pulse})`);
+  ctx.fillStyle = g; ctx.fillRect(x0, y0, x1 - x0, h);
+  ctx.globalCompositeOperation = 'lighter';
+  // the honeycomb drifts slowly sideways
+  const HB = hexBand(P.h), hx = HB.L + (tm * 12) % HB.per, ppu = HB.c.width / HB.wu;
+  ctx.globalAlpha = 0.55 + 0.45 * pulse;
+  ctx.drawImage(HB.c, (x0 - hx) * ppu, 0, (x1 - x0) * ppu, HB.c.height, x0, y0, x1 - x0, h);
+  // a few cells light up and fade
+  for (let i = 0; i < 6; i++) {
+    const k = Math.floor(tm * 1.5 + i * 0.37), r1 = seeded(k * 31 + i * 7)(), r2 = seeded(k * 17 + i * 11)();
+    const life = (tm * 1.5 + i * 0.37) % 1, cx = x0 + 8 + r1 * Math.max(0, x1 - x0 - 16), cy = y0 + 9 + r2 * Math.max(0, h - 18);
+    ctx.globalAlpha = Math.sin(life * Math.PI) * fade;
+    hexPath(ctx, cx, cy, HEX_A * 0.85); ctx.fillStyle = 'rgba(140,255,220,0.35)'; ctx.fill();
+  }
+  ctx.globalAlpha = fade;
+  // a soft light sweeps along the wall
+  const sw = L - 80 + (tm * 170) % (R - L + 160), s0 = Math.max(x0, sw - 50), s1 = Math.min(x1, sw + 50);
+  if (s1 > s0) {
+    const sg = ctx.createLinearGradient(sw - 50, 0, sw + 50, 0);
+    sg.addColorStop(0, 'rgba(150,255,225,0)'); sg.addColorStop(0.5, 'rgba(150,255,225,0.22)'); sg.addColorStop(1, 'rgba(150,255,225,0)');
+    ctx.fillStyle = sg; ctx.fillRect(s0, y0, s1 - s0, h);
+  }
+  ctx.restore();
+  // wavy glowing edges with sparks running along them
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter'; ctx.lineJoin = 'round';
+  for (const [ey, dir] of [[y0, 1], [y1, -1]]) {
+    const wave = xx => ey + dir * (1.6 * Math.sin(xx * 0.06 + tm * 5 * dir) + 1.1 * Math.sin(xx * 0.17 - tm * 7));
+    ctx.beginPath();
+    for (let xx = x0; xx <= x1 + 9; xx += 9) { const cx = Math.min(xx, x1); xx === x0 ? ctx.moveTo(cx, wave(cx)) : ctx.lineTo(cx, wave(cx)); }
+    ctx.strokeStyle = `rgba(90,255,200,${0.3 * fade})`; ctx.lineWidth = 6; ctx.stroke();
+    ctx.strokeStyle = `rgba(215,255,240,${0.95 * fade})`; ctx.lineWidth = 1.8; ctx.stroke();
+    for (let i = 0; i < 4; i++) {
+      const sx = x0 + ((tm * (110 + i * 23) * dir + i * 97) % (x1 - x0) + (x1 - x0)) % (x1 - x0);
+      glowDot(ctx, sx, wave(sx), 9, 'rgba(200,255,240,0.95)', fade);
+    }
+  }
+  if (P.state === 'open') {
+    const u = 1 - P.phase / POLE.open;
+    glowDot(ctx, P.x, FIELD_Y, 60 * (1 - u) + 20, 'rgba(200,255,235,0.95)', 1 - u);
+    for (const fx of [x0, x1]) { ctx.fillStyle = 'rgba(210,255,240,0.9)'; ctx.fillRect(fx - 1.5, y0 - 6, 3, h + 12); glowDot(ctx, fx, FIELD_Y, h * 0.8, 'rgba(150,255,220,0.8)'); }
+  }
+  ctx.restore();
+  // emitters at both sides of the screen hold the wall
+  if (P.spread >= 1) for (const [ex, sd] of [[L + 3, 1], [R - 3, -1]]) {
+    ctx.fillStyle = '#16191d'; rrect(ctx, ex - (sd > 0 ? 3 : 7), y0 - 8, 10, h + 16, 4); ctx.fill();
+    for (const ny of [y0, y1]) glowDot(ctx, ex + sd * 2, ny, 9, 'rgba(160,255,220,0.95)', fade);
+    glowDot(ctx, ex + sd * 2, FIELD_Y, 14 + Math.sin(tm * 8) * 3, 'rgba(120,255,210,0.7)', fade);
+  }
+}
+
 /* ---------- the scene ---------- */
 function render(G, real) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1137,35 +1251,24 @@ function render(G, real) {
     glowDot(ctx, P.x, y, 30, 'rgba(150,255,220,0.95)'); glowDot(ctx, P.x, y, 10, 'rgba(245,255,250,1)');
     ctx.globalCompositeOperation = 'source-over';
   }
-  if (P && (P.on || P.state === 'close')) {
-    const L = -view.ox / view.s, R = W + view.ox / view.s;
-    const fade = P.state === 'close' ? P.phase / POLE.close : 1, h = P.h * (0.25 + 0.75 * fade), y0 = FIELD_Y - h / 2;
-    const reach = 440 * P.spread, x0 = Math.max(L, P.x - reach), x1 = Math.min(R, P.x + reach);
-    const pulse = (0.75 + Math.sin(tm * 6) * 0.08) * fade;
-    const g = ctx.createLinearGradient(0, y0, 0, y0 + h);
-    g.addColorStop(0, `rgba(110,255,200,${0.42 * pulse})`); g.addColorStop(0.5, `rgba(70,220,170,${0.2 * pulse})`); g.addColorStop(1, `rgba(110,255,200,${0.42 * pulse})`);
-    ctx.fillStyle = g; ctx.fillRect(x0, y0, x1 - x0, h);
-    ctx.fillStyle = `rgba(150,255,215,${0.85 * fade})`; ctx.fillRect(x0, y0, x1 - x0, 2); ctx.fillRect(x0, y0 + h - 2, x1 - x0, 2);
-    ctx.globalCompositeOperation = 'lighter';
-    // light ripples running along the band
-    for (let i = 0; i < 4; i++) {
-      const rx = L + ((tm * 90 + i * (R - L) / 4) % (R - L));
-      if (rx > x0 && rx < x1) glowDot(ctx, rx, FIELD_Y, h * 0.7, 'rgba(120,255,210,0.35)', fade);
-    }
-    if (P.state === 'open') {
-      const u = 1 - P.phase / POLE.open;
-      glowDot(ctx, P.x, FIELD_Y, 60 * (1 - u) + 20, 'rgba(200,255,235,0.95)', 1 - u);
-      for (const fx of [x0, x1]) { ctx.fillStyle = 'rgba(210,255,240,0.9)'; ctx.fillRect(fx - 1.5, y0 - 6, 3, h + 12); glowDot(ctx, fx, FIELD_Y, h * 0.8, 'rgba(150,255,220,0.8)'); }
-    }
-    ctx.globalCompositeOperation = 'source-over';
-    if (P.spread >= 1) for (const ex of [4, W - 4]) { ctx.fillStyle = '#1b1f22'; ctx.beginPath(); ctx.arc(ex, FIELD_Y, 7, 0, TAU); ctx.fill(); glowDot(ctx, ex, FIELD_Y, 10, 'rgba(160,255,220,0.9)', fade); }
-  }
+  if (P && (P.on || P.state === 'close')) drawField(P, tm);
   // meteors
+  ctx.globalCompositeOperation = 'lighter';
+  // embers in three batches by age: yellow, orange, red (one fill each is much faster than one per ember)
+  for (const [lo, hi, col] of [[0, 0.35, 'rgba(255,225,150,0.9)'], [0.35, 0.7, 'rgba(255,150,60,0.75)'], [0.7, 1, 'rgba(220,70,30,0.5)']]) {
+    ctx.beginPath();
+    for (const m of G.embers) { const u = m.t / m.life; if (u >= lo && u < hi) ctx.rect(m.x - m.s / 2, m.y - m.s / 2, m.s, m.s); }
+    ctx.fillStyle = col; ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
   const base = view.k, ox = (view.ox + sx) * view.dpr, oy = (view.oy + sy) * view.dpr;
   for (const e of G.enemies) {
-    const list = SPR[e.kind], S = list[e.variant % list.length];
+    const list = SPR[e.kind], S = list[e.variant % list.length], F = FLAME[e.kind];
     const a = Math.atan2(-e.vx, e.vy), c = Math.cos(a) * base, s = Math.sin(a) * base;
     ctx.setTransform(c, s, -s, c, ox + e.x * base, oy + e.y * base);
+    // the faster the meteor really falls, the longer its flame (slowed ones get a short one)
+    const stretch = clamp(0.45 + speedOf(e) * e.vy / 110, 0.5, 1.5);
+    ctx.drawImage(F.frames[Math.floor(tm * 14 + e.id * 3.7) % FLAME_FRAMES], -F.ax, -F.ay * stretch, F.w, F.h * stretch);
     ctx.drawImage(S.c, -S.ax, -S.ay, S.w, S.h);
     if (e.flash > 0) { ctx.globalAlpha = 0.55; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, e.r, 0, TAU); ctx.fill(); ctx.globalAlpha = 1; }
     if (e.burnT > 0) { ctx.globalAlpha = 0.6; glowDot(ctx, 0, -2, e.r * 1.3, 'rgba(255,120,30,0.9)'); ctx.globalAlpha = 1; }
@@ -1508,5 +1611,5 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fo
 requestAnimationFrame(t => { last = t; frame(t); });
 
 // for automatic tests only (address with ?test)
-if (/[?&]test\b/.test(location.search)) window.WR = { get G() { return G; }, startBattle, step, applyCard, makeOffer, set paused(v) { paused = v; } };
+if (/[?&]test\b/.test(location.search)) window.WR = { get G() { return G; }, get FLAME() { return FLAME; }, startBattle, step, applyCard, makeOffer, set paused(v) { paused = v; } };
 })();

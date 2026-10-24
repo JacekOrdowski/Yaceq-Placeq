@@ -8,6 +8,25 @@ Gra jest pod adresem https://jacekordowski.github.io/Yaceq-Placeq/wersja-robocza
 
 ---
 
+## Wersja 4 (24 października 2026)
+
+### Dodane
+- **Żywe płomienie za meteorami:** ogon płonie i migocze (10 klatek, języki ognia falują i się kołyszą), a z meteorów
+  sypią się iskry. Im szybciej meteor leci, tym dłuższy ma płomień. Spowolniony w polu ma krótki płomień.
+  Iskry sypią się też z dołu Asteroidy.
+- **Nowy wygląd pola zwalniającego:** świetlista ściana energii z plastrem miodu, który powoli przesuwa się w bok.
+  Pojedyncze komórki rozbłyskują, wzdłuż ściany przesuwa się smuga światła, a krawędzie falują i biegną po nich iskry.
+  Po obu stronach ekranu są nadajniki, które trzymają ścianę.
+
+### Zmienione
+- Mniej drobnych liczb obrażeń (bez „−1”, „−2”) i rzadziej napis „Wolniej”, żeby niebo było czytelniejsze.
+
+### Do sprawdzenia
+- Płynność na telefonie przy wielu meteorach. Sprawdzone w przeglądarce bez karty graficznej:
+  nowe płomienie, iskry i pole prawie nie zmieniają płynności, najwięcej kosztuje sama liczba meteorów.
+
+---
+
 ## Wersja 3 (24 października 2026)
 
 Zapis w repozytorium: `ce162b8`
