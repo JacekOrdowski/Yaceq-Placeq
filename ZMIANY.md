@@ -7,6 +7,41 @@ Do każdej wersji można wrócić: przy każdej podany jest identyfikator zapisu
 
 ---
 
+## Wersja 18 (28 października 2026)
+
+Zapis w repozytorium: (uzupełnię w następnym zapisie)
+
+### Zmienione
+- **Poprawka: wygrana mogła przepaść.** Po pokonaniu potwora gra czekała około 2,5 sekundy (radość, konfetti), zanim
+  zapisała gwiazdki i złoto. Kto w tej chwili nacisnął pauzę albo zablokował telefon i wybrał „Menu” lub „Od nowa”,
+  tracił gwiazdki, złoto i skrzynię. Teraz wynik zapisuje się w chwili wygranej (i przegranej).
+- **Poprawka: złoto z przerwanej gry zostaje.** Kto wyjdzie z gry przez pauzę („Menu” albo „Od nowa”), zachowuje złoto
+  zdobyte w tej grze, tak jak po przegranej.
+- **Poprawka: ulepszenia ze skrzyni nie znikają po „Od nowa”.** Wcześniej kasowały się na starcie gry, więc po
+  „Od nowa” (albo zamknięciu aplikacji w trakcie) przepadały. Teraz zużywają się dopiero, gdy gra się skończy.
+- **Gra działa bez internetu od pierwszego uruchomienia.** Wcześniej dopiero od drugiego: kto otworzył grę raz,
+  dodał ją do ekranu telefonu i włączył bez internetu, widział pusty ekran. Muzyka bez internetu dalej gra z melodii w kodzie.
+- **Ćwiczenie po błędzie nie pobiera muzyki od nowa.** Wcześniej po każdym ćwiczeniu muzyka gry ładowała się jeszcze raz
+  (chwila ciszy i zużycie internetu w telefonie).
+- **Powtórzona stara gra nie cofa przycisku „Graj”** w menu: zostaje na grze, do której gracz doszedł.
+- **„Gra na próbę” nie powtarza zadań z poprzednich gier na próbę** (wcześniej pilnowała tylko jednej gry).
+- **Ćwiczenie po błędzie czeka, gdy telefon jest odłożony**, i nie wraca samo do gry w tle.
+- Starsze iPhony: dźwięk pomocniczy (cichy) zatrzymuje się, gdy gra jest schowana.
+- **Złe odpowiedzi, które dało się odrzucić bez liczenia:**
+  - level 8, prawdopodobieństwo: zła odpowiedź nie jest już większa od 1 (np. było 6 albo 1 i 1/4),
+  - level 5, skracanie ułamków: zła odpowiedź też jest ułamkiem nieskracalnym (wcześniej np. 2/4 przy wyniku 1/4),
+  - level 4, dodawanie i odejmowanie ułamków: tak samo (wcześniej np. 6/6 albo 2/8),
+  - level 7, długość odcinka: zła odpowiedź nie jest już 0.
+- Sprawdzone automatycznie: 768 000 zadań bez błędnego wyniku i bez złej odpowiedzi równej dobrej.
+  Tabela siły wrogów sprawdzona `narzedzia/balans.js`: jest aktualna (różnice kilku procent), bez zmian.
+
+### Do sprawdzenia
+- Level 6: procenty (np. „12 to ?% liczby 60”, podwyżki i obniżki cen) oraz łączenie wyrazów podobnych (2x + 3 + 4x)
+  mogą być materiałem 7. klasy. Do decyzji właściciela, niezmienione.
+- Z selekcji na najemnika dalej nie da się wyjść w połowie (zawsze się kończy, ale trzeba odpowiadać do końca).
+
+---
+
 ## Wersja 17 (21 października 2026)
 
 Zapis w repozytorium: `e7655a9`

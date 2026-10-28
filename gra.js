@@ -4,7 +4,7 @@
 'use strict';
 const HAS_DOM = typeof document !== 'undefined';
 const Z = globalThis.Zadania;
-const WERSJA = 17;         // numer wersji gry; opis zmian w ZMIANY.md
+const WERSJA = 18;         // numer wersji gry; opis zmian w ZMIANY.md
 
 /* ============================================================
    Helpers
@@ -208,7 +208,7 @@ function makeGroup(n, scale) {
 // are avoided too (the right gate's side is drawn anew for every gate)
 const RECENT = new Map(), probKey = p => `${p.q}|${p.sub || ''}|${p.a}`;
 function freshProblem(g) {
-  const recent = RECENT.get(`${g.cls}-${g.s}`) || [], seen = k => g.used.has(k) || recent.some(set => set !== g.used && set.has(k));
+  const recent = RECENT.get(`${g.cls}-${g.trial ? 'proba' : g.s}`) || [], seen = k => g.used.has(k) || recent.some(set => set !== g.used && set.has(k));
   let p = g.gen();
   for (let tries = 0; tries < 40 && seen(probKey(p)); tries++) p = g.gen();
   for (let tries = 0; tries < 20 && g.used.has(probKey(p)); tries++) p = g.gen();   // a small pool: at least not twice in this game
@@ -900,7 +900,8 @@ const Snd = (() => {
     src.stop(t + 0.65); cur = null;
   }
   // name: menu, run or fight; style: wesola, chill, elektro, turbo, neon, skok, retro (the old tunes made in code) or null (off)
-  function play(name, style, retry) {
+  // lesson: the calm music of the practice, kept in memory next to the game's style and played without its pair
+  function play(name, style, retry, lesson) {
     want = { name, style };
     if (!style) { track = null; stopLoop(); return; }
     if (style === 'retro') { stopLoop(); playSeq(name); return; }
@@ -909,14 +910,15 @@ const Snd = (() => {
     if (cur && cur.file === file && !retry) return;
     stopLoop();
     if (!init()) return;
-    for (const k in buffers) if (!k.startsWith(style + '-')) delete buffers[k];   // keep only one style in memory
+    if (!lesson) for (const k in buffers) if (!k.startsWith(style + '-') && k !== LESSON_FILE) delete buffers[k];   // keep only one style in memory (and the practice music)
     loadLoop(file).then(buf => {
       if (!want || want.name !== name || want.style !== style || (cur && cur.file === file)) return;
       if (!buf) { playSeq(name); return; }            // no file (for example offline): the tunes made in code
       if (live()) startLoop(file);
     });
-    loadLoop(`${style}-${name === 'fight' ? 'bieg' : 'walka'}`);
+    if (!lesson) loadLoop(`${style}-${name === 'fight' ? 'bieg' : 'walka'}`);
   }
+  const LESSON_FILE = 'chill-bieg';
   function stop() { track = null; want = null; stopLoop(); }
   function setMusic(on) { if (musicBus) musicBus.gain.setTargetAtTime(on ? 0.32 : 0, ctx.currentTime, 0.05); }
   function duck(on) { if (musicBus && save.music) musicBus.gain.setTargetAtTime(on ? 0.1 : 0.32, ctx.currentTime, 0.1); }
@@ -931,8 +933,11 @@ const Snd = (() => {
   };
   return {
     unlock, play, stop, setMusic, duck,
-    suspend() { if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {}); },
-    resume() { if (ctx && ctx.state !== 'running' && (save.music || save.sfx)) ctx.resume().catch(() => {}); },
+    suspend() { if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {}); if (silent) silent.pause(); },
+    resume() {
+      if (ctx && ctx.state !== 'running' && (save.music || save.sfx)) ctx.resume().catch(() => {});
+      if (silent && silent.paused) { const p = silent.play(); if (p && p.catch) p.catch(() => {}); }
+    },
     good: fx('good', 0, t => { [84, 88, 91, 96].forEach((m, i) => tone('square', mtof(m), t + i * 0.06, 0.12, 0.12, sfxBus, 0, 4200)); tone('triangle', mtof(96), t + 0.24, 0.32, 0.12, sfxBus); }),
     bad: fx('bad', 0, t => { tone('sawtooth', 330, t, 0.38, 0.15, sfxBus, 105, 1400); hiss(t, 0.25, 0.1, sfxBus, 'lowpass', 900); }),
     pop: fx('pop', 0.05, t => tone('square', rand(480, 760), t, 0.05, 0.035, sfxBus, 190, 3000)),
@@ -2395,7 +2400,13 @@ const stageLabel = (c, s) => `Level ${c + 1} · gra ${s + 1}`;
 const solved = p => p.sol || (p.q.includes('?') ? p.q.replace('?', p.a) : /^x [<>≤≥]/.test(p.a) ? `${p.q}, więc ${p.a}` : `${p.q}, ${p.ask || 'x'} = ${p.a}`);
 
 function show(name) { for (const k in screens) screens[k].hidden = k !== name; }
+// gold earned in a game left through the pause (Menu, Od nowa) is kept, as after a loss
+function keepGold(g) {
+  if (!g || g.attract || g.trial || g.recorded || !g.gold) return;
+  save.gold += g.gold; g.gold = 0; persist();
+}
 function goMenu() {
+  keepGold(game);
   if (!unlocked(save.next[0], save.next[1])) save.next = nextGame(0, 0);
   mode = 'menu'; game = createGame(save.next[0], save.next[1], true); hud.hidden = true; fight.hidden = true; view.hudBottom = 0; layout();
   ui.lessonQ = null; lesson = null; chest = null; $('stink').hidden = true;
@@ -2431,7 +2442,6 @@ function openIntro(c, s, trial) {
 const showHp = () => { $('inHp').textContent = pending && !pending.calib ? group(pending.monster.max) : '…'; };
 function startStage(g) {
   game = g; mode = 'play'; pending = null;
-  if (!g.trial && save.boost.length) { save.boost = []; persist(); }   // the chest's upgrades were for this one game
   ui.shownGate = null; ui.until = 0; ui.lessonQ = null; lesson = null; $('stink').hidden = true;
   parts.length = 0; floats.length = 0; confetti.length = 0; rings.length = 0; balls.length = 0; hitTexts.length = 0; bolts.length = 0;
   show(null); hud.hidden = false; fight.hidden = true; probCard.hidden = false; view.k = 0;
@@ -2445,7 +2455,7 @@ function startStage(g) {
   drawMusicStyle(); playMusic('run', g.cls); Snd.duck(false);
   countGame(g);
 }
-const restart = g => startStage(createGame(g.cls, g.s, false, g.trial ? null : playKit(), g.trial, true));
+const restart = g => { keepGold(g); startStage(createGame(g.cls, g.s, false, g.trial ? null : playKit(), g.trial, true)); };
 // The counter also notes every game started, by level (nothing about the player; does nothing when the counter is not on the page)
 // (and a few more events: the first start from the home screen icon, the choice at the start, the exams);
 // if the counter has not loaded yet, it tries again for a few seconds
@@ -2624,12 +2634,14 @@ function handleEvents(g) {
         Snd.boom(); fx.flash = 0.8; fx.flashColor = '235,60,50'; fx.shake = 0.45;
         break;
       case 'won':
+        if (!g.attract) recordGame(g);   // written down at once: leaving through the pause during the celebration loses nothing
         Snd.stop(); Snd.win(); confettiBurst();
         if (M) for (let i = 0; i < 4; i++) burst(M.x + rand(-2, 2), M.z, [MONSTERS[g.cls].body, MONSTERS[g.cls].light, '#ffffff'], 16, rand(1, 6));
         if (g.fight) { setFight('Wygrana!', `${MONSTERS[g.cls].name} ${MONSTERS[g.cls].fem ? 'pokonana' : 'pokonany'}`, 'good'); ansL.disabled = ansR.disabled = true; }
         else setCard('Wygrana!', 'Potwór pokonany', 'good', 0);
         break;
       case 'lost':
+        if (!g.attract) recordGame(g);
         Snd.stop(); Snd.boo(); stinkShow(g.lostBy === 'lesson' ? 'Chyba<br>śmierdzi Ci<br>spod pachy!' : '');   // "buuuu" and the joke the children asked for
         if (g.fight) { setFight('Przegrana', g.lostBy === 'lesson' ? 'Trzy złe odpowiedzi w ćwiczeniu' : `${MONSTERS[g.cls].name} ${MONSTERS[g.cls].fem ? 'była silniejsza' : 'był silniejszy'}`, 'bad'); ansL.disabled = ansR.disabled = true; }
         else setCard('Przegrana', g.lostBy === 'lesson' ? 'Trzy złe odpowiedzi w ćwiczeniu' : 'Wrogowie mieli przewagę', 'bad', 0);
@@ -2664,14 +2676,17 @@ function setBar(pos) {
   le.bar.setAttribute('aria-label', pos > 0 ? `Dobre odpowiedzi: ${pos} z ${GOAL}` : pos < 0 ? `Złe odpowiedzi: ${-pos} z ${GOAL}` : 'Pasek na środku');
 }
 function setMsg(html, cls) { le.msg.innerHTML = html; le.msg.className = 'le-msg' + (cls ? ' ' + cls : ''); le.msg.hidden = !html; }
-const later = (sec, fn) => { const L = lesson; setTimeout(() => { if (lesson === L && mode === 'lesson') fn(); }, sec * 1000); };
+const later = (sec, fn) => {
+  const L = lesson, run = () => { if (lesson !== L || mode !== 'lesson') return; if (document.hidden) setTimeout(run, 300); else fn(); };   // waits while the phone is put away
+  setTimeout(run, sec * 1000);
+};
 
 function openLesson(p, your) {
   const tasks = p.how ? Z.practice(p, 6) : [];
   if (tasks.length < 2) return;   // nothing to practise: keep playing
   lesson = { p, tasks, n: 0, pos: 0, cur: null, left: true, busy: false, panels: [hud.hidden, fight.hidden] };
   mode = 'lesson';
-  if (save.music) Snd.play('run', 'chill'); Snd.duck(false);   // calm music; the game and its clock wait
+  if (save.music) Snd.play('run', 'chill', false, true); Snd.duck(false);   // calm music; the game and its clock wait
   hud.hidden = fight.hidden = true;   // the problem behind the card would only confuse
   le.eyebrow.textContent = 'Podpowiedź';
   le.solved.innerHTML = richHTML(p.q) + (p.sub ? `<small>${richHTML(p.sub)}</small>` : ''); le.solved.hidden = false;
@@ -3120,11 +3135,12 @@ function recordGame(g) {
     }
     return;
   }
+  save.boost = [];                                             // the chest's upgrades were for this one game
   const before = save.stars[i];
   g.pay.stars = Math.max(0, starGold(c, g.stars) - starGold(c, before));   // only new stars pay
   g.pay.answers = g.gold;                                      // gold earned in the game is kept even after a loss
-  if (won) { save.stars[i] = Math.max(before, g.stars); save.next = nextGame(c, s); }
-  else save.next = [c, s];
+  if (won) save.stars[i] = Math.max(before, g.stars);
+  if (!before) save.next = won ? nextGame(c, s) : [c, s];    // a replayed old game leaves "Graj" where the player got to
   save.gold += g.pay.stars + g.pay.answers;
   persist();
 }

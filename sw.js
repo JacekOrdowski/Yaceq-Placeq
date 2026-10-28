@@ -1,8 +1,11 @@
 /* Śmierdzipacha: pomocnik, dzięki któremu gra otwiera się także bez internetu.
+   Przy pierwszym uruchomieniu od razu zapamiętuje pliki gry (bez muzyki: bez internetu grają melodie z kodu).
    Zawsze najpierw pyta internet (więc nowa wersja pojawia się od razu) i zapamiętuje kopię każdego pliku.
    Bez internetu podaje zapamiętaną kopię. */
 const CACHE = 'smierdzipacha-1';
-self.addEventListener('install', () => self.skipWaiting());
+const FILES = ['./', 'index.html', 'gra.js', 'zadania.js', 'manifest.webmanifest', 'ikona-180.png', 'ikona-192.png', 'ikona-512.png'];
+self.addEventListener('install', e => e.waitUntil(
+  caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).catch(() => {}).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
   const req = e.request;
