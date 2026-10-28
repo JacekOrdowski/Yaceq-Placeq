@@ -9,7 +9,12 @@ Do każdej wersji można wrócić: przy każdej podany jest identyfikator zapisu
 
 ## Wersja 18 (28 października 2026)
 
-Zapis w repozytorium: `1429050`
+Zapis w repozytorium: (uzupełnię w następnym zapisie)
+
+### Dodane
+- **Przycisk „Wróć” w czasie selekcji na najemnika.** Można wyjść w każdej chwili, także w połowie etapu.
+  Nic się nie zmienia (otwarte levele, gwiazdki i złoto zostają), a gra wraca tam, skąd selekcja była włączona:
+  do pytania „Jak chcesz grać?” albo do ekranu wyboru levelu.
 
 ### Zmienione
 - **Poprawka: wygrana mogła przepaść.** Po pokonaniu potwora gra czekała około 2,5 sekundy (radość, konfetti), zanim
@@ -37,8 +42,7 @@ Zapis w repozytorium: `1429050`
 
 ### Do sprawdzenia
 - Level 6: procenty (np. „12 to ?% liczby 60”, podwyżki i obniżki cen) oraz łączenie wyrazów podobnych (2x + 3 + 4x)
-  mogą być materiałem 7. klasy. Do decyzji właściciela, niezmienione.
-- Z selekcji na najemnika dalej nie da się wyjść w połowie (zawsze się kończy, ale trzeba odpowiadać do końca).
+  mogą być materiałem 7. klasy. Decyzja właściciela: zostają jak są.
 
 ---
 

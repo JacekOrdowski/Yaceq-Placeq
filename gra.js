@@ -2932,7 +2932,7 @@ function selStage() {
   se.title.textContent = `Etap ${S.c + 1}: level ${S.c + 1}`;
   se.say.textContent = S.c ? `Zadania z ${S.c + 1}. klasy. Uwaga, będzie trudniej!` : 'Zadania z 1. klasy. Na rozgrzewkę!';
   se.dots.innerHTML = Array.from({ length: SEL_N }, () => '<i></i>').join('');
-  se.quiz.hidden = false; se.go.hidden = true; se.back.hidden = true;
+  se.quiz.hidden = false; se.go.hidden = true; se.back.hidden = false;   // "Wróć" leaves at any moment, nothing changes
   selNext();
 }
 function selNext() {
@@ -3012,8 +3012,8 @@ function selGo() {
 function selBack() {
   const S = sel;
   if (!S) return;
-  if (S.phase === 'intro') { sel = null; if (S.from === 'levels') { mode = 'levels'; buildLevelList(); show('levels'); } else openStart(); }
-  else if (S.phase === 'done') { sel = null; goMenu(); }
+  if (S.phase !== 'done') { sel = null; if (S.from === 'levels') { mode = 'levels'; buildLevelList(); show('levels'); } else openStart(); }
+  else { sel = null; goMenu(); }
 }
 function chestGo() {
   if (!chest) return;
