@@ -9,7 +9,7 @@ Do każdej wersji można wrócić: przy każdej podany jest identyfikator zapisu
 
 ## Wersja 18 (28 października 2026)
 
-Zapis w repozytorium: (uzupełnię w następnym zapisie)
+Zapis w repozytorium: `1429050`
 
 ### Zmienione
 - **Poprawka: wygrana mogła przepaść.** Po pokonaniu potwora gra czekała około 2,5 sekundy (radość, konfetti), zanim
