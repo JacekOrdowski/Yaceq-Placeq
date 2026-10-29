@@ -9,7 +9,7 @@ Do każdej wersji można wrócić: przy każdej podany jest identyfikator zapisu
 
 ## Wersja 18 (28 października 2026)
 
-Zapis w repozytorium: `468fee3`
+Zapis w repozytorium: (uzupełnię w następnym zapisie)
 
 ### Dodane
 - **Przycisk „Wróć” w czasie selekcji na najemnika.** Można wyjść w każdej chwili, także w połowie etapu.
@@ -26,6 +26,11 @@ Zapis w repozytorium: `468fee3`
   „Od nowa” (albo zamknięciu aplikacji w trakcie) przepadały. Teraz zużywają się dopiero, gdy gra się skończy.
 - **Gra działa bez internetu od pierwszego uruchomienia.** Wcześniej dopiero od drugiego: kto otworzył grę raz,
   dodał ją do ekranu telefonu i włączył bez internetu, widział pusty ekran. Muzyka bez internetu dalej gra z melodii w kodzie.
+- **Po wgraniu nowej wersji telefon od razu bierze wszystkie nowe pliki.** Wcześniej przez około 10 minut mógł wziąć
+  część plików nowych, a część starych (telefon trzymał swoje kopie), a wtedy gra mogła się nie uruchomić. Teraz przy każdym
+  otwarciu z internetem pyta serwer, czy plik się zmienił; niezmieniony nie jest pobierany jeszcze raz. Sprawdzone
+  w przeglądarce: stara wersja pomocnika po zmianie na serwerze dawała stary plik, nowa daje nowy, a bez internetu gra
+  dalej się otwiera. Działa od drugiego otwarcia gry po tej aktualizacji.
 - **Ćwiczenie po błędzie nie pobiera muzyki od nowa.** Wcześniej po każdym ćwiczeniu muzyka gry ładowała się jeszcze raz
   (chwila ciszy i zużycie internetu w telefonie).
 - **Powtórzona stara gra nie cofa przycisku „Graj”** w menu: zostaje na grze, do której gracz doszedł.
