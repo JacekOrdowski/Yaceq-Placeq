@@ -9,7 +9,7 @@ Do każdej wersji można wrócić: przy każdej podany jest identyfikator zapisu
 
 ## Wersja 18 (28 października 2026)
 
-Zapis w repozytorium: (uzupełnię w następnym zapisie)
+Zapis w repozytorium: `d593772`
 
 ### Dodane
 - **Przycisk „Wróć” w czasie selekcji na najemnika.** Można wyjść w każdej chwili, także w połowie etapu.
