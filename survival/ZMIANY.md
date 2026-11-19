@@ -4,6 +4,8 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
 ## Wersja 7 (19.11.2026): wielka rozbudowa
 
+Zapis w repozytorium: `8326ff9`
+
 **Dodane**
 - Każde drzewo w zasięgu da się ściąć. Im dalej od bazy, tym drzewa są grubsze (więcej drewna, ale twardsze):
   blisko wystarczy zwykła siekiera, dalej trzeba żelaznej, a najdalej stalowej (kupuje się je w kuźni).
