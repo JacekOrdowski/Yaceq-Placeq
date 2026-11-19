@@ -156,6 +156,14 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 <div id="toast"></div>
 <div id="joy" hidden><div id="galka"></div></div>
 
+<div class="okno" id="o-wersje" hidden>
+  <div class="karta">
+    <h2>Wybierz wersję gry</h2>
+    <p>Każda wersja ma swój własny zapis postępu.</p>
+    <div class="lista" id="w-lista"></div>
+  </div>
+</div>
+
 <div class="okno" id="o-menu" hidden>
   <div class="karta">
     <canvas id="logo" width="240" height="240"></canvas>
@@ -169,6 +177,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
     </div>
     <div class="przelacznik"><span>Muzyka</span><button id="m-muz">wł.</button></div>
     <div class="przelacznik"><span>Dźwięki</span><button id="m-dzw">wł.</button></div>
+    <button class="przycisk drugi" id="m-wersje">Inne wersje gry</button>
     <div class="drobne" id="m-wersja"></div>
   </div>
 </div>

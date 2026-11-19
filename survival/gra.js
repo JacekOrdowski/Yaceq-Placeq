@@ -4,7 +4,15 @@ import * as MOD from './modele.js';
 import { PRZEDMIOTY, WEZLY, ZWIERZETA, WEJSCIA, WARSZTAT, STALE, CENY_STALE, KRAINY, OBOZ, ZAKRES } from './krainy.js';
 import { rysujIkone, ikonaURL } from './ikony.js';
 
-const WERSJA = 4;
+const WERSJA = 5;
+// wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
+const WERSJE = [
+  { nr: 5, opis: 'Najnowsza: wybór wersji przy starcie, a do tego wszystko z wersji 4.' },
+  { nr: 4, opis: 'Drewno i kamień do budowy, siekiera i kilof, bramy w palisadzie, wózek, taśmociąg, drwal i górnik.', taSama: true },
+  { nr: 3, opis: 'Kamera na ukos, gęsty las, wir koszyczka, wysoki stos i kolejka wężykiem.', adres: 'wersje/3/' },
+  { nr: 2, opis: 'Pierwsza wersja z poprawionym kółkiem sterowania.', adres: 'wersje/2/' },
+  { nr: 1, opis: 'Pierwsza wersja: jagody, dżem i lisy.', adres: 'wersje/1/' },
+];
 const KLUCZ = 'yaceq-survival';
 const $ = id => document.getElementById(id);
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
@@ -1732,7 +1740,7 @@ function ukonczKraine() {
 }
 
 // ================= okna =================
-const OKNA = ['o-menu', 'o-krainy', 'o-sklep', 'o-pauza', 'o-koniec', 'o-pytanie'];
+const OKNA = ['o-wersje', 'o-menu', 'o-krainy', 'o-sklep', 'o-pauza', 'o-koniec', 'o-pytanie'];
 function pokazOkno(id) { OKNA.forEach(o => { $(o).hidden = o !== id; }); }
 function ukryjOkna() { OKNA.forEach(o => { $(o).hidden = true; }); }
 function kr() { return `${zapis.krysztalki} <img src="${ikonaURL('krysztalek')}" alt="">`; }
@@ -1748,6 +1756,18 @@ function ustawPrzelaczniki() {
   for (const [id, k] of [['m-muz', 'muzyka'], ['p-muz', 'muzyka'], ['m-dzw', 'dzwieki'], ['p-dzw', 'dzwieki']]) {
     $(id).textContent = zapis[k] ? 'wł.' : 'wył.'; $(id).classList.toggle('wl', zapis[k]);
   }
+}
+function pokazWersje() {
+  pauza = true; if (muzyka) muzyka.pause();
+  const l = $('w-lista'); l.innerHTML = '';
+  for (const w of WERSJE.filter(x => !x.taSama)) {
+    const d = document.createElement('div'); d.className = 'pozycja';
+    d.innerHTML = `<div class="nr">${w.nr}</div><div class="tekst"><b>Wersja ${w.nr}${w.nr === WERSJA ? ' (najnowsza)' : ''}</b><small>${w.opis}</small></div>`;
+    const b = document.createElement('button'); b.className = 'maly'; b.textContent = 'Graj';
+    b.onclick = () => { audio(); dzwiek('klik'); if (w.adres) location.href = w.adres; else pokazMenu(); };
+    d.appendChild(b); l.appendChild(d);
+  }
+  pokazOkno('o-wersje');
 }
 function pokazKrainy() {
   const l = $('k-lista'); l.innerHTML = '';
@@ -1797,6 +1817,7 @@ $('m-graj').onclick = () => { audio(); dzwiek('klik'); uruchomKraine(zapis.ostat
 $('m-krainy').onclick = () => { audio(); dzwiek('klik'); pokazKrainy(); };
 $('m-sklep').onclick = () => { audio(); dzwiek('klik'); pokazSklep('o-menu'); };
 $('k-wroc').onclick = () => { dzwiek('klik'); pokazMenu(); };
+$('m-wersje').onclick = () => { dzwiek('klik'); pokazWersje(); };
 $('s-wroc').onclick = () => { dzwiek('klik'); skadSklep === 'o-koniec' ? pokazOkno('o-koniec') : pokazMenu(); };
 for (const id of ['m-muz', 'p-muz']) $(id).onclick = () => { audio(); zapis.muzyka = !zapis.muzyka; zapiszDysk(); ustawPrzelaczniki(); if (!zapis.muzyka && muzyka) muzyka.pause(); };
 for (const id of ['m-dzw', 'p-dzw']) $(id).onclick = () => { audio(); zapis.dzwieki = !zapis.dzwieki; zapiszDysk(); ustawPrzelaczniki(); dzwiek('klik'); };
@@ -1926,7 +1947,7 @@ window.__yaceq = { odNowa: () => { delete zapis.gry[S.k.id]; uruchomKraine(S.k.i
   przeliczKlientow();
   zbudujSwiat();
   ustawKamere(0, true);
-  pokazMenu();
+  pokazWersje();
   requestAnimationFrame(klatka);
 })();
 

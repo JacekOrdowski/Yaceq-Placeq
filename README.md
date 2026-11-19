@@ -211,4 +211,5 @@ Strona gry ma licznik GoatCounter (bez ciasteczek i bez danych osobowych): https
 - `narzedzia/balans.js` – program, który dobiera siłę wrogów do ulepszeń (uruchom po zmianie ulepszeń, cen albo złota)
 - `manifest.webmanifest`, `ikona-180.png`, `ikona-512.png` – ikona i nazwa na ekranie telefonu
 - `survival/` – gra Yaceq Survival: `gra.js` (silnik), `krainy.js` (krainy, ceny, fale), `modele.js` (modele 3D),
-  `ikony.js` (ikony), `three.module.min.js` (biblioteka 3D three.js 0.170, licencja MIT w `three-LICENSE.txt`)
+  `ikony.js` (ikony), `three.module.min.js` (biblioteka 3D three.js 0.170, licencja MIT w `three-LICENSE.txt`),
+  `wersje/` (starsze wersje do wyboru przy starcie; tworzy je `narzedzia/survival-wersja.py`)

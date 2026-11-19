@@ -60,6 +60,9 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
 - Liczby do strojenia (ceny, koszty budowli, fale, gwiazdki) są w `survival/krainy.js`.
 - Nowa wersja: podnieś `WERSJA` w `survival/gra.js` i dopisz sekcję w `survival/ZMIANY.md`
   (te same zasady co wyżej, w tym skrót commita w następnym commicie).
+- Wybór wersji przy starcie: lista `WERSJE` na początku `survival/gra.js`. Przy każdej nowej wersji poprzednią zapisz jako kopię:
+  `python narzedzia/survival-wersja.py NUMER SKROT_COMMITA` (skrót z `survival/ZMIANY.md`), a w `WERSJE` dopisz nową
+  na górze i poprzedniej daj `adres: 'wersje/NUMER/'`. Kopie mają osobny zapis postępu (`yaceq-survival-wNUMER`).
 - Test bez klikania: w konsoli przeglądarki `window.__yaceq` (stan gry, `krok(sekundy)` przesuwa czas gry,
   `cel` to miejsce, które pokazuje zielona strzałka). Robot idący za `celTrasy` (punkt, do którego prowadzi strzałka) przechodzi krainę w około 26 minut;
   `odNowa()` zaczyna krainę od zera.
