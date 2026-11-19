@@ -4,6 +4,8 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
 ## Wersja 9 (19.11.2026)
 
+Zapis w repozytorium: `ef4255e`
+
 **Zmienione**
 - Siekierę można kupić dopiero po postawieniu lady z drewnem. Lada z drewnem kosztuje teraz same pieniądze
   i pojawia się zaraz po pierwszym domku; jej sprzedawcę zatrudnia się po warsztacie.
