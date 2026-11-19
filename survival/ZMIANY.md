@@ -2,6 +2,19 @@
 
 Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
+## Wersja 9 (19.11.2026)
+
+**Zmienione**
+- Siekierę można kupić dopiero po postawieniu lady z drewnem. Lada z drewnem kosztuje teraz same pieniądze
+  i pojawia się zaraz po pierwszym domku; jej sprzedawcę zatrudnia się po warsztacie.
+- Sprzedawców widać za ladami: zamiast kolorowego szyldu z tyłu lady jest tylko słupek z tabliczką z boku,
+  a sprzedawca stoi bliżej lady.
+- Zielona strzałka lepiej obchodzi narożniki palisady, gdy Yaceq idzie na zewnątrz z jednego boku obozu na drugi.
+- Wersja 8 jest na liście wyboru wersji jako osobna kopia.
+
+**Usunięte**
+- Błąd z wersji 7: w miejscu startu stał drugi, nieruchomy Yaceq.
+
 ## Wersja 8 (19.11.2026)
 
 Zapis w repozytorium: `d5f30d8`

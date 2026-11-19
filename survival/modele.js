@@ -344,9 +344,9 @@ export function lada(kolorDaszka = '#e0413a') {
   dodaj(g, box(0.12, 0.85, 1.1, '#8e5629'), -1.44, 0.45, 0);
   dodaj(g, box(0.12, 0.85, 1.1, '#8e5629'), 1.44, 0.45, 0);
   // słupki i kolorowy szyld z tyłu, żeby nie zasłaniały towaru
-  for (const x of [-1.4, 1.4]) dodaj(g, box(0.12, 1.4, 0.12, '#7a4520'), x, 1.7, -0.5);
-  for (let i = 0; i < 6; i++) dodaj(g, box(0.48, 0.32, 0.08, i % 2 ? '#ffffff' : kolorDaszka), -1.2 + i * 0.48, 2.2, -0.5);
-  dodaj(g, box(3.0, 0.08, 0.2, '#f7fbff'), 0, 2.4, -0.5);
+  // tylko słupek z tabliczką z boku, żeby sprzedawca za ladą był dobrze widoczny
+  dodaj(g, box(0.14, 1.5, 0.14, '#7a4520'), 1.4, 1.75, -0.5);
+  dodaj(g, box(0.5, 0.08, 0.5, kolorDaszka), 1.4, 2.5, -0.5);
   g.userData.blat = 1.03;
   return cien(g);
 }

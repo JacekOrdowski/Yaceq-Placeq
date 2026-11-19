@@ -4,10 +4,11 @@ import * as MOD from './modele.js';
 import { PRZEDMIOTY, WEZLY, ZWIERZETA, WEJSCIA, WARSZTAT, STALE, CENY_STALE, KRAINY, ZAKRES, BRONIE, NARZEDZIA, SRODEK, GRANICE_STREF } from './krainy.js';
 import { rysujIkone, ikonaURL } from './ikony.js';
 
-const WERSJA = 8;
+const WERSJA = 9;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 8, opis: 'Wielka rozbudowa (las, powiększanie bazy, wieże, kuźnia, tartak, piekarnia, skarbnik, druga kraina); pierwszego sprzedawcę kupujesz po około 5 minutach.' },
+  { nr: 9, opis: 'Wielka rozbudowa; siekierę kupujesz dopiero po ladzie z drewnem, sprzedawcy dobrze widać za ladą, pierwszy sprzedawca po około 5 minutach.' },
+  { nr: 8, opis: 'Wielka rozbudowa (las, powiększanie bazy, wieże, kuźnia, tartak, piekarnia, skarbnik, druga kraina); pierwszego sprzedawcę kupujesz po około 5 minutach.', adres: 'wersje/8/' },
   { nr: 7, opis: 'Wielka rozbudowa: cały las do ścinania, powiększanie bazy, wieże z myśliwymi, kuźnia, tartak, piekarnia, skarbnik i druga kraina.', adres: 'wersje/7/' },
   { nr: 6, opis: 'Sprzedawcy przy ladach (bez nich sprzedajesz sam), lada z drewnem, siekiera za pieniądze, plecak na start 10 miejsc.', adres: 'wersje/6/' },
   { nr: 5, opis: 'Wybór wersji przy starcie, drewno i kamień do budowy, bramy, wózek, taśmociąg, drwal i górnik.', adres: 'wersje/5/' },
@@ -425,7 +426,6 @@ function zbudujSwiat() {
     m.position.set(x, 0, z); m.rotation.y = r() * 6; swiat.add(m);
   }
   zbudujPalisade();
-  zbudujGracza();  zbudujPalisade();
   zbudujGracza();
   // budowle już postawione (z zapisu albo gotowe na start)
   for (const b of k.budowle) if (b.gotowe && !zbudowane(b.id)) S.zbudowane.push(b.id);
@@ -602,6 +602,15 @@ function punktTrasy(a, b) {
       const aBok = a.z > 4 && (a.x > o.x1 || a.x < o.x0), bBok = b.z > 4 && (b.x > o.x1 || b.x < o.x0);
       if (aBok && b.z < 5.2 && !bBok) return Math.hypot(a.x - (a.x > o.x1 ? o.x1 - 1 : o.x0 + 1), a.z - 6.4) < 0.6 ? b : { x: a.x > o.x1 ? o.x1 - 1 : o.x0 + 1, z: 6.4 };
       if (bBok && a.z < 5.2 && !aBok) return Math.hypot(a.x - (b.x > o.x1 ? o.x1 - 1 : o.x0 + 1), a.z - 6.4) < 0.6 ? b : { x: b.x > o.x1 ? o.x1 - 1 : o.x0 + 1, z: 6.4 };
+    } else {
+      // oboje na zewnątrz, ale po różnych bokach palisady: przez narożnik
+      const bok = q => q.x < o.x0 ? 'W' : q.x > o.x1 ? 'E' : 'N';
+      const ba = bok(a), bb = bok(b), wRogu = a.z < o.z0 - 0.3 && ba !== 'N';
+      if (wRogu && bb !== 'N' && bb !== ba && b.z > o.z0) return { x: ba === 'W' ? o.x1 + 1.4 : o.x0 - 1.4, z: o.z0 - 1.4 };
+      if (ba !== bb && !wRogu && (ba === 'N' ? b.z > o.z0 : a.z > o.z0)) {
+        const zach = ba === 'W' || bb === 'W';
+        return { x: zach ? o.x0 - 1.4 : o.x1 + 1.4, z: o.z0 - 1.4 };
+      }
     }
     return b;
   }
@@ -820,7 +829,7 @@ function postaw(cfg, nowa) {
       const kolory = { jagody: '#3a4bb0', dzem: '#8a2f9e', drewno: '#7a4520', wedzona: '#c96a1f', zloto: '#d99a00', krysztal: '#2aa6c9' };
       dodajObj(kopia('lada' + cfg.item, () => MOD.lada(kolory[cfg.item] || '#e0413a')));
       const tab = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1), new THREE.MeshBasicMaterial({ map: tekstura((() => { const cv = plotno(128, 128), c = cv.getContext('2d'); c.beginPath(); c.arc(64, 64, 60, 0, 7); c.fillStyle = '#fff'; c.fill(); rysujIkone(c, cfg.item, 64, 64, 96); return cv; })()), transparent: true }));
-      tab.position.set(0, 2.85, -0.5); B.obj.add(tab);
+      tab.position.set(1.4, 3.05, -0.5); tab.scale.setScalar(0.85); B.obj.add(tab);
       B.zapas = S.zapasy[cfg.id] || 0; B.dolot = 0; B.maks = 60; B.meshe = []; B.kolejka = []; B.spawnT = 1; B.sprzedT = 0; B.item = cfg.item;
       B.kier = Math.round((cfg.x + 9) / 4.5) % 2 ? 1 : -1;
       B.pad = { typ: 'zrzut', x: cfg.x, z: 5.3, r: 1.05, B, przyjmuje: cfg.item };
@@ -928,7 +937,7 @@ function postaw(cfg, nowa) {
       const L = G.budowle[cfg.lada];
       if (L) {
         const o = kopia('sprzedawca', () => { const g = MOD.osoba({ kurtka: '#ffffff', czapka: '#e0413a', pompon: '#ffffff', skala: 0.85 }); g.userData = {}; return g; });
-        o.position.set(L.x - 0.95, 0, 5.95); swiat.add(o);
+        o.position.set(L.x - 0.5, 0, 6.0); swiat.add(o);
         o.userData = { rece: czesci(o, 'reka'), sprzedaje: 0 };
         L.sprzedawca = o; B.obj = o;
       }
