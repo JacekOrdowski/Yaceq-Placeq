@@ -4,6 +4,8 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
 ## Wersja 2 (19.11.2026)
 
+Zapis w repozytorium: `208e7bb`
+
 **Zmienione**
 - Joystick: gdy palec wyjedzie poza kółko, ludzik idzie dalej pełną szybkością (wcześniej prawie stawał),
   a kółko przesuwa się za palcem. Od 40% wychylenia ludzik idzie pełną szybkością, przy małym wychyleniu wolniej.
