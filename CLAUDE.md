@@ -93,6 +93,8 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   Miasto: stalowe tory z kolejką (wcześniej noszą pracownicy i muły), mur ze stalowymi sztabami, chłodnia, mroźnia,
   sortownia (1. klasa: +15% wydajności liofilizatorni i tłoczni soków, odsort ok. 3% idzie dla owiec), liofilizaty.
 - Nowa wersja: podnieś `WERSJA` w `age/gra.js`, dopisz sekcję w `age/ZMIANY.md` (te same zasady co wyżej).
+  Wybór wersji jak w Survivalu: lista `WERSJE` w `age/gra.js`; poprzednią wersję zapisz jako kopię
+  `python narzedzia/age-wersja.py NUMER SKROT_COMMITA` (kopie w `age/wersje/`, zapis `age-of-yaceq-wNUMER`).
 - Test: `window.__yaceq` jak w Survivalu, a do tego `polecane` (co gra radzi postawić) i `postawPolecane()`
   (robot stawia to w wolnym miejscu). Robot przechodzi grę w około 80 minut.
 - Przybliżanie: uszczypnięcie dwoma palcami albo kółko myszy (`zoom` w `age/gra.js`, od 0,6 do 2, zapamiętane w `zapis.zoom`).

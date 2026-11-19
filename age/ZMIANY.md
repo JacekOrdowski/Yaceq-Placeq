@@ -5,6 +5,16 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age/
 Nowa gra zbudowana na silniku Yaceq Survival. Budujesz miasto tam, gdzie chcesz, a w ratuszu przechodzisz do kolejnych er.
 Pomysł na ery wzięty z gier strategicznych, ale wygląd, budynki i nazwy są nasze.
 
+## Wersja 5 (19.11.2026)
+
+**Dodane**
+- Wybór wersji przy starcie gry, tak jak w Yaceq Survival, i przycisk „Inne wersje gry” w menu.
+  Starsze wersje (1–4) są zapisane jako osobne kopie i każda ma swój własny zapis postępu.
+
+**Zmienione**
+- Telefon od razu bierze najnowszą wersję gry (wcześniej przez kilka minut po zmianie pokazywał starą).
+  Ta poprawka działa we wszystkich naszych grach.
+
 ## Wersja 4 (19.11.2026)
 
 **Zmienione**

@@ -4,10 +4,14 @@ import * as MOD from './modele.js';
 import { PRZEDMIOTY, WEZLY, ZWIERZETA, WEJSCIA, WARSZTAT, STALE, CENY_STALE, KRAINY, ZAKRES, BRONIE, NARZEDZIA, SRODEK, GRANICE_STREF, ERY } from './krainy.js';
 import { rysujIkone, ikonaURL } from './ikony.js';
 
-const WERSJA = 4;
+const WERSJA = 5;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/); przy jednej wersji od razu menu
 const WERSJE = [
-  { nr: 4, opis: 'Budynki można stawiać na całym placu, aż do jego dolnego brzegu przy targu. Do tego wszystko z wersji 2.' },
+  { nr: 5, opis: 'Wybór wersji przy starcie i przycisk „Inne wersje gry” w menu. Do tego wszystko z wersji 4.' },
+  { nr: 4, opis: 'Budynki można stawiać na całym placu, aż do jego dolnego brzegu przy targu.', adres: 'wersje/4/' },
+  { nr: 3, opis: 'Budynki także na dole placu, ale z wolnym pasem przy ladach.', adres: 'wersje/3/' },
+  { nr: 2, opis: 'Przybliżanie i oddalanie uszczypnięciem dwoma palcami (albo kółkiem myszy).', adres: 'wersje/2/' },
+  { nr: 1, opis: 'Pierwsza wersja: ratusz z erami, menu „Buduj”, stawianie gdzie chcesz, burzenie za połowę kosztu.', adres: 'wersje/1/' },
 ];
 const KLUCZ = 'age-of-yaceq-1';
 const STARY_KLUCZ = 'age-of-yaceq';

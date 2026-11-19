@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Yaceq Survival">
+<meta name="theme-color" content="#dce8f4">
+<link rel="apple-touch-icon" href="ikona-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="ikona-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Age of Yaceq (wersja 1)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Paytone+One&text=%C4%85%C4%87%C4%99%C5%82%C5%84%C3%B3%C5%9B%C5%BA%C5%BC%C4%84%C4%86%C4%98%C5%81%C5%83%C3%93%C5%9A%C5%B9%C5%BB&display=swap">
+<style>
+:root {
+  --ink: #213047;
+  --ink-soft: #5a6b84;
+  --paper: #ffffff;
+  --snow: #eef4fb;
+  --green: #3fbf5f;
+  --green-deep: #23883c;
+  --orange: #ff8a3d;
+  --orange-deep: #c9561a;
+  --blue: #3d7bd9;
+  --red: #e0413a;
+  --berry: #3a4bb0;
+  --gold: #ffcf3a;
+  --display: "Lilita One", "Paytone One", "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Nunito", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; overflow: hidden; background: #dce8f4; }
+body {
+  font-family: var(--body); color: var(--ink);
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent; overscroll-behavior: none; touch-action: none;
+}
+#scena { position: fixed; inset: 0; }
+#scena canvas { display: block; width: 100%; height: 100%; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; -webkit-tap-highlight-color: transparent; }
+button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+
+/* ---------- pasek u góry ---------- */
+#hud { position: fixed; left: 0; right: 0; top: 0; z-index: 10; pointer-events: none;
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px)); }
+.hud-row { display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 8px; }
+#zasoby { display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
+.chip { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px 0 4px; border-radius: 15px;
+  background: rgba(33, 48, 71, 0.72); color: #fff; font-family: var(--display); font-size: 18px; letter-spacing: 0.3px; }
+.chip img { width: 26px; height: 26px; }
+.chip.kasa { height: 38px; border-radius: 19px; font-size: 24px; padding-right: 14px; }
+.chip.kasa img { width: 34px; height: 34px; }
+.chip.puls { animation: puls 0.25s; }
+@keyframes puls { 50% { transform: scale(1.12); } }
+.chip.zimno { background: rgba(40, 110, 200, 0.85); }
+.chip.cieplo { background: rgba(220, 110, 30, 0.85); }
+#prawa { margin-right: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.okragly { pointer-events: auto; width: 46px; height: 46px; border-radius: 50%; background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 3px 0 rgba(33, 48, 71, 0.25); display: grid; place-items: center; }
+.okragly svg { width: 22px; height: 22px; }
+.okragly:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(33, 48, 71, 0.25); }
+#fala { background: rgba(33, 48, 71, 0.72); color: #fff; border-radius: 12px; padding: 4px 10px; font-weight: 900; font-size: 14px; text-align: left; }
+#fala.blisko { background: rgba(224, 65, 58, 0.9); }
+/* Age of Yaceq: przycisk „Buduj”, era i stawianie */
+#b-buduj { pointer-events: auto; padding: 9px 14px; border-radius: 16px; background: var(--orange); color: #fff; font-family: var(--display);
+  font-size: 20px; box-shadow: 0 4px 0 var(--orange-deep); }
+#b-buduj:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--orange-deep); }
+#b-buduj.zachecaj { animation: zachecaj 1s infinite; }
+@keyframes zachecaj { 50% { transform: scale(1.12); box-shadow: 0 4px 0 var(--orange-deep), 0 0 0 6px rgba(255, 210, 63, 0.7); } }
+#h-era { background: rgba(33, 48, 71, 0.72); color: #fff; border-radius: 12px; padding: 4px 10px; font-weight: 900; font-size: 13px; }
+#h-era:empty { display: none; }
+#stawianie { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); transform: translateX(-50%); z-index: 15;
+  width: min(92vw, 420px); background: rgba(255, 255, 255, 0.95); border-radius: 18px; padding: 10px 12px 12px; text-align: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }
+#stawianie[hidden] { display: none; }
+#st-tekst { font-weight: 900; font-size: 15px; }
+#st-tak:disabled { background: #c3ccda; box-shadow: 0 5px 0 #a7b1c2; }
+.bu-poz { display: flex; align-items: center; gap: 10px; width: 100%; background: #f1f5fb; border-radius: 16px; padding: 9px 10px; text-align: left; }
+.bu-poz.polecane { background: #fff4d6; box-shadow: inset 0 0 0 3px #ffc93c; }
+.bu-poz.zablok { opacity: 0.55; cursor: default; }
+.bu-ik { width: 40px; height: 40px; flex: none; display: grid; place-items: center; font-size: 28px; }
+.bu-ik img { width: 38px; height: 38px; }
+.bu-tx { flex: 1; min-width: 0; }
+.bu-tx b { display: block; font-size: 15px; }
+.bu-tx small { display: block; color: var(--ink-soft); font-weight: 800; font-size: 12px; line-height: 1.25; }
+.bu-koszt { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-weight: 900; font-size: 14px; flex: none; }
+.bu-koszt span { display: inline-flex; align-items: center; gap: 3px; }
+.bu-koszt img { width: 20px; height: 20px; }
+/* podpowiedź na dole ekranu, żeby nie zasłaniała środka gry */
+#zadanie { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); transform: translateX(-50%);
+  width: max-content; max-width: min(92vw, 420px); text-align: center; background: rgba(255, 255, 255, 0.9); color: var(--ink);
+  border-radius: 14px; padding: 6px 12px; font-weight: 900; font-size: 15px; box-shadow: 0 3px 0 rgba(33, 48, 71, 0.18); }
+#zadanie:empty { display: none; }
+
+#baner { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 70px); transform: translate(-50%, 0) scale(0.6); z-index: 12; pointer-events: none;
+  font-family: var(--display); font-size: clamp(24px, 7vw, 42px); color: #fff; text-align: center; white-space: nowrap;
+  -webkit-text-stroke: 7px #2b3a8f; paint-order: stroke fill;
+  text-shadow: 0 4px 0 rgba(20, 30, 70, 0.35); opacity: 0; transition: opacity 0.25s, transform 0.25s; }
+#baner.widac { opacity: 1; transform: translate(-50%, 0) scale(1); }
+#baner small { display: block; font-size: 0.42em; font-family: var(--body); font-weight: 900; margin-top: 6px; -webkit-text-stroke: 5px #2b3a8f; white-space: normal; max-width: 86vw; }
+#baner.zly { color: #ffe1de; -webkit-text-stroke-color: #a3221b; }
+#baner.zly small { -webkit-text-stroke-color: #a3221b; }
+#toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 58px); transform: translateX(-50%);
+  z-index: 12; background: rgba(33, 48, 71, 0.85); color: #fff; border-radius: 14px; padding: 8px 14px; font-weight: 900;
+  font-size: 15px; pointer-events: none; opacity: 0; transition: opacity 0.25s; max-width: 86vw; text-align: center; }
+#toast.widac { opacity: 1; }
+
+/* ---------- joystick ---------- */
+#joy { position: fixed; z-index: 9; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28); box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.55); pointer-events: none; }
+#galka { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2); }
+
+/* ---------- okna ---------- */
+.okno { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: rgba(28, 44, 70, 0.55);
+  padding: 16px; overflow-y: auto; touch-action: pan-y; }
+.karta { width: min(420px, 100%); background: var(--paper); border-radius: 22px; padding: 20px 18px 18px;
+  box-shadow: 0 8px 0 rgba(33, 48, 71, 0.18), 0 20px 50px rgba(0, 0, 0, 0.25); text-align: center; }
+.karta h1, .karta h2 { font-family: var(--display); font-weight: 400; margin: 0 0 6px; letter-spacing: 0.5px; }
+.karta h1 { font-size: 40px; line-height: 1; color: var(--berry); }
+.karta h1 span { display: block; color: var(--orange); font-size: 0.8em; }
+.karta h2 { font-size: 28px; }
+.karta p { margin: 6px 0 12px; color: var(--ink-soft); font-weight: 800; line-height: 1.35; }
+.przycisk { display: block; width: 100%; margin-top: 10px; padding: 13px 16px; border-radius: 16px; background: var(--green);
+  color: #fff; font-family: var(--display); font-size: 23px; letter-spacing: 0.5px; box-shadow: 0 5px 0 var(--green-deep); }
+.przycisk:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--green-deep); }
+.przycisk.drugi { background: #e9eef6; color: var(--ink); box-shadow: 0 5px 0 #c3ccda; font-size: 20px; }
+.przycisk.drugi:active { box-shadow: 0 2px 0 #c3ccda; }
+.przycisk.pomaranczowy { background: var(--orange); box-shadow: 0 5px 0 var(--orange-deep); }
+.wiersz { display: flex; gap: 10px; }
+.wiersz .przycisk { flex: 1; }
+.krysztalki { display: inline-flex; align-items: center; gap: 6px; font-family: var(--display); font-size: 22px; color: #1e8fb8; }
+.krysztalki img { width: 28px; height: 28px; }
+#logo { width: 120px; height: 120px; margin: -6px auto 2px; display: block; }
+
+.lista { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 4px; text-align: left; }
+.pozycja { display: flex; align-items: center; gap: 10px; background: #f1f5fb; border-radius: 16px; padding: 10px 12px; }
+.pozycja .nr { width: 38px; height: 38px; border-radius: 12px; background: var(--berry); color: #fff; display: grid; place-items: center;
+  font-family: var(--display); font-size: 22px; flex: none; }
+.pozycja .tekst { flex: 1; min-width: 0; }
+.pozycja b { display: block; font-size: 17px; }
+.pozycja small { display: block; color: var(--ink-soft); font-weight: 800; font-size: 13px; line-height: 1.25; }
+.pozycja .gw { color: #f0b400; font-size: 18px; letter-spacing: 1px; }
+.pozycja button.maly { flex: none; padding: 9px 12px; border-radius: 12px; background: var(--green); color: #fff; font-family: var(--display);
+  font-size: 17px; box-shadow: 0 3px 0 var(--green-deep); display: inline-flex; align-items: center; gap: 5px; }
+.pozycja button.maly img { width: 20px; height: 20px; }
+.pozycja button.maly:disabled { background: #c3ccda; box-shadow: 0 3px 0 #a7b1c2; cursor: default; }
+.pozycja.zamknieta { opacity: 0.55; }
+.pozycja.zamknieta .nr { background: #8d97a8; }
+.poziomy { display: flex; gap: 3px; margin-top: 4px; }
+.poziomy i { width: 12px; height: 6px; border-radius: 3px; background: #d4dbe6; }
+.poziomy i.ma { background: var(--berry); }
+
+.gwiazdy { font-size: 52px; letter-spacing: 6px; margin: 4px 0; }
+.gwiazdy .pusta { color: #d4dbe6; }
+.gwiazdy .pelna { color: #f5c000; text-shadow: 0 3px 0 #c79300; }
+.przelacznik { display: flex; justify-content: space-between; align-items: center; padding: 8px 4px; font-weight: 900; }
+.przelacznik button { padding: 6px 14px; border-radius: 12px; background: #e9eef6; font-weight: 900; }
+.przelacznik button.wl { background: var(--green); color: #fff; }
+.drobne { font-size: 12px; color: var(--ink-soft); margin-top: 10px; font-weight: 800; }
+</style>
+</head>
+<body>
+<div id="scena"></div>
+
+<div id="hud" hidden>
+  <div class="hud-row">
+    <div id="zasoby"></div>
+    <div id="prawa">
+      <button class="okragly" id="b-pauza" aria-label="Pauza">
+        <svg viewBox="0 0 24 24" fill="#213047"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></svg>
+      </button>
+      <div id="fala" hidden></div>
+      <button id="b-buduj">🔨 Buduj</button>
+      <div id="h-era"></div>
+    </div>
+  </div>
+  <div id="zadanie"></div>
+</div>
+<div id="baner"></div>
+<div id="toast"></div>
+<div id="joy" hidden><div id="galka"></div></div>
+<div id="stawianie" hidden>
+  <div id="st-tekst"></div>
+  <div class="wiersz"><button class="przycisk drugi" id="st-anuluj">Anuluj</button><button class="przycisk" id="st-tak">Postaw tutaj</button></div>
+</div>
+
+<div class="okno" id="o-buduj" hidden>
+  <div class="karta">
+    <h2>🔨 Buduj</h2>
+    <p id="bu-info"></p>
+    <div class="lista" id="bu-lista"></div>
+    <div class="wiersz">
+      <button class="przycisk drugi" id="bu-zburz">Zburz</button>
+      <button class="przycisk drugi" id="bu-wroc">Zamknij</button>
+    </div>
+  </div>
+</div>
+
+<div class="okno" id="o-wersje" hidden>
+  <div class="karta">
+    <h2>Wybierz wersję gry</h2>
+    <p>Każda wersja ma swój własny zapis postępu.</p>
+    <div class="lista" id="w-lista"></div>
+  </div>
+</div>
+
+<div class="okno" id="o-menu" hidden>
+  <div class="karta">
+    <canvas id="logo" width="240" height="240"></canvas>
+    <h1>Age of<span>Yaceq</span></h1>
+    <p>Stawiaj budynki tam, gdzie chcesz, i w ratuszu przechodź do kolejnych er!</p>
+    <div class="krysztalki" id="m-kr"></div>
+    <button class="przycisk" id="m-graj">Graj</button>
+    <div class="wiersz">
+      <button class="przycisk drugi" id="m-krainy">Krainy</button>
+      <button class="przycisk drugi" id="m-sklep">Ulepszenia</button>
+    </div>
+    <div class="przelacznik"><span>Muzyka</span><button id="m-muz">wł.</button></div>
+    <div class="przelacznik"><span>Dźwięki</span><button id="m-dzw">wł.</button></div>
+    <button class="przycisk drugi" id="m-wersje">Inne wersje gry</button>
+    <button class="przycisk drugi" data-inne-gry>Inne gry</button>
+    <div class="drobne" id="m-wersja"></div>
+  </div>
+</div>
+
+<div class="okno" id="o-krainy" hidden>
+  <div class="karta">
+    <h2>Krainy</h2>
+    <p>Ukończ krainę, żeby otworzyć następną. Szybciej = więcej gwiazdek.</p>
+    <div class="lista" id="k-lista"></div>
+    <button class="przycisk drugi" id="k-wroc">Wróć</button>
+  </div>
+</div>
+
+<div class="okno" id="o-sklep" hidden>
+  <div class="karta">
+    <h2>Ulepszenia na zawsze</h2>
+    <p>Kryształki zdobywasz za ukończone krainy, gwiazdki i fale bez końca.</p>
+    <div class="krysztalki" id="s-kr"></div>
+    <div class="lista" id="s-lista"></div>
+    <button class="przycisk drugi" id="s-wroc">Wróć</button>
+  </div>
+</div>
+
+<div class="okno" id="o-pauza" hidden>
+  <div class="karta">
+    <h2>Pauza</h2>
+    <p id="p-info"></p>
+    <button class="przycisk" id="p-dalej">Graj dalej</button>
+    <div class="przelacznik"><span>Muzyka</span><button id="p-muz">wł.</button></div>
+    <div class="przelacznik"><span>Dźwięki</span><button id="p-dzw">wł.</button></div>
+    <button class="przycisk drugi" id="p-menu">Menu</button>
+    <button class="przycisk drugi" id="p-odnowa">Zacznij krainę od nowa</button>
+  </div>
+</div>
+
+<div class="okno" id="o-koniec" hidden>
+  <div class="karta">
+    <h2 id="ko-tytul">Brawo!</h2>
+    <div class="gwiazdy" id="ko-gw"></div>
+    <p id="ko-info"></p>
+    <div class="krysztalki" id="ko-kr"></div>
+    <button class="przycisk" id="ko-dalej">Następna kraina</button>
+    <button class="przycisk pomaranczowy" id="ko-bez">Graj tu dalej: fale bez końca</button>
+    <button class="przycisk drugi" id="ko-sklep">Ulepszenia</button>
+  </div>
+</div>
+
+<div class="okno" id="o-pytanie" hidden>
+  <div class="karta">
+    <h2 id="py-tytul"></h2>
+    <p id="py-tekst"></p>
+    <div class="wiersz">
+      <button class="przycisk drugi" id="py-nie">Nie</button>
+      <button class="przycisk" id="py-tak">Tak</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="gra.js"></script>
+<script src="../../../gry.js"></script>
+</body>
+</html>
