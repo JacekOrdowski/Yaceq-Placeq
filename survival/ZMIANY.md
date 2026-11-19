@@ -4,6 +4,8 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
 ## Wersja 1 (19.11.2026)
 
+Zapis w repozytorium: `8bd520c`
+
 **Dodane**
 - Nowa gra 3D na telefon: Yaceq zbiera jagody kamczackie do koszyczka, a na plecach rośnie mu stos koszyczków.
   Pomysł na zasady wzięty z filmiku z reklamą gry z zimowym obozem. Wygląd, postacie i nazwy są nasze własne.
