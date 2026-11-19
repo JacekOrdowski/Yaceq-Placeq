@@ -4,10 +4,11 @@ import * as MOD from './modele.js';
 import { PRZEDMIOTY, WEZLY, ZWIERZETA, WEJSCIA, WARSZTAT, STALE, CENY_STALE, KRAINY, ZAKRES, BRONIE, NARZEDZIA, SRODEK, GRANICE_STREF } from './krainy.js';
 import { rysujIkone, ikonaURL } from './ikony.js';
 
-const WERSJA = 11;
+const WERSJA = 12;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 11, opis: 'Podpowiedzi na dole ekranu, duże napisy u góry; środek ekranu wolny. Do tego wszystko z wersji 10.' },
+  { nr: 12, opis: 'Ulepszenia pokazują poziom (np. 3 z 10) i nie kupują się same po kolei, pokonane zwierzęta się przewracają, skład desek przy tartaku.' },
+  { nr: 11, opis: 'Podpowiedzi na dole ekranu, duże napisy u góry; środek ekranu wolny. Do tego wszystko z wersji 10.', adres: 'wersje/11/' },
   { nr: 10, opis: 'Lada z kamieniem, pomocnicy niosą zbiory na lady, magazyn dla ciebie, wszystko po 1,5 s stania na polu, duże obrazki ulepszeń, mniejsze chatki.', adres: 'wersje/10/' },
   { nr: 9, opis: 'Wielka rozbudowa; siekierę kupujesz dopiero po ladzie z drewnem, sprzedawcy dobrze widać za ladą, pierwszy sprzedawca po około 5 minutach.', adres: 'wersje/9/' },
   { nr: 8, opis: 'Wielka rozbudowa (las, powiększanie bazy, wieże, kuźnia, tartak, piekarnia, skarbnik, druga kraina); pierwszego sprzedawcę kupujesz po około 5 minutach.', adres: 'wersje/8/' },
@@ -134,6 +135,19 @@ function napis(tekst, szer = 3.2, kolor = '#ffffff') {
   c.lineWidth = 9; c.strokeStyle = 'rgba(25,38,60,0.85)'; c.lineJoin = 'round';
   c.strokeText(tekst, 256, 46); c.fillStyle = kolor; c.fillText(tekst, 256, 46);
   return nowySprite(cv, szer);
+}
+// napis nad polem ulepszenia: nazwa, a pod nią żółty poziom („Poziom 2 z 4”)
+function napisUlepszenia(tekst, poziom) {
+  const cv = plotno(512, 150), c = cv.getContext('2d');
+  c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round'; c.lineWidth = 9; c.strokeStyle = 'rgba(25,38,60,0.85)';
+  c.font = `44px ${FONT}`; c.strokeText(tekst, 256, 46); c.fillStyle = '#ffffff'; c.fillText(tekst, 256, 46);
+  c.font = `46px ${FONT}`; c.strokeText(poziom, 256, 108); c.fillStyle = '#ffd84a'; c.fillText(poziom, 256, 108);
+  return nowySprite(cv, 3.2);
+}
+function tekstPoziomu(ul) {
+  const [lv, max] = ul.lv();
+  if (lv < 1) return ul.najpierw || '';
+  return lv >= max ? `Poziom ${lv} z ${max} · MAX` : `Poziom ${lv} z ${max}`;
 }
 function pasekZycia() {
   const cv = plotno(96, 16), s = nowySprite(cv, 1.3); s.userData.cv = cv; s.userData.ost = -1;
@@ -623,7 +637,8 @@ function punktTrasy(a, b) {
       const L = G.budowle[id];
       if (L.cfg.rodzaj !== 'lada' || Math.abs(xc - L.x) >= 2.0) continue;
       const sx = L.x + (a.x < L.x ? -2.4 : 2.4), sz = a.z > 7.7 ? 8.3 : 5.7;
-      return Math.hypot(a.x - sx, a.z - sz) < 0.5 ? { x: sx, z: a.z > 7.7 ? 5.7 : 8.3 } : { x: sx, z: sz };
+      // już przy przejściu obok lady (na tej samej linii): idź prosto na drugą stronę, bez zawracania
+      return Math.abs(a.x - sx) < 0.5 && Math.abs(a.z - 7) < 1.9 ? { x: sx, z: a.z > 7.7 ? 5.7 : 8.3 } : { x: sx, z: sz };
     }
   }
   const sa = strona(a.x, a.z);
@@ -912,7 +927,8 @@ function postaw(cfg, nowa) {
     }
     case 'sklad': {
       dodajObj(kopia('sklad', () => MOD.sklad()));
-      B.wej = S.zapasy[cfg.id] || 0; B.dolot = 0; B.maks = 64; B.meshe = [];
+      B.wej = S.zapasy[cfg.id] || 0; B.dolot = 0; B.maks = cfg.maks || 64; B.meshe = [];
+      if (nowa && cfg.item === 'deski') baner('Skład desek!', 'Tartak sam odkłada tu deski, a ty bierzesz je na budowy');
       B.pad = { typ: 'dostawa', x: cfg.x - 1.7, z: cfg.z, r: 0, B, przyjmuje: cfg.item };
       B.odbior = { typ: 'odbior', x: cfg.x, z: cfg.z, r: 1.25, B, daje: cfg.item, ile: () => B.wej, zdejmij: () => { B.wej--; return zdejmijZeStosu(B); } };
       G.pady.push(B.odbior);
@@ -1001,7 +1017,7 @@ function postaw(cfg, nowa) {
       dodajObj(kopia('kuznia', () => MOD.kuznia()));
       B.ogien = B.obj.getObjectByName('ogien');
       kol(cfg.x, cfg.z, 1.6);
-      padyUlepszen(B, UL_KUZNIA());
+      padyUlepszen(B, UL_KUZNIA(), 3);
       break;
     }
     case 'zbrojownia': {
@@ -1106,15 +1122,22 @@ function ustawUlepszenie(p) {
   p.wpl = {};
   p.dol = k ? p.ul.dol() : '';
   p.ost = -1;
+  const tp = tekstPoziomu(p.ul);
+  if (p.napis && p.napis.userData.tp !== tp) {
+    swiat.remove(p.napis); p.napis.material.map.dispose(); p.napis.material.dispose();
+    p.napis = napisUlepszenia(p.ul.napis || p.ul.nazwa, tp); p.napis.userData.tp = tp;
+    p.napis.position.set(p.x, 1.25, p.z - 1.0); swiat.add(p.napis);
+  }
   if (p.max) { const t = p.ul.brak ? p.ul.brak() : 'MAX'; rysujPoleUlepszenia(p.mesh.userData.cv, p.ikona, null, t, false); p.mesh.material.map.needsUpdate = true; }
   else rysujPad(p);
 }
 function odswiezUlepszenia() { for (const p of G.pady) if (p.typ === 'ulepsz' && p.max) ustawUlepszenie(p); }
-function padyUlepszen(B, lista) {
+// dx: przesunięcie pól w bok (np. żeby wieża nie zasłaniała ich na ekranie)
+function padyUlepszen(B, lista, dx = 0) {
   B.pady = lista.map((ul, i) => {
-    const p = { typ: 'ulepsz', x: B.x - (lista.length - 1) * 1.15 + i * 2.3, z: B.z + 2.8, r: 1.0, ul, wpl: {} };
+    const p = { typ: 'ulepsz', x: B.x + dx - (lista.length - 1) * 1.15 + i * 2.3, z: B.z + 2.8, r: 1.0, ul, wpl: {} };
     p.mesh = pole(2.2); p.mesh.position.set(p.x, 0.05, p.z); swiat.add(p.mesh);
-    p.napis = napis(ul.napis || ul.nazwa, 2.4); p.napis.position.set(p.x, 1.1, p.z - 1.0); swiat.add(p.napis);
+    p.napis = napisUlepszenia(ul.napis || ul.nazwa, ''); p.napis.position.set(p.x, 1.25, p.z - 1.0); swiat.add(p.napis);
     p.ikona = ul.ikona; p.ost = -1; ustawUlepszenie(p);
     G.pady.push(p); return p;
   });
@@ -1123,20 +1146,24 @@ const UL_WARSZTAT = () => WARSZTAT.map(u => ({
   nazwa: u.nazwa, ikona: EMOJI[u.id], napis: { kosz: 'Większy plecak', buty: 'Szybsze buty', rece: 'Szybsze ręce' }[u.id],
   koszt: () => { const c = u.ceny[S.warsztat[u.id]]; return c === undefined ? null : { kasa: c, drewno: Math.round(c / 3) }; },
   dol: () => `${u.nazwa} ${S.warsztat[u.id] + 1}`,
-  zastosuj: () => { S.warsztat[u.id]++; baner(u.nazwa + '!', u.opis); },
+  lv: () => [S.warsztat[u.id] + 1, u.ceny.length + 1],
+  zastosuj: () => { S.warsztat[u.id]++; baner(`${u.nazwa}: poziom ${S.warsztat[u.id] + 1} z ${u.ceny.length + 1}`, u.opis); },
 }));
 const UL_KUZNIA = () => ['siekiera', 'kilof'].map(t => ({
   nazwa: NARZEDZIA[t].nazwa, ikona: t === 'siekiera' ? '🪓' : '⛏️', napis: t === 'siekiera' ? 'Lepsza siekiera' : 'Lepszy kilof',
   koszt: () => { const lv = S.narz[t] || 0; return lv < 1 ? null : NARZEDZIA[t].koszty[lv + 1] || null; },
   dol: () => `${NARZEDZIA[t].nazwa} ${NARZEDZIA[t].poziomy[(S.narz[t] || 0) + 1]}`,
   brak: () => (S.narz[t] || 0) < 1 ? 'brak' : 'MAX',
-  zastosuj: () => { S.narz[t]++; baner(`${NARZEDZIA[t].nazwa} ${NARZEDZIA[t].poziomy[S.narz[t]]}!`, t === 'siekiera' ? 'Teraz zetniesz grubsze drzewa dalej w lesie' : 'Teraz rozbijesz większe głazy'); odswiezHudNarz(); },
+  lv: () => [S.narz[t] || 0, NARZEDZIA[t].poziomy.length - 1],
+  najpierw: t === 'siekiera' ? 'Najpierw kup siekierę' : 'Najpierw zbuduj kamieniołom',
+  zastosuj: () => { S.narz[t]++; baner(`${NARZEDZIA[t].nazwa} ${NARZEDZIA[t].poziomy[S.narz[t]]}: poziom ${S.narz[t]} z ${NARZEDZIA[t].poziomy.length - 1}`, t === 'siekiera' ? 'Teraz zetniesz grubsze drzewa dalej w lesie' : 'Teraz rozbijesz większe głazy'); odswiezHudNarz(); },
 }));
 const UL_ZBROJOWNIA = () => [{
   nazwa: 'Broń myśliwych', ikona: '🏹', napis: 'Lepsza broń dla myśliwych',
   koszt: () => (BRONIE[S.bron + 1] || {}).koszt || null,
   dol: () => BRONIE[S.bron + 1].nazwa,
-  zastosuj: () => { S.bron++; baner('Nowa broń: ' + BRONIE[S.bron].nazwa, 'Myśliwi na wieżach mocniej przeganiają zwierzęta'); odswiezHudNarz(); },
+  lv: () => [S.bron + 1, BRONIE.length],
+  zastosuj: () => { S.bron++; baner(`Nowa broń: ${BRONIE[S.bron].nazwa} (poziom ${S.bron + 1} z ${BRONIE.length})`, 'Myśliwi na wieżach szybciej pokonują zwierzęta'); odswiezHudNarz(); },
 }];
 
 // stosy przedmiotów: na ladzie (na blacie) i przy przetworni / kopalni (na ziemi)
@@ -1347,8 +1374,9 @@ function idz(zw, x, z, v, dt) {
 }
 function przegon(zw) {
   if (zw.stan === 'ucieka') return;
-  zw.stan = 'ucieka'; zw.pasek.visible = false;
-  if (zw.dziki) { const gr = G.gracz, dx = zw.x - gr.x, dz = zw.z - gr.z, d = Math.hypot(dx, dz) || 1; zw.sx = zw.x + dx / d * 25; zw.sz = zw.z + dz / d * 25; G.dzikieT = Math.max(G.dzikieT, 40); }
+  // pokonane zwierzę przewraca się na bok, a po chwili znika w obłoczku (stan nazywa się dalej 'ucieka')
+  zw.stan = 'ucieka'; zw.pasek.visible = false; zw.T = 0; zw.skala0 = zw.obj.scale.x; zw.odrzut.multiplyScalar(0.4);
+  if (zw.dziki) G.dzikieT = Math.max(G.dzikieT, 40);
   const p = V(zw.x, 1.2, zw.z);
   wybuch('gwiazda', p, 10, 3.5, 0.7, 0.55);
   wybuch('puch', p, 6, 2, 0.6, 0.9);
@@ -1403,16 +1431,17 @@ function aktualizujZwierzeta(dt) {
       if (wObozie(zw.x, zw.z)) ruch = !idz(zw, s.x + s.nx * 1.5, s.z + s.nz * 1.5, def.v, dt);
       else { ruch = !idz(zw, zw.sx, zw.sz, def.v, dt); if (!ruch) { usunZwierze(i); continue; } }
       if (!ruch && wObozie(zw.x, zw.z)) zw.x += s.nx * 0.2;
-    } else if (zw.stan === 'ucieka' && s && strona(zw.x, zw.z) === 'w' && !zw.wyszedl) {
-      ruch = !idz(zw, s.x + s.nx * 1.6, s.z + s.nz * 1.6, def.v * 1.7, dt);
-      if (!ruch) zw.wyszedl = true;
     } else if (zw.stan === 'ucieka') {
-      ruch = !idz(zw, zw.sx, zw.sz, def.v * 1.7, dt);
-      if (!ruch || Math.hypot(zw.x - zw.sx, zw.z - zw.sz) < 1) { usunZwierze(i); continue; }
+      zw.T += dt;
+      if (zw.T > 1.4) { wybuch('puch', V(zw.x, 0.5, zw.z), 12, 2.5, 0.7, 1.1); usunZwierze(i); continue; }
     }
     // wygląd
-    zw.obj.position.set(zw.x, zw.stan === 'ucieka' ? Math.abs(Math.sin(zw.faza)) * 0.25 : 0, zw.z);
+    zw.obj.position.set(zw.x, 0, zw.z);
     zw.obj.rotation.y = zw.kat;
+    if (zw.stan === 'ucieka') {
+      zw.obj.rotation.z = -Math.PI / 2 * Math.min(1, zw.T / 0.3);
+      zw.obj.scale.setScalar(zw.skala0 * Math.max(0.05, Math.min(1, (1.4 - zw.T) / 0.35)));
+    }
     const atak = zw.stan === 'atakuje' || zw.stan === 'je';
     const fz = ruch ? zw.faza : atak ? czasGry * 12 : 0;
     zw.nogi.forEach((n, j) => { n.rotation.x = (ruch ? 0.7 : atak ? 0.25 : 0) * Math.sin(fz + (j % 2 ? Math.PI : 0) + (j > 1 ? Math.PI : 0)); });
@@ -1450,7 +1479,7 @@ function uderz(zw, sila, skad) {
   if (zw.zycie <= 0) przegon(zw);
 }
 
-// wieże: myśliwy strzela z broni kupionej w zbrojowni (zwierzęta tylko uciekają)
+// wieże: myśliwy strzela z broni kupionej w zbrojowni
 const KULA_G = new THREE.SphereGeometry(0.2, 8, 6), KULA_M = new THREE.MeshLambertMaterial({ color: '#ffffff' });
 function aktualizujWieze(dt) {
   const bron = BRONIE[S.bron];
@@ -1633,6 +1662,17 @@ function aktualizujProdukcje(dt) {
         if (T.pasy) T.pasy.position.z = (czasGry * 1.6) % 0.3;
         if (B.wyj > 0 && miejsceL) { T.T -= dt; if (T.T <= 0) { T.T = 0.35; B.wyj--; zdejmijWyjscie(B); wyslijTasma(T, L, c.wyj); } }
       }
+      // gotowe wyroby same lecą do składu obok (np. deski z tartaku do składu desek)
+      const Sk = c.sklad && G.budowle[c.sklad];
+      if (!T && Sk && B.wyj > 0 && miejsceW(Sk)) {
+        B.skT = (B.skT || 0) - dt;
+        if (B.skT <= 0) {
+          B.skT = 0.3; B.wyj--;
+          const st = zdejmijWyjscie(B), m = przedmiot(c.wyj); swiat.add(m);
+          m.position.copy(st ? st.position : V(B.x + 2.2, 0.3, B.z));
+          przyjmij(Sk, c.wyj, m);
+        }
+      }
       if (B.ogien) B.ogien.visible = pracuje || Math.floor(czasGry * 2) % 2 === 0;
       if (B.ogien && B.ogien.isGroup) B.ogien.children.forEach((f, i) => { f.scale.y = 0.8 + Math.sin(czasGry * 18 + i) * 0.25; });
       if (pracuje) {
@@ -1811,7 +1851,7 @@ function aktualizujGracza(dt) {
   // narzędzie w ręku: koszyczek, siekiera albo kilof
   const narz = zbiera ? wZasiegu[0].def.daje : 'jagody';
   if (gr.narzTyp !== narz) { gr.narzTyp = narz; pokazNarzedzie(gr.obj, narz); }
-  // wir: przy zbieraniu i przeganianiu Yaceq kręci się z wyciągniętym narzędziem
+  // wir: przy zbieraniu i walce Yaceq kręci się z wyciągniętym narzędziem
   const wir = zbiera || blisko;
   gr.wir = Math.max(0, Math.min(1, gr.wir + (wir ? dt * 6 : -dt * 4)));
   G.wir.visible = gr.wir > 0.05;
@@ -1844,7 +1884,8 @@ function aktualizujGracza(dt) {
   let czeka = null;
   for (const p of G.pady) {
     const d = Math.hypot(p.x - gr.x, p.z - gr.z);
-    if (d > p.r) { p.stoi = 0; continue; }
+    if (d > p.r) { p.stoi = 0; p.zablok = false; continue; }
+    if (p.zablok) continue;
     p.stoi = (p.stoi || 0) + dt;
     if (p.stoi < CZEKAJ) { if (!czeka || p.stoi > czeka.stoi) czeka = p; continue; }
     obsluzPad(p, dt);
@@ -1923,6 +1964,9 @@ function obsluzPad(p, dt) {
       if (p.typ === 'buduj') zbuduj(p.cfg);
       else if (p.typ === 'ulepsz') {
         p.ul.zastosuj(); ustawUlepszenie(p); dzwiek('buduj'); konfetti(V(p.x, 1, p.z), 20);
+        // następny poziom nie kupuje się sam: trzeba zejść z pola i wejść znowu
+        p.zablok = true;
+        if (!p.max) toast('Chcesz następny poziom? Zejdź z pola i wejdź znowu');
         zmienionyPlecak(); zapiszGre();
       } else {
         const sg = p.seg; sg.hp = sg.max; wyglądSegmentu(sg); dzwiek('buduj'); wybuch('gwiazda', V(sg.x, 1, sg.z), 8, 2, 0.6, 0.5);
@@ -1973,7 +2017,7 @@ function wybierzZadanie() {
   // 3. budowa, na którą jest wszystko (albo ulepszenie, gdy zostaje dość pieniędzy)
   const tanie = pola.find(stac);
   if (tanie) return ustaw('Zbuduj: ' + tanie.cfg.nazwa, { x: tanie.x, z: tanie.z });
-  const ulepsz = G.pady.filter(p => p.typ === 'ulepsz' && !p.max && stac(p)).sort((a, b) => waga(a) - waga(b))[0];
+  const ulepsz = G.pady.filter(p => p.typ === 'ulepsz' && !p.max && !p.zablok && stac(p)).sort((a, b) => waga(a) - waga(b))[0];
   if (ulepsz && S.kasa - reszta(ulepsz).kasa >= (pola[0] ? reszta(pola[0]).kasa * 0.5 : 0)) return ustaw('Kup ulepszenie: ' + ulepsz.ul.nazwa, { x: ulepsz.x, z: ulepsz.z });
   const pelnyPl = gr.plecak.length >= pojemnosc();
   // 3b. niesie drewno, kamień albo deski potrzebne do budowy
@@ -2169,7 +2213,7 @@ function stanDoZapisu() {
     if (B.cfg.rodzaj === 'kopalnia') z.kopalnia = B.wyj;
     if (B.cfg.rodzaj === 'sklad') z.zapasy[id] = B.wej + B.dolot;
   }
-  // pieniądze z przegonionych zwierząt dolicz do kasy
+  // pieniądze z pokonanych zwierząt dolicz do kasy
   for (const p of G.pady) if (p.lup) z.kasa += p.wartosc;
   return z;
 }

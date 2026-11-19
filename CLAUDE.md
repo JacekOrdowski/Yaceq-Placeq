@@ -51,7 +51,7 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
 - Gra 3D (three.js 0.170 w `survival/three.module.min.js`, bez internetu). Zasady wzięte z filmiku z reklamą gry
   z zimowym obozem, ale wygląd, postacie i nazwy są własne: nie kopiujemy cudzej gry.
 - Zamiast rąbania drzew: zbieranie jagód kamczackich, zamiast siekiery: koszyczek (życzenie właściciela).
-  Zwierzęta się przegania (uciekają), nikt nie ginie.
+  Pokonane zwierzę przewraca się na bok i znika w obłoczku, bez krwi (życzenie właściciela; wcześniej tylko uciekały).
 - Zasoby: jagody (koszyczek) → sprzedaż na ladach daje pieniądze; drewno (siekiera, ścinalne drzewa) i kamień
   (kilof, głazy po zbudowaniu kamieniołomu) idą na budowy. Koszt budowli w `krainy.js` to `{ kasa, drewno, kamien }`.
 - Lady sprzedają tylko, gdy stoi przy nich Yaceq albo gdy zatrudniono sprzedawcę (`rodzaj: 'sprzedawca'`).
@@ -71,7 +71,7 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   `python narzedzia/survival-wersja.py NUMER SKROT_COMMITA` (skrót z `survival/ZMIANY.md`), a w `WERSJE` dopisz nową
   na górze i poprzedniej daj `adres: 'wersje/NUMER/'`. Kopie mają osobny zapis postępu (`yaceq-survival-wNUMER`).
 - Test bez klikania: w konsoli przeglądarki `window.__yaceq` (stan gry, `krok(sekundy)` przesuwa czas gry,
-  `cel` to miejsce, które pokazuje zielona strzałka). Robot idący za `celTrasy` (punkt, do którego prowadzi strzałka) przechodzi krainę w około 71 minut (pola działają po 1,5 s stania: `CZEKAJ` w `gra.js`);
+  `cel` to miejsce, które pokazuje zielona strzałka). Robot idący za `celTrasy` (punkt, do którego prowadzi strzałka) przechodzi krainę w około 55 minut (pola działają po 1,5 s stania: `CZEKAJ` w `gra.js`);
   przy dłuższych symulacjach używaj `krok(0.1, 1/30)` (szybciej);
   `odNowa()` zaczyna krainę od zera.
   Kamera patrzy na ukos: kierunek w świecie (dx, dz) to na ekranie x = (dx − dz)/√2, z = (dx + dz)/√2.

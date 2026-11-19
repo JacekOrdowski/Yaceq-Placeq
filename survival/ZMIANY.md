@@ -2,6 +2,20 @@
 
 Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
+## Wersja 12 (19.11.2026)
+
+**Dodane**
+- Nad każdym polem ulepszenia jest żółty napis z poziomem, np. „Poziom 3 z 10”, a przy MAX: „Poziom 10 z 10 · MAX”.
+  Po kupieniu duży napis też mówi, który to poziom.
+- Skład desek obok tartaku: tartak sam odkłada do niego gotowe deski (mieści 100), a ty bierzesz je stamtąd na budowy.
+
+**Zmienione**
+- Po kupieniu poziomu ulepszenia następny nie kupuje się sam. Trzeba zejść z pola i wejść na nie znowu.
+- Zwierzęta po pokonaniu nie uciekają: przewracają się na bok i znikają w obłoczku (bez krwi).
+- Pola ulepszeń siekiery i kilofa przy kuźni są przesunięte w bok, żeby nie zasłaniała ich wieża myśliwych.
+- Poprawka: przy ladzie z kamieniem strzałka czasem kręciła się w kółko i nie prowadziła dalej.
+- Robot przechodzi krainę w około 55 minut.
+
 ## Wersja 11 (19.11.2026)
 
 **Zmienione**

@@ -28,7 +28,7 @@ export const SRODEK = [0, -6];
 export const GRANICE_STREF = [28, 37]; // < 28: strefa 1, < 37: strefa 2, dalej: strefa 3
 
 // zwierzęta: zycie = ile uderzeń (siła 1), sila = ile palisady psują na sekundę,
-// je = ile zapasów zjedzą, zanim uciekną, nagroda = złotówki, które zostawiają, gdy się je przegoni
+// je = ile zapasów zjedzą, zanim uciekną, nagroda = złotówki, które zostawiają, gdy się je pokona
 export const ZWIERZETA = {
   lis:        { nazwa: 'lisy', zycie: 3, v: 3.4, sila: 1, je: 3, nagroda: 3 },
   wilk:       { nazwa: 'wilki', zycie: 8, v: 3.2, sila: 2.4, je: 4, nagroda: 7 },
@@ -39,7 +39,7 @@ export const ZWIERZETA = {
 // skąd przychodzą fale zwierząt (zza lasu)
 export const WEJSCIA = { N: [0, -48], NE: [36, -42], NW: [-36, -42], E: [48, -12], W: [-48, -12] };
 
-// broń myśliwych na wieżach (kupowana w zbrojowni). Zwierzęta nie giną, tylko uciekają.
+// broń myśliwych na wieżach (kupowana w zbrojowni). Trafione zwierzę przewraca się i znika.
 export const BRONIE = [
   { nazwa: 'Proca', sila: 1, co: 1.3, zasieg: 10, pocisk: 'sniezka', obszar: 0 },
   { nazwa: 'Łuk', sila: 2, co: 1.1, zasieg: 12, pocisk: 'strzala', obszar: 0, koszt: { kasa: 300, drewno: 60 } },
@@ -161,12 +161,14 @@ function zrob(p) {
       K(domek('domek4', 25, 19, ['ladaD', 'ladaDr']), { kasa: 250, drewno: 50, kamien: 20 }, 'kuznia', 1),
       K(rozbudowa('rozb2', 2, 10.3, 0.3, 'Powiększ bazę na wschód'), { kasa: 600, drewno: 100, kamien: 50 }, ['kuznia', 'zbrojownia', 'mys3', 'mys4'], 1),
       // ----- etap 2: wschód (tartak, rynek) -----
-      K(przetwornia('tartak', 'tartak', 'drewno', 'deski', 15.5, 1.5, 1.4, null, 'Tartak (drewno → deski)'), { kasa: 400, drewno: 80, kamien: 40 }, 'rozb2', 2),
+      K({ ...przetwornia('tartak', 'tartak', 'drewno', 'deski', 15.5, 1.5, 1.4, null, 'Tartak (drewno → deski)'), sklad: 'skladDe' }, { kasa: 400, drewno: 80, kamien: 40 }, 'rozb2', 2),
+      // skład desek: tartak sam odkłada do niego gotowe deski (mieści dużo więcej niż tartak)
+      K({ id: 'skladDe', rodzaj: 'sklad', item: 'deski', x: 17.3, z: -1.9, maks: 100, nazwa: 'Skład desek' }, { kasa: 250, drewno: 60, kamien: 20 }, 'tartak', 2),
       K(chatka('chatka5', 15.5, -4, 'drewno', 'tartak'), { kasa: 300, drewno: 60, kamien: 30 }, 'tartak', 2),
       K(efekt('rynek', 'ceny', 15.5, -8.8, 'Rynek (klienci płacą o 30% więcej)', 'rynek'), { kasa: 800, deski: 40, kamien: 60 }, 'tartak', 2),
       K(wieza('wieza5', 16.2, -14.4), { drewno: 60, kamien: 40 }, 'rozb2', 2),
       K(mysliwy('mys5', 'wieza5', 16.2, -12.2), 200, 'wieza5', 2),
-      K(rozbudowa('rozb3', 3, -10.2, -7.6, 'Powiększ bazę na zachód'), { kasa: 1200, drewno: 150, kamien: 80, deski: 30 }, ['chatka5', 'mys5', 'rynek'], 2),
+      K(rozbudowa('rozb3', 3, -10.2, -7.6, 'Powiększ bazę na zachód'), { kasa: 1200, drewno: 150, kamien: 80, deski: 30 }, ['chatka5', 'mys5', 'rynek', 'skladDe'], 2),
       // ----- etap 3: zachód (piekarnia, szkoła) -----
       K(przetwornia('piekarnia', 'piekarnia', 'jagody', 'drozdzowka', -15.5, -1, 1.6, 'ladaDz', 'Piekarnia (drożdżówki)'), { kasa: 700, deski: 40, kamien: 50 }, 'rozb3', 3),
       K(lada('ladaDz', 'drozdzowka', -16), { kasa: 500, deski: 30, kamien: 30 }, 'piekarnia', 3),
