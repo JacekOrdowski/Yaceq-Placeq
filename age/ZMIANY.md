@@ -34,3 +34,5 @@ Pomysł na ery wzięty z gier strategicznych, ale wygląd, budynki i nazwy są n
 **Do sprawdzenia**
 - Czy przesuwanie budynku palcem jest wygodne na telefonie.
 - Czy na targu wystarcza miejsca, gdy dziecko rozstawia lady z dużymi odstępami (można zburzyć i postawić ciaśniej).
+
+Zapis w repozytorium: `f40d885`

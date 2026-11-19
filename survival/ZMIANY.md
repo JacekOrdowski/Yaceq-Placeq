@@ -10,6 +10,8 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 **Zmienione**
 - Wersja 13 jest na liście wersji do wyboru przy starcie.
 
+Zapis w repozytorium: `f40d885`
+
 ## Wersja 13 (19.11.2026)
 
 **Dodane**

@@ -9,6 +9,8 @@ Do każdej wersji można wrócić: przy każdej podany jest identyfikator zapisu
 
 ## Wersja 18 (19 listopada 2026)
 
+Zapis w repozytorium: `f40d885`
+
 ### Dodane
 - **Przycisk „Inne gry” w menu:** lista wszystkich naszych gier (Śmierdzipacha, Yaceq Survival, Age of Yaceq,
   Obrona bazy). Jedno dotknięcie przenosi do wybranej gry.
