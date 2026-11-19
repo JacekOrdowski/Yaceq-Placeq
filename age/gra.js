@@ -4,10 +4,10 @@ import * as MOD from './modele.js';
 import { PRZEDMIOTY, WEZLY, ZWIERZETA, WEJSCIA, WARSZTAT, STALE, CENY_STALE, KRAINY, ZAKRES, BRONIE, NARZEDZIA, SRODEK, GRANICE_STREF, ERY } from './krainy.js';
 import { rysujIkone, ikonaURL } from './ikony.js';
 
-const WERSJA = 3;
+const WERSJA = 4;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/); przy jednej wersji od razu menu
 const WERSJE = [
-  { nr: 3, opis: 'Budynki można stawiać też na dole placu, przy targu. Do tego wszystko z wersji 2.' },
+  { nr: 4, opis: 'Budynki można stawiać na całym placu, aż do jego dolnego brzegu przy targu. Do tego wszystko z wersji 2.' },
 ];
 const KLUCZ = 'age-of-yaceq-1';
 const STARY_KLUCZ = 'age-of-yaceq';
@@ -2669,8 +2669,8 @@ function miejsceOk(cfg, x, z) {
   if (cfg.rodzaj === 'lada') { if (Math.abs(x) > 24.5) return 'Lady stoją tylko na targu, przy drodze klientów'; }
   else if (cfg.rodzaj === 'domek') { if (Math.abs(x) < 25 || Math.abs(x) > 33 || z < 11 || z > 21) return 'Domki stoją na osiedlu po bokach targu'; }
   else if (p[0] < o.x0 + 0.5 || p[1] > o.x1 - 0.5 || p[2] < o.z0 + 0.5) return 'Tylko w środku palisady';
-  // na dole placu (przy targu) też wolno stawiać, ale nie na drodze klientów; zajęte miejsce nie zmieści już lady
-  else if (p[3] > 7.0) return 'Za blisko targu: tędy chodzą klienci';
+  // na dole placu (przy targu) też wolno stawiać, aż do brzegu brązowej ziemi; zajęte miejsce nie zmieści już lady
+  else if (p[3] > 7.6) return 'Tylko na placu: niżej chodzą klienci';
   // klienci idą do lady prosto od dołu mapy: na ich drodze nie stawiamy domków
   const droga = L => [L.x - 1.7, L.x + 1.7, 7.6, 40];
   const naDrodze = q => p[0] < q[1] && p[1] > q[0] && p[2] < q[3] && p[3] > q[2];
@@ -2694,7 +2694,7 @@ function autoMiejsce(cfg, px, pz) {
   const kand = [];
   if (cfg.rodzaj === 'lada') for (let x = -24.5; x <= 24.5; x += 0.5) kand.push([x, 7]);
   else if (cfg.rodzaj === 'domek') for (const s of [-1, 1]) for (let x = 25; x <= 33; x += 0.5) for (let z = 11; z <= 21; z += 0.5) kand.push([s * x, z]);
-  else { const o = G.oboz; for (let x = Math.ceil(o.x0) + 1; x <= o.x1 - 1; x += 0.5) for (let z = Math.ceil(o.z0) + 1; z <= 6.5; z += 0.5) kand.push([x, z]); }
+  else { const o = G.oboz; for (let x = Math.ceil(o.x0) + 1; x <= o.x1 - 1; x += 0.5) for (let z = Math.ceil(o.z0) + 1; z <= 7; z += 0.5) kand.push([x, z]); }
   if (px == null) {
     const o = G.oboz, [hx, hz, dz] = STOPA[cfg.rodzaj] || [1.5, 1.5, 0];
     // przy samym podpowiadaniu omijamy dół placu, żeby zostało miejsce na lady
