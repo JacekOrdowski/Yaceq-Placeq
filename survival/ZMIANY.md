@@ -2,6 +2,37 @@
 
 Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
+## Wersja 10 (19.11.2026)
+
+**Dodane**
+- Lada z kamieniem (obok lady z dżemem): klienci kupują kamień, więc nadmiar kamienia ma gdzie iść.
+  Ma swojego sprzedawcę do zatrudnienia.
+- Magazyn przy ladach z trzema półkami: jagody, drewno, kamień. Na półkę wchodzi się, żeby wziąć towar;
+  przed półką jest miejsce, gdzie odkłada się swój nadmiar z plecaka.
+- Każda czynność na polu (oddawanie, branie, płacenie, kupowanie) zaczyna się dopiero po 1,5 s stania na polu.
+  Na ziemi wypełnia się zielone kółko. Przechodząc przez pole, nic się przypadkiem nie kupi.
+- Pola ulepszeń mają duży obrazek (plecak, buty, rękawice, siekiera, kilof, łuk) z zielonym plusem,
+  a nad polem napis, co to daje („Większy plecak”, „Szybsze buty”, „Lepsza siekiera”…).
+
+**Zmienione**
+- Pomocnicy nie noszą już do składów: zbieracze niosą jagody na ladę z jagodami, drwale drewno na ladę z drewnem,
+  górnicy kamień na ladę z kamieniem, a wózek wozi kamień na ladę z kamieniem. Gdy jest magazyn, drewno i kamień
+  trafiają najpierw do magazynu (na budowy), a nadmiar na ladę; jagody najpierw na ladę, a nadmiar do magazynu.
+  Drwal przy tartaku nosi drewno prosto do tartaku.
+- Chatki pracowników są mniejsze i każda inna: zbieracze mają fioletowy dach i koszyk przed chatką,
+  drwale zielony dach i bale, górnicy szare ściany i kamień.
+- Gdy plecak jest pełny, strzałka każe sprzedać na ladzie albo odłożyć do magazynu (wcześniej z pełnym plecakiem
+  kamienia nie dało się nic zrobić, nawet ściąć drzewa). Strzałka każe też wziąć z magazynu to, czego brakuje
+  kuchni albo ladzie.
+- Strzałka obchodzi lady bokiem, zamiast prowadzić przez nie.
+- Fale zwierząt co 2 minuty i słabiej rosną z każdą rozbudową. Budowy są trochę tańsze.
+  Robot przechodzi krainę w około 71 minut, dziecko w około 1,5 godziny.
+- Licznik siekiery i kilofa odświeża się od razu po zakupie.
+- Wersja 9 jest na liście wyboru wersji jako osobna kopia.
+
+**Usunięte**
+- Skład drewna, skład kamienia i taśmociąg ze składu do tartaku (zastąpił je magazyn i drwal przy tartaku).
+
 ## Wersja 9 (19.11.2026)
 
 Zapis w repozytorium: `ef4255e`

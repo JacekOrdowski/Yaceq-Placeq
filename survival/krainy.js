@@ -6,7 +6,7 @@ export const PRZEDMIOTY = {
   dzem:       { nazwa: 'Dżem jagodowy', cena: 5 },
   drozdzowka: { nazwa: 'Drożdżówka z jagodami', cena: 9 },
   drewno:     { nazwa: 'Drewno', cena: 2 },
-  kamien:     { nazwa: 'Kamień', cena: 0 },
+  kamien:     { nazwa: 'Kamień', cena: 3 },
   deski:      { nazwa: 'Deski', cena: 0 },
 };
 
@@ -72,14 +72,14 @@ export const CENY_STALE = [5, 10, 18, 30, 45, 65, 90, 120];
 // ---------- pomocnicze ----------
 const LADA_Z = 7;
 function rep(x, n) { return Array.from({ length: Math.max(0, n) }, () => x); }
-function lada(id, item, x) { return { id, rodzaj: 'lada', item, x, z: LADA_Z, nazwa: 'Lada: ' + PRZEDMIOTY[item].nazwa.toLowerCase() }; }
+function lada(id, item, x, kasaX = 2.4) { return { id, rodzaj: 'lada', item, x, z: LADA_Z, kasaX, nazwa: 'Lada: ' + PRZEDMIOTY[item].nazwa.toLowerCase() }; }
 function przetwornia(id, model, wej, wyj, x, z, czas, dla, nazwa) { return { id, rodzaj: 'przetwornia', model, wej, wyj, czas, dla, x, z, nazwa }; }
 function domek(id, x, z, dla) { return { id, rodzaj: 'domek', x, z, dla, nazwa: 'Domek (więcej klientów)' }; }
 function wieza(id, x, z) { return { id, rodzaj: 'wieza', x, z, nazwa: 'Wieża myśliwych' }; }
 function mysliwy(id, wiezaId, x, z) { return { id, rodzaj: 'mysliwy', wieza: wiezaId, x, z, nazwa: 'Zatrudnij myśliwego' }; }
-function chatka(id, x, z, zbiera, doId) {
+function chatka(id, x, z, zbiera, doId, zapas) {
   const nazwy = { jagody: 'Chatka zbieracza jagód', drewno: 'Chatka drwala', kamien: 'Chatka górnika' };
-  return { id, rodzaj: 'chatka', x, z, zbiera, do: doId, nazwa: nazwy[zbiera] };
+  return { id, rodzaj: 'chatka', x, z, zbiera, do: doId, zapas, nazwa: nazwy[zbiera] };
 }
 function tasma(id, skad, doId, punkty, x, z, nazwa) { return { id, rodzaj: 'tasmociag', skad, do: doId, tasma: punkty, x, z, nazwa }; }
 function sprzedawca(id, ladaId, x, z) { return { id, rodzaj: 'sprzedawca', lada: ladaId, x, z, nazwa: 'Sprzedawca (sam sprzedaje)' }; }
@@ -91,7 +91,7 @@ function efekt(id, efektTyp, x, z, nazwa, model) { return { id, rodzaj: 'efekt',
 function zrob(p) {
   const K = (o, k, po, etap = 0) => {
     const kosz = typeof k === 'number' ? { kasa: k } : { ...k };
-    const naEtap = [1, 0.85, 0.7, 0.6, 0.5][etap]; // późniejsze etapy: mniej zasobów (pieniędzy jest wtedy dużo)
+    const naEtap = [1, 0.8, 0.6, 0.45, 0.35][etap]; // późniejsze etapy: mniej zasobów (pieniędzy jest wtedy dużo)
     if (o.rodzaj !== 'kraina') for (const t in kosz) kosz[t] = Math.round(kosz[t] * (t === 'kasa' ? p.drozej : p.drozejZasoby * naEtap) / 5) * 5 || (kosz[t] > 0 ? 5 : 0);
     o.koszt = kosz; o.po = po ? [].concat(po) : []; o.etap = etap; return o;
   };
@@ -133,21 +133,23 @@ function zrob(p) {
       K({ id: 'warsztat', rodzaj: 'warsztat', x: 8.5, z: -5.0, nazwa: 'Warsztat (plecak, buty, ręce)' }, { kasa: 60, drewno: 20 }, 'kuchnia'),
       K(sprzedawca('sprzDr', 'ladaDr', -5.1, 5.0), 60, 'warsztat'),
       K(tasma('tasma1', 'kuchnia', 'ladaD', [[5.0, 0.9], [5.0, 6.2]], 2.6, 3.0, 'Taśmociąg: dżem sam jedzie na ladę'), { kasa: 80, drewno: 20 }, 'warsztat'),
-      K(chatka('chatka1', -9, -3.5, 'jagody', 'ladaJ'), { kasa: 80, drewno: 20 }, 'warsztat'),
-      K(sklad('skladD', 'drewno', 8.5, 2.5), { kasa: 40, drewno: 10 }, 'warsztat'),
-      K(chatka('chatka2', -5.5, -3.5, 'drewno', 'skladD'), { kasa: 100, drewno: 25 }, 'skladD'),
-      K(domek('domek2', 25, 12, ['ladaD', 'ladaDr']), { kasa: 90, drewno: 25 }, 'chatka1'),
+      // pomocnicy niosą zbiory na lady do sprzedawców; nadmiar trafia do magazynu (jeśli jest)
+      K(chatka('chatka1', -9, -3.5, 'jagody', 'ladaJ', 'magazyn'), { kasa: 80, drewno: 20 }, 'warsztat'),
+      K({ id: 'magazyn', rodzaj: 'magazyn', x: -4, z: 2.0, nazwa: 'Magazyn: jagody, drewno, kamień dla ciebie' }, { kasa: 60, drewno: 20 }, 'warsztat'),
+      K(chatka('chatka2', -5.5, -3.5, 'drewno', 'ladaDr', 'magazyn'), { kasa: 100, drewno: 25 }, 'warsztat'),
+      K(domek('domek2', 25, 12, ['ladaD', 'ladaDr', 'ladaK']), { kasa: 90, drewno: 25 }, 'chatka1'),
       K(wieza('wieza2', 5, -7.4), { kasa: 60, drewno: 30 }, 'mys1'),
       K(mysliwy('mys2', 'wieza2', 5, -5.2), 60, 'wieza2'),
       // ----- kamień -----
       K({ id: 'kamieniolom', rodzaj: 'kopalnia', wyj: 'kamien', co: 6, narzedzie: 'kilof', x: 24.5, z: -8, nazwa: 'Kamieniołom (i kilof)' }, { kasa: 150, drewno: 40 }, 'chatka2'),
-      K(sklad('skladK', 'kamien', 9, 5.6), { kasa: 60, drewno: 20, kamien: 5 }, 'kamieniolom'),
-      K({ id: 'wozek', rodzaj: 'wagonik', skad: 'kamieniolom', do: 'skladK', x: 11.6, z: 3.6, nazwa: 'Wózek: kamień sam jedzie do składu',
-          tory: [[26.4, -6.4], [22, -4], [22, 5.9], [10.6, 5.9]] }, { kasa: 150, drewno: 35, kamien: 10 }, 'skladK'),
-      K(chatka('chatka3', -2, -3.5, 'kamien', 'skladK'), { kasa: 150, drewno: 30, kamien: 10 }, 'skladK'),
+      K(lada('ladaK', 'kamien', 10.5, -2.4), { kasa: 60, drewno: 20 }, 'kamieniolom'),
+      K(sprzedawca('sprzK', 'ladaK', 10.5, 2.9), 80, 'ladaK'),
+      K({ id: 'wozek', rodzaj: 'wagonik', skad: 'kamieniolom', do: 'ladaK', zapas: 'magazyn', x: 13.6, z: 5.8, nazwa: 'Wózek: kamień sam jedzie na ladę',
+          tory: [[26.4, -6.4], [22, -4], [22, 5.9], [14.2, 5.9]] }, { kasa: 150, drewno: 35, kamien: 10 }, 'ladaK'),
+      K(chatka('chatka3', -2, -3.5, 'kamien', 'ladaK', 'magazyn'), { kasa: 150, drewno: 30, kamien: 10 }, 'ladaK'),
       K(chatka('chatka4', -9, 0.3, 'jagody', 'kuchnia'), { kasa: 140, drewno: 30 }, 'tasma1'),
-      K(domek('domek3', -25, 19, ['ladaJ', 'ladaD', 'ladaDr']), { kasa: 180, drewno: 35, kamien: 10 }, ['domek2', 'skladK']),
-      K({ id: 'palisada', rodzaj: 'palisada', x: -2.5, z: 0.8, nazwa: 'Mocna palisada' }, { drewno: 40, kamien: 25 }, ['mys2', 'skladK']),
+      K(domek('domek3', -25, 19, ['ladaJ', 'ladaD', 'ladaDr', 'ladaK']), { kasa: 180, drewno: 35, kamien: 10 }, ['domek2', 'ladaK']),
+      K({ id: 'palisada', rodzaj: 'palisada', x: 2.5, z: -3.0, nazwa: 'Mocna palisada' }, { drewno: 40, kamien: 25 }, ['mys2', 'kamieniolom']),
       K(rozbudowa('rozb1', 1, -0.5, -7.6, 'Powiększ bazę na północ'), { kasa: 250, drewno: 50, kamien: 20 }, ['chatka3', 'mys2', 'domek2']),
       // ----- etap 1: północ (kuźnia, zbrojownia, wieże) -----
       K({ id: 'kuznia', rodzaj: 'kuznia', x: -5.5, z: -13.8, nazwa: 'Kuźnia (lepsze siekiery i kilofy)' }, { kasa: 200, drewno: 50, kamien: 30 }, 'rozb1', 1),
@@ -160,12 +162,11 @@ function zrob(p) {
       K(rozbudowa('rozb2', 2, 10.3, 0.3, 'Powiększ bazę na wschód'), { kasa: 600, drewno: 100, kamien: 50 }, ['kuznia', 'zbrojownia', 'mys3', 'mys4'], 1),
       // ----- etap 2: wschód (tartak, rynek) -----
       K(przetwornia('tartak', 'tartak', 'drewno', 'deski', 15.5, 1.5, 1.4, null, 'Tartak (drewno → deski)'), { kasa: 400, drewno: 80, kamien: 40 }, 'rozb2', 2),
-      K(tasma('tasma2', 'skladD', 'tartak', [[9.9, 2.4], [12.7, 1.6]], 13.0, 4.0, 'Taśmociąg: drewno ze składu do tartaku'), { kasa: 300, drewno: 60, kamien: 30 }, ['tartak', 'wozek'], 2),
-      K(chatka('chatka5', 15.5, -4, 'drewno', 'skladD'), { kasa: 300, drewno: 60, kamien: 30 }, 'tartak', 2),
+      K(chatka('chatka5', 15.5, -4, 'drewno', 'tartak'), { kasa: 300, drewno: 60, kamien: 30 }, 'tartak', 2),
       K(efekt('rynek', 'ceny', 15.5, -8.8, 'Rynek (klienci płacą o 30% więcej)', 'rynek'), { kasa: 800, deski: 40, kamien: 60 }, 'tartak', 2),
       K(wieza('wieza5', 16.2, -14.4), { drewno: 60, kamien: 40 }, 'rozb2', 2),
       K(mysliwy('mys5', 'wieza5', 16.2, -12.2), 200, 'wieza5', 2),
-      K(rozbudowa('rozb3', 3, -10.2, -7.6, 'Powiększ bazę na zachód'), { kasa: 1200, drewno: 150, kamien: 80, deski: 30 }, ['tasma2', 'chatka5', 'mys5', 'rynek'], 2),
+      K(rozbudowa('rozb3', 3, -10.2, -7.6, 'Powiększ bazę na zachód'), { kasa: 1200, drewno: 150, kamien: 80, deski: 30 }, ['chatka5', 'mys5', 'rynek'], 2),
       // ----- etap 3: zachód (piekarnia, szkoła) -----
       K(przetwornia('piekarnia', 'piekarnia', 'jagody', 'drozdzowka', -15.5, -1, 1.6, 'ladaDz', 'Piekarnia (drożdżówki)'), { kasa: 700, deski: 40, kamien: 50 }, 'rozb3', 3),
       K(lada('ladaDz', 'drozdzowka', -16), { kasa: 500, deski: 30, kamien: 30 }, 'piekarnia', 3),
@@ -189,7 +190,7 @@ function zrob(p) {
       K({ id: 'kraina', rodzaj: 'kraina', x: -8, z: -20.5, nazwa: 'Kup nową krainę' }, { kasa: p.cenaKrainy }, 'cel', 4),
     ],
     fale: {
-      po: 'mys1', pierwsza: 60, co: 100,
+      po: 'mys1', pierwsza: 60, co: 120,
       sklad: (n, e) => [
         ...rep('lis', Math.min(6, 1 + Math.floor(n * 0.6))),
         ...rep('wilk', e >= 1 || n >= 6 ? Math.min(6, Math.floor((n - 3) / 2) + e) : 0),
@@ -207,7 +208,7 @@ export const KRAINY = [
   zrob({
     id: 1, nazwa: 'Jagodowa Polana', opis: 'Zbieraj jagody, ścinaj las, powiększaj bazę i broń jej przed zwierzętami. Na końcu baza sama zarabia.',
     paleta: { snieg: '#eef4fb', plac: '#d4895a', mgla: '#dbe8f6', igly: ['#86bfe9', '#5f9fd4', '#3f7fb8'] },
-    ceny: 1, chca: [3, 7], drozej: 0.55, drozejZasoby: 0.55, silaZwierzat: 1, cenaKrainy: 25000,
+    ceny: 1, chca: [3, 7], drozej: 0.45, drozejZasoby: 0.45, silaZwierzat: 1, cenaKrainy: 25000,
   }),
   zrob({
     id: 2, nazwa: 'Mroźna Dolina', opis: 'Druga kraina: wszystko od nowa, ale drożej, a zwierzęta są groźniejsze.',

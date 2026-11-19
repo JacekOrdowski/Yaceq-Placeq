@@ -4,10 +4,11 @@ import * as MOD from './modele.js';
 import { PRZEDMIOTY, WEZLY, ZWIERZETA, WEJSCIA, WARSZTAT, STALE, CENY_STALE, KRAINY, ZAKRES, BRONIE, NARZEDZIA, SRODEK, GRANICE_STREF } from './krainy.js';
 import { rysujIkone, ikonaURL } from './ikony.js';
 
-const WERSJA = 9;
+const WERSJA = 10;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 9, opis: 'Wielka rozbudowa; siekierę kupujesz dopiero po ladzie z drewnem, sprzedawcy dobrze widać za ladą, pierwszy sprzedawca po około 5 minutach.' },
+  { nr: 10, opis: 'Lada z kamieniem, pomocnicy niosą zbiory na lady, magazyn dla ciebie, wszystko po 1,5 s stania na polu, duże obrazki ulepszeń, mniejsze chatki.' },
+  { nr: 9, opis: 'Wielka rozbudowa; siekierę kupujesz dopiero po ladzie z drewnem, sprzedawcy dobrze widać za ladą, pierwszy sprzedawca po około 5 minutach.', adres: 'wersje/9/' },
   { nr: 8, opis: 'Wielka rozbudowa (las, powiększanie bazy, wieże, kuźnia, tartak, piekarnia, skarbnik, druga kraina); pierwszego sprzedawcę kupujesz po około 5 minutach.', adres: 'wersje/8/' },
   { nr: 7, opis: 'Wielka rozbudowa: cały las do ścinania, powiększanie bazy, wieże z myśliwymi, kuźnia, tartak, piekarnia, skarbnik i druga kraina.', adres: 'wersje/7/' },
   { nr: 6, opis: 'Sprzedawcy przy ladach (bez nich sprzedajesz sam), lada z drewnem, siekiera za pieniądze, plecak na start 10 miejsc.', adres: 'wersje/6/' },
@@ -158,7 +159,7 @@ function rysujDymek(s, typ, liczba) {
   }
   s.material.map.needsUpdate = true;
 }
-const EMOJI = { wieza: '🏹', mysliwy: '🧑', kuznia: '⚒️', zbrojownia: '🏹', efekt: '🏪', skarbnik: '🏦', rozbudowa: '🌲', kraina: '🗺️', narzedzie: '🪓', sprzedawca: '🙋', sklad: '📦', tasmociag: '⚙️', domek: '🏠', armatka: '❄️', chatka: '👷', warsztat: '🔨', palisada: '🛡️', cel: '⭐', kopalnia: '⛏️', wagonik: '🚃', piec: '🔥', napraw: '🔨', kosz: '🎒', buty: '👟', rece: '🧤' };
+const EMOJI = { magazyn: '📦', wieza: '🏹', mysliwy: '🧑', kuznia: '⚒️', zbrojownia: '🏹', efekt: '🏪', skarbnik: '🏦', rozbudowa: '🌲', kraina: '🗺️', narzedzie: '🪓', sprzedawca: '🙋', sklad: '📦', tasmociag: '⚙️', domek: '🏠', armatka: '❄️', chatka: '👷', warsztat: '🔨', palisada: '🛡️', cel: '⭐', kopalnia: '⛏️', wagonik: '🚃', piec: '🔥', napraw: '🔨', kosz: '🎒', buty: '👟', rece: '🧤' };
 const TYPY_KOSZTU = ['kasa', 'drewno', 'kamien', 'deski'];
 const PRZEDMIOTY_KOSZTU = ['drewno', 'kamien', 'deski'];
 function reszta(p) {
@@ -194,6 +195,26 @@ function rysujPoleKoszt(cv, ikona, r, dol, jasne) {
     else rysujIkone(c, t, 82, y, wiersze.length > 3 ? 30 : 42);
     c.fillText(String(r[t]), 110, y + 2);
   });
+}
+// pole ulepszenia: duży obrazek z zielonym plusem, a pod nim koszt (albo MAX)
+function rysujPoleUlepszenia(cv, ikona, r, tekst, jasne) {
+  const c = cv.getContext('2d'); c.clearRect(0, 0, 256, 256);
+  zaokr(c, 12, 12, 232, 232, 34); c.fillStyle = jasne ? 'rgba(63,191,95,0.6)' : 'rgba(26,40,64,0.55)'; c.fill();
+  c.setLineDash([22, 14]); c.lineWidth = 9; c.strokeStyle = 'rgba(255,255,255,0.95)'; c.stroke(); c.setLineDash([]);
+  c.font = '104px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText(ikona, 118, 92);
+  if (tekst !== 'MAX' && tekst !== 'brak') {
+    c.beginPath(); c.arc(196, 52, 30, 0, Math.PI * 2); c.fillStyle = '#3fbf5f'; c.fill(); c.lineWidth = 5; c.strokeStyle = '#fff'; c.stroke();
+    // kamera patrzy na ukos, więc plus rysujemy obrócony, żeby na ekranie był prosty (a nie jak „×”)
+    c.save(); c.translate(196, 52); c.rotate(Math.PI / 4); c.fillStyle = '#fff';
+    c.fillRect(-16, -5, 32, 10); c.fillRect(-5, -16, 10, 32); c.restore();
+  }
+  c.fillStyle = '#fff'; c.textBaseline = 'middle';
+  if (!r) { c.font = `48px ${FONT}`; c.fillText(tekst === 'brak' ? '—' : 'MAX', 128, 196); return; }
+  const wiersze = TYPY_KOSZTU.filter(t => r[t] > 0).slice(0, 3);
+  c.font = `${wiersze.length > 2 ? 30 : 38}px ${FONT}`; c.textAlign = 'left';
+  wiersze.forEach((t, i) => { const y = 168 + i * (wiersze.length > 2 ? 26 : 34); rysujIkone(c, t, 84, y, 30); c.fillText(String(r[t]), 106, y + 2); });
+  if (!wiersze.length) { c.textAlign = 'center'; c.font = `44px ${FONT}`; c.fillText('✓', 128, 190); }
 }
 function rysujPole(cv, ikona, gora, dol, jasne) {
   const c = cv.getContext('2d'); c.clearRect(0, 0, 256, 256);
@@ -594,6 +615,16 @@ function wyglądSegmentu(s) {
 // ---------- trasy: przez palisadę tylko bramą (albo dziurą, albo dookoła od południa) ----------
 function strona(x, z) { const o = G.oboz; return (x > o.x0 && x < o.x1 && z > o.z0) || z > 5.2 ? 'w' : 'z'; }
 function punktTrasy(a, b) {
+  // lady stoją w rzędzie na z = 7: z jednej strony na drugą trzeba przejść obok lady, nie przez nią
+  if ((a.z > 7.7) !== (b.z > 7.7) && Math.abs(b.z - a.z) > 0.01) {
+    const t = (7 - a.z) / (b.z - a.z), xc = a.x + t * (b.x - a.x);
+    for (const id in G.budowle) {
+      const L = G.budowle[id];
+      if (L.cfg.rodzaj !== 'lada' || Math.abs(xc - L.x) >= 2.0) continue;
+      const sx = L.x + (a.x < L.x ? -2.4 : 2.4), sz = a.z > 7.7 ? 8.3 : 5.7;
+      return Math.hypot(a.x - sx, a.z - sz) < 0.5 ? { x: sx, z: a.z > 7.7 ? 5.7 : 8.3 } : { x: sx, z: sz };
+    }
+  }
   const sa = strona(a.x, a.z);
   if (sa === strona(b.x, b.z)) {
     // od strony lad: palisada kończy się na z = 4.5, więc z boku obozu trzeba obejść jej koniec
@@ -812,7 +843,8 @@ function rysujPad(p) {
   const r = reszta(p), jasne = stac(p);
   const klucz = [...TYPY_KOSZTU, 'drzewa'].map(t => r[t]).join('/') + jasne;
   if (klucz === p.ost) return; p.ost = klucz;
-  rysujPoleKoszt(p.mesh.userData.cv, p.ikona, r, p.dol || '', jasne);
+  if (p.typ === 'ulepsz') rysujPoleUlepszenia(p.mesh.userData.cv, p.ikona, r, '', jasne);
+  else rysujPoleKoszt(p.mesh.userData.cv, p.ikona, r, p.dol || '', jasne);
   p.mesh.material.map.needsUpdate = true;
 }
 function wPlecakuGotowe(t) { return G && G.gracz ? G.gracz.plecak.filter(e => e.typ === t && e.dotarl).length : 0; }
@@ -826,7 +858,7 @@ function postaw(cfg, nowa) {
   const kol = (x, z, r) => dodajKolizje({ x, z, r, b: cfg.id });
   switch (cfg.rodzaj) {
     case 'lada': {
-      const kolory = { jagody: '#3a4bb0', dzem: '#8a2f9e', drewno: '#7a4520', wedzona: '#c96a1f', zloto: '#d99a00', krysztal: '#2aa6c9' };
+      const kolory = { kamien: '#6c717b', jagody: '#3a4bb0', dzem: '#8a2f9e', drewno: '#7a4520', wedzona: '#c96a1f', zloto: '#d99a00', krysztal: '#2aa6c9' };
       dodajObj(kopia('lada' + cfg.item, () => MOD.lada(kolory[cfg.item] || '#e0413a')));
       const tab = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1), new THREE.MeshBasicMaterial({ map: tekstura((() => { const cv = plotno(128, 128), c = cv.getContext('2d'); c.beginPath(); c.arc(64, 64, 60, 0, 7); c.fillStyle = '#fff'; c.fill(); rysujIkone(c, cfg.item, 64, 64, 96); return cv; })()), transparent: true }));
       tab.position.set(1.4, 3.05, -0.5); tab.scale.setScalar(0.85); B.obj.add(tab);
@@ -835,7 +867,7 @@ function postaw(cfg, nowa) {
       B.pad = { typ: 'zrzut', x: cfg.x, z: 5.3, r: 1.05, B, przyjmuje: cfg.item };
       B.znak = znacznik(cfg.item); B.znak.position.set(B.pad.x, 0.035, B.pad.z); swiat.add(B.znak);
       G.pady.push(B.pad);
-      B.kasa = { typ: 'kasa', x: cfg.x + 2.4, z: 5.2, r: 0.95, wartosc: 0, meshe: [] };
+      B.kasa = { typ: 'kasa', x: cfg.x + (cfg.kasaX ?? 2.4), z: 5.2, r: 0.95, wartosc: 0, meshe: [] };
       G.pady.push(B.kasa);
       dodajKase(B.kasa, S.kasy[cfg.id] || 0);
       for (const dx of [-1, 0, 1]) kol(cfg.x + dx, cfg.z, 0.7);
@@ -912,9 +944,9 @@ function postaw(cfg, nowa) {
       break;
     }
     case 'chatka': {
-      dodajObj(kopia('chatka', () => MOD.chatka()), cfg.x < 0 ? 0.4 : -0.4);
-      const tab = napis(PRZEDMIOTY[cfg.zbiera].nazwa, 2.6); tab.position.set(cfg.x, 3.0, cfg.z); swiat.add(tab);
-      kol(cfg.x, cfg.z, 1.3);
+      dodajObj(kopia('chatka' + cfg.zbiera, () => MOD.chatka(cfg.zbiera)), cfg.x < 0 ? 0.4 : -0.4);
+      const tab = napis(PRZEDMIOTY[cfg.zbiera].nazwa, 2.2); tab.position.set(cfg.x, 2.4, cfg.z); swiat.add(tab);
+      kol(cfg.x, cfg.z, 1.0);
       dodajPomocnika(B);
       break;
     }
@@ -990,6 +1022,24 @@ function postaw(cfg, nowa) {
       if (nowa) baner('Skarbnik!', 'Sam zbiera pieniądze ze wszystkich lad');
       break;
     }
+    case 'magazyn': {
+      B.polki = {};
+      ['jagody', 'drewno', 'kamien'].forEach((typ, i) => {
+        const x = cfg.x + (i - 1) * 2.7, z = cfg.z, id = 'mag_' + typ;
+        const P = { cfg: { id, rodzaj: 'sklad', item: typ, x, z, nazwa: 'Magazyn: ' + PRZEDMIOTY[typ].nazwa.toLowerCase() }, id, x, z };
+        P.obj = kopia('sklad', () => MOD.sklad()); P.obj.position.set(x, 0, z); swiat.add(P.obj);
+        P.wej = S.zapasy[id] || 0; P.dolot = 0; P.maks = 60; P.meshe = [];
+        P.pad = { typ: 'zrzut', x, z: z - 1.8, r: 0.9, B: P, przyjmuje: typ, magazyn: true };
+        P.znak = znacznik(typ); P.znak.position.set(P.pad.x, 0.035, P.pad.z); P.znak.scale.setScalar(0.85); swiat.add(P.znak);
+        P.odbior = { typ: 'odbior', x, z, r: 1.15, B: P, daje: typ, ile: () => P.wej, zdejmij: () => { P.wej--; return zdejmijZeStosu(P); } };
+        G.pady.push(P.pad, P.odbior);
+        const tab = napis(PRZEDMIOTY[typ].nazwa, 2.2); tab.position.set(x, 1.9, z + 1.3); swiat.add(tab);
+        for (let j = 0; j < P.wej; j++) dodajDoStosu(P, typ);
+        G.budowle[id] = P; B.polki[typ] = P;
+      });
+      if (nowa) baner('Magazyn!', 'Odkładaj tu nadmiar, a pomocnicy też go tu zaniosą');
+      break;
+    }
     case 'rozbudowa': case 'kraina': break;
     case 'palisada': {
       for (const s of G.segmenty) { s.max = maxPalisady(); s.hp = s.max; wyglądSegmentu(s); }
@@ -1013,6 +1063,7 @@ function zbuduj(cfg) {
   if (p) { swiat.remove(p.mesh); swiat.remove(p.napis); G.pady.splice(G.pady.indexOf(p), 1); delete G.pola[cfg.id]; }
   S.zbudowane.push(cfg.id); delete S.wplacone[cfg.id];
   postaw(cfg, true);
+  odswiezHudNarz();
   dzwiek('buduj');
   konfetti(V(cfg.x, 1.5, cfg.z), 40);
   if (cfg.rodzaj === 'palisada') baner('Mocna palisada!', 'Zwierzęta dłużej ją psują');
@@ -1054,33 +1105,34 @@ function ustawUlepszenie(p) {
   p.wpl = {};
   p.dol = k ? p.ul.dol() : '';
   p.ost = -1;
-  if (p.max) { const t = p.ul.brak ? p.ul.brak() : 'MAX'; rysujPole(p.mesh.userData.cv, p.ikona, t, p.ul.nazwa, false); p.mesh.material.map.needsUpdate = true; }
+  if (p.max) { const t = p.ul.brak ? p.ul.brak() : 'MAX'; rysujPoleUlepszenia(p.mesh.userData.cv, p.ikona, null, t, false); p.mesh.material.map.needsUpdate = true; }
   else rysujPad(p);
 }
 function odswiezUlepszenia() { for (const p of G.pady) if (p.typ === 'ulepsz' && p.max) ustawUlepszenie(p); }
 function padyUlepszen(B, lista) {
   B.pady = lista.map((ul, i) => {
-    const p = { typ: 'ulepsz', x: B.x - (lista.length - 1) + i * 2, z: B.z + 2.6, r: 0.9, ul, wpl: {} };
-    p.mesh = pole(1.8); p.mesh.position.set(p.x, 0.05, p.z); swiat.add(p.mesh);
+    const p = { typ: 'ulepsz', x: B.x - (lista.length - 1) * 1.15 + i * 2.3, z: B.z + 2.8, r: 1.0, ul, wpl: {} };
+    p.mesh = pole(2.2); p.mesh.position.set(p.x, 0.05, p.z); swiat.add(p.mesh);
+    p.napis = napis(ul.napis || ul.nazwa, 2.4); p.napis.position.set(p.x, 1.1, p.z - 1.0); swiat.add(p.napis);
     p.ikona = ul.ikona; p.ost = -1; ustawUlepszenie(p);
     G.pady.push(p); return p;
   });
 }
 const UL_WARSZTAT = () => WARSZTAT.map(u => ({
-  nazwa: u.nazwa, ikona: EMOJI[u.id],
+  nazwa: u.nazwa, ikona: EMOJI[u.id], napis: { kosz: 'Większy plecak', buty: 'Szybsze buty', rece: 'Szybsze ręce' }[u.id],
   koszt: () => { const c = u.ceny[S.warsztat[u.id]]; return c === undefined ? null : { kasa: c, drewno: Math.round(c / 3) }; },
   dol: () => `${u.nazwa} ${S.warsztat[u.id] + 1}`,
   zastosuj: () => { S.warsztat[u.id]++; baner(u.nazwa + '!', u.opis); },
 }));
 const UL_KUZNIA = () => ['siekiera', 'kilof'].map(t => ({
-  nazwa: NARZEDZIA[t].nazwa, ikona: t === 'siekiera' ? '🪓' : '⛏️',
+  nazwa: NARZEDZIA[t].nazwa, ikona: t === 'siekiera' ? '🪓' : '⛏️', napis: t === 'siekiera' ? 'Lepsza siekiera' : 'Lepszy kilof',
   koszt: () => { const lv = S.narz[t] || 0; return lv < 1 ? null : NARZEDZIA[t].koszty[lv + 1] || null; },
   dol: () => `${NARZEDZIA[t].nazwa} ${NARZEDZIA[t].poziomy[(S.narz[t] || 0) + 1]}`,
   brak: () => (S.narz[t] || 0) < 1 ? 'brak' : 'MAX',
   zastosuj: () => { S.narz[t]++; baner(`${NARZEDZIA[t].nazwa} ${NARZEDZIA[t].poziomy[S.narz[t]]}!`, t === 'siekiera' ? 'Teraz zetniesz grubsze drzewa dalej w lesie' : 'Teraz rozbijesz większe głazy'); odswiezHudNarz(); },
 }));
 const UL_ZBROJOWNIA = () => [{
-  nazwa: 'Broń myśliwych', ikona: '🏹',
+  nazwa: 'Broń myśliwych', ikona: '🏹', napis: 'Lepsza broń dla myśliwych',
   koszt: () => (BRONIE[S.bron + 1] || {}).koszt || null,
   dol: () => BRONIE[S.bron + 1].nazwa,
   zastosuj: () => { S.bron++; baner('Nowa broń: ' + BRONIE[S.bron].nazwa, 'Myśliwi na wieżach mocniej przeganiają zwierzęta'); odswiezHudNarz(); },
@@ -1260,7 +1312,7 @@ function noweZwierze(typ, wej, px, pz) {
   const skala = typ === 'yeti' ? 1.3 : 1;
   obj.scale.setScalar(skala);
   obj.position.set(x, 0, z); swiat.add(obj);
-  const mnoznik = (S.k.silaZwierzat || 1) * (1 + 0.2 * S.etap) * (S.nieskonczona ? 1 + S.fala * 0.03 : 1);
+  const mnoznik = (S.k.silaZwierzat || 1) * (1 + 0.1 * S.etap) * (S.nieskonczona ? 1 + S.fala * 0.03 : 1);
   const zw = { typ, def, obj, x, z, sx: x, sz: z, zycie: def.zycie * mnoznik, max: def.zycie * mnoznik, stan: 'idzie', seg, kat: 0, faza: Math.random() * 6,
     zjadl: 0, T: 0, nogi: czesci(obj, 'noga'), ogon: obj.getObjectByName('ogon'), pasek: pasekZycia(), wys: (obj.userData.wys || 1.5) * skala, odrzut: V(), migaj: 0 };
   zw.pasek.visible = false; swiat.add(zw.pasek);
@@ -1474,14 +1526,21 @@ function atakNaGracza(zw) {
 // ================= pomocnicy =================
 function dodajPomocnika(B) {
   const obj = kopia('pomocnik', () => MOD.pomocnik());
-  const x = B.x, z = B.z + 1.6;
+  const x = B.x, z = B.z + 1.3;
   obj.position.set(x, 0, z); swiat.add(obj);
   const stos = new THREE.Group(); stos.position.set(0, 0.95, -0.42); obj.add(stos);
   const p = { B, obj, x, z, kat: 0, faza: 0, stan: 'szuka', niesie: [], stos, T: 0, cel: null, nogi: czesci(obj, 'noga'), rece: czesci(obj, 'reka') };
   pokazNarzedzie(obj, B.cfg.zbiera);
   G.pomocnicy.push(p);
 }
-function celDostawy(p) { const B = G.budowle[p.B.cfg.do]; return B ? B : null; }
+// pomocnicy: jagody na ladę do sprzedawcy; drewno i kamień najpierw do magazynu (na budowy), a gdy pełny — na ladę
+function napelnienie(B) { return ((B.cfg.rodzaj === 'lada' ? B.zapas : B.wej) + B.dolot) / B.maks; }
+function wybierzCel(B, Z, typ) {
+  const mB = B && miejsceW(B), mZ = Z && miejsceW(Z);
+  if (mB && mZ) return typ === 'jagody' ? B : Z; // jagody: najpierw na sprzedaż; drewno i kamień: najpierw do magazynu na budowy, nadmiar na ladę
+  return mB ? B : mZ ? Z : B || Z || null;
+}
+function celDostawy(p) { return wybierzCel(G.budowle[p.B.cfg.do], p.B.cfg.zapas && G.budowle['mag_' + p.B.cfg.zbiera], p.B.cfg.zbiera); }
 function aktualizujPomocnikow(dt) {
   const v = 3.4 * tempoPomocy();
   for (const p of G.pomocnicy) {
@@ -1518,20 +1577,21 @@ function aktualizujPomocnikow(dt) {
         if (p.niesie.length >= ileNiesie || w.zostalo <= 0) { if (w.zostalo <= 0 && !w.odrost) w.odrost = w.def.odrost; w.zajety = null; p.stan = p.niesie.length >= ileNiesie ? 'niesie' : 'szuka'; }
       }
     } else if (p.stan === 'niesie') {
-      const B = celDostawy(p);
+      if (!p.dost || !G.budowle[p.dost.id]) p.dost = celDostawy(p);
+      const B = p.dost;
       if (!B) { p.stan = 'szuka'; continue; }
       if (idzDo(B.pad.x, B.pad.z)) { p.stan = 'oddaje'; p.T = 0; }
     } else if (p.stan === 'oddaje') {
-      const B = celDostawy(p); p.T -= dt;
+      const B = p.dost || celDostawy(p); p.T -= dt;
       if (p.T <= 0 && p.niesie.length) {
-        if (!miejsceW(B)) { p.T = 0.5; }
+        if (!miejsceW(B)) { p.T = 0.5; const nowy = celDostawy(p); if (nowy && nowy !== B && miejsceW(nowy)) { p.dost = nowy; p.stan = 'niesie'; } }
         else {
           p.T = 0.12;
           const m = p.niesie.pop(); swiat.attach(m);
           przyjmij(B, typ, m);
         }
       }
-      if (!p.niesie.length) p.stan = 'szuka';
+      if (!p.niesie.length) { p.stan = 'szuka'; p.dost = null; }
     }
     p.obj.position.set(p.x, 0, p.z); p.obj.rotation.y = p.kat;
     p.nogi.forEach((n, j) => { n.rotation.x = ruch ? Math.sin(p.faza + j * Math.PI) * 0.6 : 0; });
@@ -1687,11 +1747,13 @@ function aktualizujWagonik(B, dt) {
     B.s = Math.min(B.calosc, B.s + dt * 4);
     if (B.s >= B.calosc) B.stan = 'rozladowuje';
   } else if (B.stan === 'rozladowuje') {
-    if (B.ladunek.length && B.T <= 0 && cel && miejsceW(cel)) {
+    const typW = zrodlo ? zrodlo.cfg.wyj : 'ruda';
+    const zap = B.cfg.zapas && G.budowle['mag_' + typW];
+    const wyb = wybierzCel(cel, zap, typW), docel = wyb && miejsceW(wyb) ? wyb : null;
+    if (B.ladunek.length && B.T <= 0 && docel) {
       B.T = 0.15; const m = B.ladunek.pop(); if (m.parent) B.obj.remove(m);
-      const typW = zrodlo ? zrodlo.cfg.wyj : 'ruda';
       const nm = przedmiot(typW); swiat.add(nm); nm.position.copy(B.obj.position).add(V(0, 1, 0));
-      przyjmij(cel, typW, nm);
+      przyjmij(docel, typW, nm);
     }
     if (!B.ladunek.length) B.stan = 'wraca';
   } else if (B.stan === 'wraca') {
@@ -1776,12 +1838,34 @@ function aktualizujGracza(dt) {
   gr.pelny.visible = pelny;
   if (pelny) { let h = 0; for (const e of gr.plecak) h += e.h; gr.pelny.position.set(gr.x, 2.3 + h, gr.z); }
 
-  // miejsca: odkładanie, branie, płacenie
+  // miejsca: odkładanie, branie, płacenie; zaczynają działać po 1,5 s stania na polu
   gr.padT -= dt;
+  let czeka = null;
   for (const p of G.pady) {
     const d = Math.hypot(p.x - gr.x, p.z - gr.z);
-    if (d > p.r) continue;
+    if (d > p.r) { p.stoi = 0; continue; }
+    p.stoi = (p.stoi || 0) + dt;
+    if (p.stoi < CZEKAJ) { if (!czeka || p.stoi > czeka.stoi) czeka = p; continue; }
     obsluzPad(p, dt);
+  }
+  pokazCzekanie(czeka);
+}
+const CZEKAJ = 1.5;
+let czekanieMesh = null, czekanieOst = -1;
+function pokazCzekanie(p) {
+  if (!czekanieMesh || czekanieMesh.parent !== swiat) {
+    czekanieMesh = new THREE.Mesh(new THREE.RingGeometry(0.8, 1, 40, 1, 0, 0.01), new THREE.MeshBasicMaterial({ color: '#3fdc6a', transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide }));
+    czekanieMesh.rotation.x = -Math.PI / 2; czekanieMesh.renderOrder = 4; swiat.add(czekanieMesh); czekanieOst = -1;
+  }
+  if (!p) { czekanieMesh.visible = false; return; }
+  const u = Math.min(1, p.stoi / CZEKAJ), k = Math.round(u * 40) / 40;
+  czekanieMesh.visible = true;
+  czekanieMesh.position.set(p.x, 0.08, p.z);
+  if (k !== czekanieOst) {
+    czekanieOst = k;
+    czekanieMesh.geometry.dispose();
+    const r = Math.max(0.7, p.r);
+    czekanieMesh.geometry = new THREE.RingGeometry(r * 0.82, r, 40, 1, Math.PI / 2, -Math.max(0.01, k * Math.PI * 2));
   }
 }
 
@@ -1931,11 +2015,12 @@ function wybierzZadanie() {
     const potrzebaDesek = pola.some(q => reszta(q).deski > 0) && G.budowle.tartak;
     const typy = [...new Set(gr.plecak.map(e => e.typ))].filter(t => !pola.some(q => (reszta(q)[t] || 0) > 0) || (t === 'drewno' && potrzebaDesek && gr.plecak.length >= pojemnosc()));
     let cel = null, cd = Infinity;
-    for (const p of G.pady) if (p.typ === 'zrzut' && typy.includes(p.przyjmuje) && miejsceW(p.B)) { const d = Math.hypot(p.x - gr.x, p.z - gr.z); if (d < cd) { cd = d; cel = p; } }
+    for (const p of G.pady) if (p.typ === 'zrzut' && !p.magazyn && typy.includes(p.przyjmuje) && miejsceW(p.B)) { const d = Math.hypot(p.x - gr.x, p.z - gr.z); if (d < cd) { cd = d; cel = p; } }
     // wszystko pełne, a plecak też: idź pod ladę, klienci zaraz zrobią miejsce
-    if (!cel && gr.plecak.length >= pojemnosc()) for (const p of G.pady) if (p.typ === 'zrzut' && typy.includes(p.przyjmuje)) { const d = Math.hypot(p.x - gr.x, p.z - gr.z); if (d < cd) { cd = d; cel = p; } }
+    if (!cel && gr.plecak.length >= pojemnosc()) for (const p of G.pady) if (p.typ === 'zrzut' && p.magazyn && miejsceW(p.B) && gr.plecak.some(e => e.typ === p.przyjmuje)) { const d = Math.hypot(p.x - gr.x, p.z - gr.z); if (d < cd) { cd = d; cel = p; } }
+    if (!cel && gr.plecak.length >= pojemnosc()) for (const p of G.pady) if (p.typ === 'zrzut' && !p.magazyn && typy.includes(p.przyjmuje)) { const d = Math.hypot(p.x - gr.x, p.z - gr.z); if (d < cd) { cd = d; cel = p; } }
     if (cel && (gr.plecak.length >= pojemnosc() || !gr.plecak.some(e => !e.dotarl) && (cd < 6 || gr.plecak.length >= Math.min(pojemnosc(), 6) || brakWezlow(typy)))) {
-      const nazwa = cel.B.cfg.rodzaj === 'lada' ? 'na ladę' : cel.B.cfg.rodzaj === 'piec' ? 'do pieca' : 'do: ' + cel.B.cfg.nazwa;
+      const nazwa = cel.B.cfg.rodzaj === 'lada' ? 'na ladę' : cel.magazyn ? 'do magazynu' : 'do: ' + cel.B.cfg.nazwa;
       return ustaw(`Zanieś ${PRZEDMIOTY[cel.przyjmuje].nazwa.toLowerCase()} ${nazwa}`, { x: cel.x, z: cel.z });
     }
   }
@@ -1957,7 +2042,7 @@ function wybierzZadanie() {
   const potrzeby = [];
   for (const id in G.budowle) {
     const B = G.budowle[id];
-    if (!B.pad || B.pad.typ !== 'zrzut') continue;
+    if (!B.pad || B.pad.typ !== 'zrzut' || B.pad.magazyn) continue;
     const ma = B.cfg.rodzaj === 'lada' ? B.zapas : B.wej;
     if (ma + B.dolot < B.maks) potrzeby.push({ typ: B.pad.przyjmuje, ile: ma / B.maks });
   }
@@ -1966,6 +2051,8 @@ function wybierzZadanie() {
   for (const pt of potrzeby) {
     const zr = G.pady.find(p => p.typ === 'odbior' && p.daje === pt.typ && p.B.wyj > 0 && p.B.cfg.rodzaj === 'przetwornia' && !p.B.tasma);
     if (zr) return ustaw(`Weź ${PRZEDMIOTY[pt.typ].nazwa.toLowerCase()} z: ${zr.B.cfg.nazwa}`, { x: zr.x, z: zr.z });
+    const mg = G.budowle['mag_' + pt.typ];
+    if (mg && mg.wej >= 3 && !pelnyPl) return ustaw(`Weź ${PRZEDMIOTY[pt.typ].nazwa.toLowerCase()} z magazynu`, { x: mg.odbior.x, z: mg.odbior.z });
     if (pt.typ === 'ruda' && kop && !G.budowle.wagonik) return ustaw('Weź rudę z kopalni', { x: kop.pad.x, z: kop.pad.z });
     let w = null, wd = Infinity;
     for (const x of G.wezly) if (x.def.daje === pt.typ && x.zostalo > 0 && dostepny(x)) { const d = Math.hypot(x.x - gr.x, x.z - gr.z); if (d < wd) { wd = d; w = x; } }
@@ -1975,6 +2062,7 @@ function wybierzZadanie() {
     }
   }
   if (kasa && kw >= 4) return ustaw('Zbierz pieniądze', { x: kasa.x, z: kasa.z });
+  if (gr.plecak.length >= pojemnosc()) return ustaw('Plecak pełny: sprzedaj na ladzie albo odłóż do magazynu', null);
   if (P) return ustaw(`Zbieraj na: ${P.cfg.nazwa}`, null);
   ustaw('', null);
 }

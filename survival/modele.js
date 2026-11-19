@@ -422,13 +422,22 @@ export function armatka() {
   dodaj(g, sph(0.14, '#ffffff', 6, 4), 0.25, 2.05, -0.5);
   return cien(g);
 }
-export function chatka() {
+// mała chatka pracownika; każdy rodzaj pracy ma inne ściany, dach i dodatki
+export function chatka(rodzaj = 'jagody') {
   const g = new THREE.Group();
-  dodaj(g, box(2.2, 1.5, 1.9, '#9a6236'), 0, 0.75, 0);
-  for (let i = 0; i < 4; i++) dodaj(g, cyl(0.1, 0.1, 2.25, '#7a4520', 6), 0, 0.2 + i * 0.38, 0.97).rotation.z = Math.PI / 2;
-  const d = dodaj(g, new THREE.Mesh(geo('dach2', () => new THREE.CylinderGeometry(1.4, 1.4, 2.6, 3)), mat('#3f7f4f')), 0, 1.95, 0);
+  const w = { jagody: ['#d9b48a', '#5b4bb5', '#33449e'], drewno: ['#9a6236', '#3f7f4f', '#7a4520'], kamien: ['#a3a9b3', '#5a5d66', '#868d98'] }[rodzaj] || ['#9a6236', '#3f7f4f', '#7a4520'];
+  dodaj(g, box(1.6, 1.15, 1.4, w[0]), 0, 0.58, 0);
+  if (rodzaj === 'drewno') for (let i = 0; i < 3; i++) dodaj(g, cyl(0.08, 0.08, 1.65, '#7a4520', 6), 0, 0.2 + i * 0.36, 0.72).rotation.z = Math.PI / 2;
+  if (rodzaj === 'kamien') for (const [x, y] of [[-0.45, 0.3], [0.3, 0.7], [0.5, 0.25]]) dodaj(g, box(0.4, 0.22, 0.06, '#868d98'), x, y, 0.72);
+  const d = dodaj(g, new THREE.Mesh(geo('dachC', () => new THREE.CylinderGeometry(1.05, 1.05, 1.9, 3)), mat(w[1])), 0, 1.45, 0);
   d.rotation.z = Math.PI / 2; d.scale.set(0.6, 1, 1);
-  dodaj(g, box(0.55, 0.9, 0.06, '#4a2c18'), 0, 0.45, 1.0);
+  dodaj(g, box(0.4, 0.7, 0.05, '#4a2c18'), 0.35, 0.35, 0.72);
+  // znak przed chatką: koszyk z jagodami, bal drewna albo kamień
+  dodaj(g, box(0.08, 0.7, 0.08, '#7a4520'), -0.95, 0.35, 0.7);
+  if (rodzaj === 'jagody') { dodaj(g, cyl(0.2, 0.15, 0.2, '#c48a4e', 8), -0.95, 0.8, 0.7); dodaj(g, sph(0.16, w[2], 8, 4), -0.95, 0.9, 0.7).scale.set(1, 0.45, 1); }
+  else if (rodzaj === 'drewno') { const b = dodaj(g, cyl(0.13, 0.13, 0.5, '#9a6236', 8), -0.95, 0.82, 0.7); b.rotation.z = Math.PI / 2; }
+  else dodaj(g, dode(0.2, '#a3a9b3'), -0.95, 0.85, 0.7);
+  if (rodzaj !== 'kamien') dodaj(g, box(0.25, 0.6, 0.25, '#8d939d'), 0.45, 1.8, -0.3);
   return cien(g);
 }
 export function warsztat() {
