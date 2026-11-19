@@ -11,6 +11,8 @@ Pomysł na ery wzięty z gier strategicznych, ale wygląd, budynki i nazwy są n
 - Budynki można stawiać na całym placu, aż do dolnego brzegu brązowej ziemi (w wersji 3 trzeba było
   zostawić pas przy ladach). Poza placem gra napisze „Tylko na placu: niżej chodzą klienci”.
 
+Zapis w repozytorium: `e4488ba`
+
 ## Wersja 3 (19.11.2026)
 
 **Zmienione**
