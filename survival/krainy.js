@@ -10,14 +10,14 @@ export const PRZEDMIOTY = {
   zloto:    { nazwa: 'Sztabka złota', cena: 14 },
   wegiel:   { nazwa: 'Węgiel', cena: 3 },
   krysztal: { nazwa: 'Lodowy kryształ', cena: 10 },
-  drewno:   { nazwa: 'Drewno', cena: 0 },
+  drewno:   { nazwa: 'Drewno', cena: 2 },
   kamien:   { nazwa: 'Kamień', cena: 0 },
 };
 
 // miejsca, z których się zbiera (ile = ile sztuk naraz, odrost w sekundach, trud = ile razy dłużej niż jagody)
 export const WEZLY = {
   krzak:    { daje: 'jagody', ile: 8, odrost: 14, trud: 1, kolizja: 0 },
-  drzewo:   { daje: 'drewno', ile: 6, odrost: 25, trud: 1.0, kolizja: 0.4, calosc: true },
+  drzewo:   { daje: 'drewno', ile: 6, odrost: 25, trud: 1.0, kolizja: 0.4, calosc: true, wymaga: 'siekiera' },
   glaz:     { daje: 'kamien', ile: 6, odrost: 30, trud: 1.3, kolizja: 0.85, wymaga: 'kamieniolom' },
   przerebel:{ daje: 'ryba', ile: 3, odrost: 18, trud: 1.5, kolizja: 0 },
   skala:    { daje: 'ruda', ile: 6, odrost: 26, trud: 1.6, kolizja: 0.9 },
@@ -42,12 +42,12 @@ export const WEJSCIA = {
 
 // Ulepszenia w Warsztacie (w danej krainie) i stałe (za kryształki, w menu)
 export const WARSZTAT = [
-  { id: 'kosz', nazwa: 'Większy kosz', opis: '+10 miejsc na plecach', ceny: [40, 90, 160, 260, 400, 600, 850] },
+  { id: 'kosz', nazwa: 'Większy kosz', opis: '+5 miejsc na plecach', ceny: [40, 90, 160, 260, 400, 600, 850] },
   { id: 'buty', nazwa: 'Szybkie buty', opis: '+10% szybkości', ceny: [50, 110, 190, 300, 460] },
   { id: 'rece', nazwa: 'Zręczne ręce', opis: '+15% szybsze zbieranie', ceny: [50, 110, 190, 300, 460] },
 ];
 export const STALE = [
-  { id: 'kosz', nazwa: 'Wielki koszyk', opis: '+4 miejsca na plecach na start', max: 8 },
+  { id: 'kosz', nazwa: 'Wielki koszyk', opis: '+2 miejsca na plecach na start', max: 8 },
   { id: 'buty', nazwa: 'Śnieżne buty', opis: '+5% szybkości', max: 8 },
   { id: 'rece', nazwa: 'Szybkie palce', opis: '+8% szybsze zbieranie', max: 8 },
   { id: 'mach', nazwa: 'Mocny zamach', opis: '+20% siły koszyczka na zwierzęta', max: 8 },
@@ -86,6 +86,7 @@ function palisada(extra = {}) { return { id: 'palisada', rodzaj: 'palisada', x: 
 function cel(nazwa, extra = {}) { return { id: 'cel', rodzaj: 'cel', x: 0.6, z: -3.6, nazwa, ...extra }; }
 
 function tasma(id, skad, doId, punkty, x, z) { return { id, rodzaj: 'tasmociag', skad, do: doId, tasma: punkty, x, z, nazwa: 'Taśmociąg: dżem sam jedzie na ladę' }; }
+function sprzedawca(id, ladaId, x, z) { return { id, rodzaj: 'sprzedawca', lada: ladaId, x, z, nazwa: 'Sprzedawca (sam sprzedaje)' }; }
 function sklad(id, item, x, z) { return { id, rodzaj: 'sklad', item, x, z, nazwa: item === 'drewno' ? 'Skład drewna' : 'Skład kamienia' }; }
 
 // koszt (k: liczba = złotówki albo { kasa, drewno, kamien }) i warunek (po) dopisywane przy krainie
@@ -106,32 +107,37 @@ const WSZYSTKIE = [
     wejscia: ['N', 'NE', 'NW'],
     // najpierw jagody (sprzedaż = pieniądze na życie), potem drewno do budowy, potem kamieniołom, wózki, taśmociąg i pomocnicy
     budowle: [
-      K(lada('ladaJ', 'jagody', 0, { gotowe: true }), 0),
+      K(lada('ladaJ', 'jagody', 0, { gotowe: true, x: -9.5 }), 0),
+      K(sprzedawca('sprzJ', 'ladaJ', -11.6, 5.0), 30, 'ladaJ'),
       K(domek('domek1', 0, ['ladaJ']), 20, 'ladaJ'),
-      K(lada('ladaD', 'dzem', 1), { kasa: 30, drewno: 5 }, 'domek1'),
-      K(przetwornia('kuchnia', 'kuchnia', 'jagody', 'dzem', 1, 1.3, 'ladaD'), { kasa: 40, drewno: 10 }, 'ladaD'),
+      K({ id: 'siekiera', rodzaj: 'narzedzie', narzedzie: 'drewno', x: -6, z: -1.2, nazwa: 'Siekiera (ścinanie drzew)' }, 25, 'ladaJ'),
+      K(lada('ladaD', 'dzem', 1, { x: 3.5 }), { kasa: 30, drewno: 5 }, ['domek1', 'siekiera']),
+      K(przetwornia('kuchnia', 'kuchnia', 'jagody', 'dzem', 1, 1.3, 'ladaD', { x: 3.5, z: 0.2 }), { kasa: 40, drewno: 10 }, 'ladaD'),
+      K(sprzedawca('sprzD', 'ladaD', 1.4, 5.0), 60, 'kuchnia'),
       K(armatka('armatka1', 0), { kasa: 30, drewno: 15 }, 'kuchnia'),
       K(warsztat(), { kasa: 60, drewno: 20 }, 'kuchnia'),
-      K(tasma('tasma1', 'kuchnia', 'ladaD', [[-3.0, 3.3], [-3.0, 6.2]], 0, 3.6), { kasa: 80, drewno: 20 }, 'warsztat'),
+      K(lada('ladaDr', 'drewno', 1, { x: -3 }), { kasa: 40, drewno: 10 }, 'warsztat'),
+      K(sprzedawca('sprzDr', 'ladaDr', -5.1, 5.0), 60, 'ladaDr'),
+      K(tasma('tasma1', 'kuchnia', 'ladaD', [[5.0, 0.9], [5.0, 6.2]], 2.6, 3.0), { kasa: 80, drewno: 20 }, 'warsztat'),
       K(chatka('chatka1', 0, 'jagody', 'ladaJ'), { kasa: 80, drewno: 20 }, 'warsztat'),
-      K(sklad('skladD', 'drewno', 8, 1.6), { kasa: 40, drewno: 10 }, 'warsztat'),
+      K(sklad('skladD', 'drewno', 8.5, 2.5), { kasa: 40, drewno: 10 }, 'warsztat'),
       K(chatka('chatka2', 2, 'drewno', 'skladD'), { kasa: 100, drewno: 25 }, 'skladD'),
-      K(domek('domek2', 1, ['ladaD']), { kasa: 90, drewno: 25 }, 'chatka1'),
+      K(domek('domek2', 1, ['ladaD', 'ladaDr']), { kasa: 90, drewno: 25 }, 'chatka1'),
       K({ id: 'kamieniolom', rodzaj: 'kopalnia', wyj: 'kamien', co: 6, x: 16, z: -11.5, nazwa: 'Kamieniołom' }, { kasa: 120, drewno: 35 }, 'chatka2'),
-      K(sklad('skladK', 'kamien', 8, 5.2), { kasa: 60, drewno: 20, kamien: 5 }, 'kamieniolom'),
+      K(sklad('skladK', 'kamien', 8.8, 5.6), { kasa: 60, drewno: 20, kamien: 5 }, 'kamieniolom'),
       K({ id: 'wozek', rodzaj: 'wagonik', skad: 'kamieniolom', do: 'skladK', x: 14.4, z: -2, nazwa: 'Wózek: kamień sam jedzie do składu',
-          tory: [[17.8, -9.4], [14.4, -7.8], [14.4, 5.6], [10.6, 5.6]] }, { kasa: 150, drewno: 35, kamien: 10 }, 'skladK'),
+          tory: [[17.8, -9.4], [14.4, -7.8], [14.4, 5.8], [10.6, 5.8]] }, { kasa: 150, drewno: 35, kamien: 10 }, 'skladK'),
       K(chatka('chatka3', 3, 'kamien', 'skladK'), { kasa: 150, drewno: 30, kamien: 10 }, 'skladK'),
       K(armatka('armatka2', 1), { drewno: 25, kamien: 10 }, ['armatka1', 'kamieniolom']),
       K(chatka('chatka4', 1, 'jagody', 'kuchnia'), { kasa: 140, drewno: 30 }, 'tasma1'),
-      K(domek('domek3', 2, ['ladaJ', 'ladaD']), { kasa: 180, drewno: 35, kamien: 10 }, ['domek2', 'skladK']),
-      K(palisada(), { drewno: 40, kamien: 25 }, 'armatka2'),
+      K(domek('domek3', 2, ['ladaJ', 'ladaD', 'ladaDr']), { kasa: 180, drewno: 35, kamien: 10 }, ['domek2', 'skladK']),
+      K(palisada({ x: -2.5, z: 0.8 }), { drewno: 40, kamien: 25 }, 'armatka2'),
       K(armatka('armatka3', 2), { drewno: 25, kamien: 15 }, 'palisada'),
       K(armatka('armatka4', 3), { drewno: 25, kamien: 15 }, 'palisada'),
-      K(cel('Wielki Piec'), { kasa: 600, drewno: 60, kamien: 45 }, ['domek3', 'wozek', 'chatka3', 'chatka4', 'armatka3']),
+      K(cel('Wielki Piec'), { kasa: 600, drewno: 60, kamien: 45 }, ['domek3', 'wozek', 'chatka3', 'chatka4', 'armatka3', 'sprzD', 'sprzDr']),
     ],
     fale: { po: 'armatka1', pierwsza: 45, co: 85, sklad: n => [...rep('lis', Math.min(6, 1 + Math.floor(n * 0.6))), ...rep('wilk', n >= 6 ? Math.floor((n - 4) / 2) : 0), ...rep('niedzwiedz', n >= 7 ? Math.min(3, Math.floor((n - 4) / 3)) : 0)] },
-    gwiazdki: [20 * 60, 30 * 60],
+    gwiazdki: [30 * 60, 45 * 60],
   },
   {
     id: 2, nazwa: 'Zamarznięte Jezioro', opis: 'Łów ryby w przeręblach i wędź je. Uwaga na pingwiny-łasuchy!',

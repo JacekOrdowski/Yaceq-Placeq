@@ -2,6 +2,24 @@
 
 Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
+## Wersja 6 (19.11.2026)
+
+**Dodane**
+- Sprzedawcy: przy każdej ladzie można zatrudnić sprzedawcę (pole obok lady, płaci się pieniędzmi). Dopóki go nie ma,
+  klientów obsługuje tylko Yaceq: musi stanąć przy ladzie (strzałka podpowiada „Stań przy ladzie i sprzedawaj”).
+  Sprzedawca stoi za ladą w białym fartuchu i sprzedaje sam.
+- Lada z drewnem: klienci kupują drewno (2 zł za bal). Drewno potrzebne do budowy strzałka każe nieść na budowę,
+  a nie na sprzedaż.
+- Siekierę trzeba kupić za pieniądze (25 zł, pole w obozie). Bez niej nie da się ścinać drzew, ani Yaceqowi, ani drwalom.
+- Wersja 5 jest na liście wyboru wersji jako osobna kopia.
+
+**Zmienione**
+- Plecak na start ma 10 miejsc (w warsztacie +5 za poziom, w ulepszeniach na zawsze +2).
+- Nowy układ lad: lada z jagodami z lewej, z drewnem w środku, z dżemem z prawej. Kuchnia stoi dalej od lady,
+  a taśmociąg jest dłuższy.
+- Wielki Piec wymaga też obu sprzedawców (przy dżemie i przy drewnie).
+- Gwiazdki: 3 do 30 minut, 2 do 45 minut (robot przechodzi krainę w około 36 minut).
+
 ## Wersja 5 (19.11.2026)
 
 Zapis w repozytorium: `6838013`

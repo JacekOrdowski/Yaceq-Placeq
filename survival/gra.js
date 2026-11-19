@@ -4,10 +4,11 @@ import * as MOD from './modele.js';
 import { PRZEDMIOTY, WEZLY, ZWIERZETA, WEJSCIA, WARSZTAT, STALE, CENY_STALE, KRAINY, OBOZ, ZAKRES } from './krainy.js';
 import { rysujIkone, ikonaURL } from './ikony.js';
 
-const WERSJA = 5;
+const WERSJA = 6;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 5, opis: 'Najnowsza: wybór wersji przy starcie, a do tego wszystko z wersji 4.' },
+  { nr: 6, opis: 'Sprzedawcy przy ladach (bez nich sprzedajesz sam), lada z drewnem, siekiera za pieniądze, plecak na start 10 miejsc.' },
+  { nr: 5, opis: 'Wybór wersji przy starcie, drewno i kamień do budowy, bramy, wózek, taśmociąg, drwal i górnik.', adres: 'wersje/5/' },
   { nr: 4, opis: 'Drewno i kamień do budowy, siekiera i kilof, bramy w palisadzie, wózek, taśmociąg, drwal i górnik.', taSama: true },
   { nr: 3, opis: 'Kamera na ukos, gęsty las, wir koszyczka, wysoki stos i kolejka wężykiem.', adres: 'wersje/3/' },
   { nr: 2, opis: 'Pierwsza wersja z poprawionym kółkiem sterowania.', adres: 'wersje/2/' },
@@ -147,7 +148,7 @@ function rysujDymek(s, typ, liczba) {
   }
   s.material.map.needsUpdate = true;
 }
-const EMOJI = { sklad: '📦', tasmociag: '⚙️', domek: '🏠', armatka: '❄️', chatka: '👷', warsztat: '🔨', palisada: '🛡️', cel: '⭐', kopalnia: '⛏️', wagonik: '🚃', piec: '🔥', napraw: '🔨', kosz: '🎒', buty: '👟', rece: '🧤' };
+const EMOJI = { narzedzie: '🪓', sprzedawca: '🙋', sklad: '📦', tasmociag: '⚙️', domek: '🏠', armatka: '❄️', chatka: '👷', warsztat: '🔨', palisada: '🛡️', cel: '⭐', kopalnia: '⛏️', wagonik: '🚃', piec: '🔥', napraw: '🔨', kosz: '🎒', buty: '👟', rece: '🧤' };
 const TYPY_KOSZTU = ['kasa', 'drewno', 'kamien'];
 function reszta(p) { const r = {}; for (const t of TYPY_KOSZTU) r[t] = Math.max(0, Math.ceil((p.koszt[t] || 0) - (p.wpl[t] || 0) - 0.001)); return r; }
 function gotowe(p) { const r = reszta(p); return TYPY_KOSZTU.every(t => r[t] <= 0); }
@@ -272,7 +273,7 @@ function nowyStan(k) {
     zapasy: {}, kasy: {}, kopalnia: 0, ogrzewanie: 0, palisada: [], plecak: [], gracz: [...k.start],
   };
 }
-const pojemnosc = () => 20 + 4 * stale('kosz') + 10 * S.warsztat.kosz;
+const pojemnosc = () => 10 + 2 * stale('kosz') + 5 * S.warsztat.kosz;
 const szybkosc = () => 5.0 * (1 + 0.05 * stale('buty') + 0.1 * S.warsztat.buty);
 const tempoZbierania = () => 0.4 / (1 + 0.08 * stale('rece') + 0.15 * S.warsztat.rece);
 const silaMachu = () => 1 + 0.2 * stale('mach');
@@ -670,7 +671,7 @@ function postaw(cfg, nowa) {
   const kol = (x, z, r) => G.kolizje.push({ x, z, r, b: cfg.id });
   switch (cfg.rodzaj) {
     case 'lada': {
-      const kolory = { jagody: '#3a4bb0', dzem: '#8a2f9e', wedzona: '#c96a1f', zloto: '#d99a00', krysztal: '#2aa6c9' };
+      const kolory = { jagody: '#3a4bb0', dzem: '#8a2f9e', drewno: '#7a4520', wedzona: '#c96a1f', zloto: '#d99a00', krysztal: '#2aa6c9' };
       dodajObj(kopia('lada' + cfg.item, () => MOD.lada(kolory[cfg.item] || '#e0413a')));
       const tab = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1), new THREE.MeshBasicMaterial({ map: tekstura((() => { const cv = plotno(128, 128), c = cv.getContext('2d'); c.beginPath(); c.arc(64, 64, 60, 0, 7); c.fillStyle = '#fff'; c.fill(); rysujIkone(c, cfg.item, 64, 64, 96); return cv; })()), transparent: true }));
       tab.position.set(0, 2.85, -0.5); B.obj.add(tab);
@@ -778,6 +779,20 @@ function postaw(cfg, nowa) {
       B.dl = []; let suma = 0; for (let i = 0; i < B.tory.length - 1; i++) { suma += B.tory[i].distanceTo(B.tory[i + 1]); B.dl.push(suma); }
       B.calosc = suma; B.s = 0; B.kier = 0; B.ladunek = []; B.T = 0; B.stan = 'laduje';
       B.obj.position.copy(B.tory[0]);
+      break;
+    }
+    case 'sprzedawca': {
+      const L = G.budowle[cfg.lada];
+      if (L) {
+        const o = kopia('sprzedawca', () => { const g = MOD.osoba({ kurtka: '#ffffff', czapka: '#e0413a', pompon: '#ffffff', skala: 0.85 }); g.userData = {}; return g; });
+        o.position.set(L.x - 0.95, 0, 5.95); swiat.add(o);
+        o.userData = { rece: czesci(o, 'reka'), sprzedaje: 0 };
+        L.sprzedawca = o; B.obj = o;
+      }
+      break;
+    }
+    case 'narzedzie': {
+      if (nowa) baner('Masz siekierę!', 'Teraz możesz ścinać drzewa');
       break;
     }
     case 'palisada': {
@@ -898,7 +913,9 @@ function aktualizujKlientow(dt) {
     const k0 = B.kolejka[0];
     if (k0 && k0.stan === 'czeka' && k0.ma < k0.chce) {
       B.sprzedT -= dt;
-      if (B.zapas > 0 && B.sprzedT <= 0) {
+      const obsluga = B.sprzedawca || Math.hypot(G.gracz.x - B.pad.x, G.gracz.z - B.pad.z) < 1.7;
+      if (B.sprzedawca) B.sprzedawca.userData.sprzedaje = 0.3;
+      if (B.zapas > 0 && B.sprzedT <= 0 && obsluga) {
         B.sprzedT = 0.13; B.zapas--; k0.ma++; k0.dolot++;
         const m = zdejmijZLady(B);
         if (m) {
@@ -948,6 +965,14 @@ function aktualizujKlientow(dt) {
 function miejsceKolejki(B, i) {
   const rzad = Math.floor(i / 5), j = i % 5;
   return V(B.x + B.kier * rzad * 1.25, 0, 8.6 + (rzad % 2 ? 4 - j : j) * 1.0);
+}
+function ruszajSprzedawcami(dt) {
+  for (const id in G.budowle) {
+    const L = G.budowle[id]; if (!L.sprzedawca) continue;
+    const u = L.sprzedawca.userData; if (!u.rece) continue;
+    const k0 = L.kolejka[0], dziala = k0 && k0.stan === 'czeka' && L.zapas > 0;
+    u.rece.forEach((r, j) => { r.rotation.x = dziala ? -1.2 + Math.sin(czasGry * 12 + j * 3) * 0.4 : 0; });
+  }
 }
 function nowyKlient(B) {
   const obj = kopia('klient' + (G.liczKlient % 8), () => MOD.klient(G.liczKlient % 8));
@@ -1531,13 +1556,20 @@ function wybierzZadanie() {
     }
   }
   const P = pola[0], rP = P ? reszta(P) : { kasa: 0, drewno: 0, kamien: 0 };
+  // 3c. klienci czekają przy ladzie bez sprzedawcy: stań przy ladzie
+  for (const id in G.budowle) {
+    const L = G.budowle[id];
+    if (L.cfg.rodzaj !== 'lada' || L.sprzedawca) continue;
+    const k0 = L.kolejka[0];
+    if (k0 && k0.stan === 'czeka' && L.zapas > 0) return ustaw('Stań przy ladzie i sprzedawaj klientom', { x: L.pad.x, z: L.pad.z });
+  }
   // 4. pieniądze do zebrania
   let kasa = null, kw = 0;
   for (const p of G.pady) if (p.typ === 'kasa' && p.wartosc > kw) { kw = p.wartosc; kasa = p; }
   if (kasa && rP.kasa > S.kasa && (kw >= 4 || kw >= rP.kasa - S.kasa)) return ustaw('Zbierz pieniądze', { x: kasa.x, z: kasa.z });
   // 5. coś w plecaku: zanieś
   if (gr.plecak.length) {
-    const typy = [...new Set(gr.plecak.map(e => e.typ))];
+    const typy = [...new Set(gr.plecak.map(e => e.typ))].filter(t => !pola.some(q => (reszta(q)[t] || 0) > 0));
     let cel = null, cd = Infinity;
     for (const p of G.pady) if (p.typ === 'zrzut' && typy.includes(p.przyjmuje) && miejsceW(p.B)) { const d = Math.hypot(p.x - gr.x, p.z - gr.z); if (d < cd) { cd = d; cel = p; } }
     // wszystko pełne, a plecak też: idź pod ladę, klienci zaraz zrobią miejsce
@@ -1888,6 +1920,7 @@ function aktualizuj(dt) {
     aktualizujGracza(dt);
     aktualizujProdukcje(dt);
     aktualizujKlientow(dt);
+    ruszajSprzedawcami(dt);
     aktualizujZwierzeta(dt);
     aktualizujArmatki(dt);
     aktualizujPomocnikow(dt);

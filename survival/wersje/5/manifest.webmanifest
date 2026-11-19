@@ -1,0 +1,18 @@
+{
+  "name": "Yaceq Survival",
+  "short_name": "Yaceq Survival",
+  "description": "Zbieraj jagody kamczackie, buduj zimowy obóz i przeganiaj zwierzęta, które chcą zjeść zapasy.",
+  "lang": "pl",
+  "start_url": "./",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#d6e3f2",
+  "theme_color": "#d6e3f2",
+  "icons": [
+    { "src": "ikona-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "ikona-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "ikona-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

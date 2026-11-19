@@ -43,8 +43,13 @@ def main():
             t = zamien(t, '`../muzyka/', '`../../../muzyka/', p)
             t = zamien(t, "register('../sw.js', { scope: '../' })", "register('../../../sw.js', { scope: '../../../' })", p)
             t = zamien(t, "const KLUCZ = 'yaceq-survival';", f"const KLUCZ = 'yaceq-survival-w{nr}';", p)
+            # od wersji 5 gra ma własny wybór wersji: w kopii start od razu z menu, a przycisk wraca do głównej listy
+            if 'pokazWersje();\n  requestAnimationFrame' in t:
+                t = zamien(t, 'pokazWersje();\n  requestAnimationFrame', 'pokazMenu();\n  requestAnimationFrame', p)
+                t = zamien(t, "$('m-wersje').onclick = () => { dzwiek('klik'); pokazWersje(); };", "$('m-wersje').onclick = () => { location.href = '../../'; };", p)
         if p == 'index.html':
             t = zamien(t, '<title>Yaceq Survival</title>', f'<title>Yaceq Survival (wersja {nr})</title>', p)
+        if p == 'index.html' and 'id="m-wersje"' not in t:
             t = zamien(t, '<div class="drobne" id="m-wersja"></div>',
                        '<div class="drobne" id="m-wersja"></div>\n'
                        '    <a class="przycisk drugi" href="../../" style="text-decoration:none">Inne wersje gry</a>', p)
