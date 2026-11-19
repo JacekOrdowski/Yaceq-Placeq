@@ -2,6 +2,40 @@
 
 Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
+## Wersja 7 (19.11.2026): wielka rozbudowa
+
+**Dodane**
+- Każde drzewo w zasięgu da się ściąć. Im dalej od bazy, tym drzewa są grubsze (więcej drewna, ale twardsze):
+  blisko wystarczy zwykła siekiera, dalej trzeba żelaznej, a najdalej stalowej (kupuje się je w kuźni).
+  Tak samo głazy (zwykły, żelazny i stalowy kilof) i krzaki (dalej większe, z większą ilością jagód).
+- Powiększanie bazy w 4 etapach: na północ, na wschód, na zachód i dalej na północ. Żeby powiększyć bazę, trzeba wyciąć
+  las w nowym kawałku (na polu widać „🌲 ile zostało”) i zapłacić. Palisada sama przesuwa się dalej, a w nowym kawałku
+  pojawiają się nowe budynki. Ścięte drzewa w tych kawałkach nie odrastają.
+- Wieże myśliwych (zamiast armatek): wieżę się buduje, a myśliwego trzeba zatrudnić. 8 wież.
+- Zbrojownia: lepsza broń dla myśliwych (proca, łuk, kusza, armatka śnieżna, lodowe działo). Zwierzęta dalej nie giną,
+  tylko uciekają.
+- Kuźnia: lepsze siekiery i kilofy.
+- Tartak: z drewna robi deski, potrzebne do dużych budynków. Taśmociąg wozi drewno ze składu prosto do tartaku.
+- Piekarnia: z jagód robi drożdżówki; nowa lada z drożdżówkami, taśmociąg i sprzedawca.
+- Rynek (klienci płacą o 30% więcej) i szkoła pomocników (pomocnicy są o 30% szybsi).
+- Więcej chatek z pomocnikami, więcej domków dla klientów.
+- Dzikie zwierzęta w głębi lasu: wilki, niedźwiedzie, a później nawet Yeti. Gdy Yaceq podejdzie, gonią go
+  i wytrącają mu rzeczy z plecaka. Trzeba je przegonić albo uciec do bazy.
+- Fale zwierząt są silniejsze po każdym powiększeniu bazy.
+- Skarbnik: sam zbiera pieniądze ze wszystkich lad. Baza staje się samowystarczalna.
+- Wielki Piec kończy krainę, a potem baza dalej sama zarabia, także wtedy, gdy gra jest zamknięta
+  (połowa zwykłego dochodu, najwyżej za 3 godziny).
+- Za zarobione pieniądze (25 000 zł) kupuje się drugą krainę, „Mroźną Dolinę”, i tam buduje się od początku
+  (drożej i z groźniejszymi zwierzętami).
+- Licznik narzędzi i broni w pasku (🪓 siekiera, ⛏ kilof, 🏹 broń).
+- Strzałka podpowiada też: wycinanie lasu pod rozbudowę, branie desek z tartaku i kupno ulepszeń.
+
+**Zmienione**
+- Postęp w wersji 7 zaczyna się od nowa (kryształki i ulepszenia na zawsze zostają).
+- Gra jest dużo większa: około 60 budynków. Robot przechodzi krainę w około 71 minut, dziecko około 1,5 godziny.
+- Gwiazdki: 3 do 80 minut, 2 do 110 minut.
+- Na telefonie gra liczy przeszkody tylko w pobliżu Yaceqa, żeby setki drzew nie spowalniały gry.
+
 ## Wersja 6 (19.11.2026)
 
 Zapis w repozytorium: `8a91f3e`

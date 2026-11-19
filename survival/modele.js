@@ -314,6 +314,13 @@ function nowyPrzedmiot(typ) {
     dodaj(g, box(0.42, 0.24, 0.3, '#a3a9b3'), 0, 0.12, 0);
     dodaj(g, box(0.3, 0.05, 0.22, '#c3c9d2'), 0.02, 0.26, 0);
     h = 0.27;
+  } else if (typ === 'deski') {
+    for (let i = 0; i < 3; i++) dodaj(g, box(0.62, 0.06, 0.13, i % 2 ? '#d9a467' : '#c48a4e'), 0, 0.04 + i * 0.065, (i - 1) * 0.06);
+    h = 0.2;
+  } else if (typ === 'drozdzowka') {
+    const b = dodaj(g, sph(0.2, '#e3b06b', 10, 6), 0, 0.1, 0); b.scale.set(1, 0.55, 1);
+    dodaj(g, sph(0.11, '#4a3aa8', 8, 4), 0, 0.19, 0).scale.set(1, 0.4, 1);
+    h = 0.22;
   } else if (typ === 'kasa') {
     dodaj(g, box(0.46, 0.07, 0.25, '#2f9b45'), 0, 0.035, 0);
     dodaj(g, box(0.47, 0.072, 0.06, '#d8f3dc'), 0, 0.035, 0);
@@ -593,5 +600,115 @@ export function sklad(kolor = '#8e5629') {
   for (const [x, z] of [[-1.25, -1.25], [1.25, -1.25], [-1.25, 1.25], [1.25, 1.25]]) dodaj(g, box(0.16, 0.9, 0.16, kolor), x, 0.45, z);
   for (const z of [-1.25, 1.25]) dodaj(g, box(2.6, 0.12, 0.1, kolor), 0, 0.7, z);
   dodaj(g, box(0.1, 0.12, 2.6, kolor), -1.25, 0.7, 0);
+  return cien(g);
+}
+
+// ---------- wersja 7: nowe budynki, myśliwi, przedmioty ----------
+export function wieza() {
+  const g = new THREE.Group();
+  for (const [x, z] of [[-0.75, -0.75], [0.75, -0.75], [-0.75, 0.75], [0.75, 0.75]]) dodaj(g, box(0.2, 3.0, 0.2, '#8e5629'), x, 1.5, z);
+  for (const y of [0.9, 1.9]) { dodaj(g, box(1.7, 0.1, 0.1, '#7a4520'), 0, y, 0.75); dodaj(g, box(1.7, 0.1, 0.1, '#7a4520'), 0, y, -0.75); }
+  dodaj(g, box(2.0, 0.2, 2.0, '#b9773f'), 0, 3.05, 0);
+  for (const [x, z, w, d] of [[0, 0.95, 2.0, 0.1], [0, -0.95, 2.0, 0.1], [0.95, 0, 0.1, 2.0], [-0.95, 0, 0.1, 2.0]]) dodaj(g, box(w, 0.5, d, '#9a6236'), x, 3.4, z);
+  for (const [x, z] of [[-0.9, -0.9], [0.9, -0.9], [-0.9, 0.9], [0.9, 0.9]]) dodaj(g, box(0.12, 1.4, 0.12, '#7a4520'), x, 3.8, z);
+  const d = dodaj(g, cone(1.75, 0.9, '#3f7f4f', 4), 0, 4.9, 0); d.rotation.y = Math.PI / 4;
+  dodaj(g, cone(1.3, 0.5, '#f7fbff', 4), 0, 5.1, 0).rotation.y = Math.PI / 4;
+  return cien(g);
+}
+function luk() {
+  const g = new THREE.Group();
+  const l = dodaj(g, new THREE.Mesh(geo('luk', () => new THREE.TorusGeometry(0.42, 0.035, 4, 12, Math.PI)), mat('#7a4520')), 0, -0.55, 0.1);
+  l.rotation.y = Math.PI / 2; l.rotation.z = -Math.PI / 2;
+  dodaj(g, box(0.01, 0.84, 0.01, '#f4f1ea'), 0, -0.55, 0.1);
+  return g;
+}
+export function mysliwy() {
+  const g = osoba({ kurtka: '#4f6b3a', czapka: '#8a5a2b', pompon: '#e8d9b0', skala: 0.9 });
+  const l = luk(); l.name = 'narluk'; g.userData.rece[0].add(l);
+  g.userData = {};
+  return g;
+}
+export function strzala() {
+  const g = new THREE.Group();
+  const t = dodaj(g, cyl(0.03, 0.03, 0.8, '#c48a4e', 5), 0, 0, 0); t.rotation.x = Math.PI / 2;
+  const p = dodaj(g, sph(0.07, '#e0413a', 6, 4), 0, 0, 0.42); p.scale.set(1, 1, 0.6);
+  for (const s of [-1, 1]) dodaj(g, box(0.02, 0.12, 0.14, '#ffffff'), s * 0.03, 0, -0.36);
+  return g;
+}
+export function kuznia() {
+  const g = new THREE.Group();
+  dodaj(g, box(3.0, 1.8, 2.4, '#8d939d'), 0, 0.9, -0.2);
+  const d = dodaj(g, new THREE.Mesh(geo('dachK', () => new THREE.CylinderGeometry(1.8, 1.8, 3.3, 3)), mat('#5a5d66')), 0, 2.25, -0.2);
+  d.rotation.z = Math.PI / 2; d.scale.set(0.55, 1, 1);
+  dodaj(g, box(0.6, 1.8, 0.6, '#6c717b'), 1.0, 2.9, -0.6);
+  const o = dodaj(g, box(1.0, 0.8, 0.1, '#ff8a1f'), -0.6, 0.7, 1.02); o.material = new THREE.MeshBasicMaterial({ color: '#ff8a1f' }); o.name = 'ogien';
+  dodaj(g, box(0.7, 0.3, 0.35, '#3a3c45'), 0.8, 0.75, 1.4);
+  dodaj(g, box(0.3, 0.5, 0.3, '#5a5d66'), 0.8, 0.35, 1.4);
+  g.userData.dym = [1.0, 4.0, -0.6];
+  return cien(g);
+}
+export function zbrojownia() {
+  const g = new THREE.Group();
+  dodaj(g, box(3.0, 1.7, 2.4, '#9a6236'), 0, 0.85, -0.2);
+  const d = dodaj(g, new THREE.Mesh(geo('dachZ', () => new THREE.CylinderGeometry(1.8, 1.8, 3.3, 3)), mat('#a8432f')), 0, 2.2, -0.2);
+  d.rotation.z = Math.PI / 2; d.scale.set(0.55, 1, 1);
+  const tarcza = dodaj(g, cyl(0.55, 0.55, 0.08, '#f4f1ea', 14), -0.7, 1.0, 1.05); tarcza.rotation.x = Math.PI / 2;
+  const t2 = dodaj(g, cyl(0.35, 0.35, 0.09, '#e0413a', 14), -0.7, 1.0, 1.06); t2.rotation.x = Math.PI / 2;
+  const t3 = dodaj(g, cyl(0.15, 0.15, 0.1, '#f4f1ea', 14), -0.7, 1.0, 1.07); t3.rotation.x = Math.PI / 2;
+  const l = luk(); l.position.set(0.8, 1.6, 1.08); l.scale.setScalar(1.3); g.add(l);
+  return cien(g);
+}
+export function tartak() {
+  const g = new THREE.Group();
+  dodaj(g, box(3.0, 0.2, 2.2, '#8e5629'), 0, 0.1, 0);
+  for (const [x, z] of [[-1.4, -1.0], [1.4, -1.0], [-1.4, 1.0], [1.4, 1.0]]) dodaj(g, box(0.16, 2.2, 0.16, '#7a4520'), x, 1.1, z);
+  dodaj(g, box(3.2, 0.15, 2.4, '#5c3a24'), 0, 2.25, 0);
+  dodaj(g, box(3.25, 0.06, 2.45, '#f7fbff'), 0, 2.35, 0);
+  dodaj(g, box(2.4, 0.5, 0.6, '#b9773f'), 0, 0.5, 0);
+  const pila = new THREE.Group(); pila.name = 'pow'; pila.position.set(0, 0.85, 0); g.add(pila);
+  const p = dodaj(pila, cyl(0.55, 0.55, 0.05, '#c9ced6', 16), 0, 0, 0); p.rotation.x = Math.PI / 2;
+  const b = dodaj(g, cyl(0.25, 0.25, 1.6, '#9a6236', 8), -0.6, 0.95, 0); b.rotation.z = Math.PI / 2;
+  return cien(g);
+}
+export function piekarnia() {
+  const g = new THREE.Group();
+  dodaj(g, box(2.8, 1.8, 2.4, '#e8d5b5'), 0, 0.9, -0.2);
+  const d = dodaj(g, new THREE.Mesh(geo('dachP', () => new THREE.CylinderGeometry(1.75, 1.75, 3.1, 3)), mat('#c95a3a')), 0, 2.25, -0.2);
+  d.rotation.z = Math.PI / 2; d.scale.set(0.55, 1, 1);
+  dodaj(g, box(0.5, 1.4, 0.5, '#a4553a'), -0.9, 3.0, -0.5);
+  const o = dodaj(g, sph(0.55, '#a4553a', 10, 6), 0.4, 0.6, 1.0); o.scale.set(1, 0.9, 0.7);
+  const ogien = dodaj(g, box(0.5, 0.35, 0.1, '#ff8a1f'), 0.4, 0.5, 1.42); ogien.material = new THREE.MeshBasicMaterial({ color: '#ff8a1f' }); ogien.name = 'ogien';
+  g.userData.dym = [-0.9, 4.0, -0.5];
+  return cien(g);
+}
+export function rynek() {
+  const g = new THREE.Group();
+  const kol = ['#e0413a', '#3d7bd9', '#e0a12b'];
+  [-1.1, 0, 1.1].forEach((x, i) => {
+    dodaj(g, box(0.9, 0.8, 0.8, '#b9773f'), x, 0.4, 0);
+    for (const s of [-0.4, 0.4]) dodaj(g, box(0.07, 1.6, 0.07, '#7a4520'), x + s, 1.3, -0.35);
+    const da = dodaj(g, box(1.0, 0.08, 1.0, kol[i]), x, 2.1, 0); da.rotation.x = 0.25;
+  });
+  dodaj(g, sph(0.15, '#33449e', 6, 4), -1.1, 0.88, 0); dodaj(g, sph(0.15, '#f2b51f', 6, 4), 1.1, 0.88, 0);
+  return cien(g);
+}
+export function szkola() {
+  const g = new THREE.Group();
+  dodaj(g, box(3.2, 2.0, 2.6, '#d9c9a5'), 0, 1, 0);
+  const d = dodaj(g, new THREE.Mesh(geo('dachS', () => new THREE.CylinderGeometry(1.95, 1.95, 3.5, 3)), mat('#3d7bd9')), 0, 2.55, 0);
+  d.rotation.z = Math.PI / 2; d.scale.set(0.6, 1, 1);
+  dodaj(g, box(0.15, 1.2, 0.15, '#7a4520'), 1.2, 3.4, 0);
+  dodaj(g, box(0.25, 0.3, 0.25, '#f2b51f'), 1.2, 4.1, 0);
+  for (const x of [-0.9, 0.9]) { const o = dodaj(g, box(0.55, 0.5, 0.06, '#ffd76a'), x, 1.25, 1.31); o.material = new THREE.MeshBasicMaterial({ color: '#ffd76a' }); }
+  return cien(g);
+}
+export function skarbnik() {
+  const g = new THREE.Group();
+  dodaj(g, box(3.2, 0.3, 2.8, '#c9ced6'), 0, 0.15, 0);
+  dodaj(g, box(2.8, 2.0, 2.4, '#f2f4f8'), 0, 1.3, 0);
+  for (const x of [-1.1, -0.37, 0.37, 1.1]) dodaj(g, cyl(0.14, 0.14, 2.0, '#ffffff', 8), x, 1.3, 1.3);
+  const d = dodaj(g, new THREE.Mesh(geo('dachB', () => new THREE.CylinderGeometry(1.9, 1.9, 3.2, 3)), mat('#e2a114')), 0, 2.75, 0);
+  d.rotation.z = Math.PI / 2; d.scale.set(0.45, 1, 1);
+  const m = dodaj(g, cyl(0.45, 0.45, 0.12, '#f2b51f', 16), 0, 3.6, 0.5); m.rotation.x = Math.PI / 2; m.name = 'swiatlo';
   return cien(g);
 }

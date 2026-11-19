@@ -42,7 +42,10 @@ def main():
         if p == 'gra.js':
             t = zamien(t, '`../muzyka/', '`../../../muzyka/', p)
             t = zamien(t, "register('../sw.js', { scope: '../' })", "register('../../../sw.js', { scope: '../../../' })", p)
-            t = zamien(t, "const KLUCZ = 'yaceq-survival';", f"const KLUCZ = 'yaceq-survival-w{nr}';", p)
+            import re
+            if not re.search(r"const KLUCZ = '[^']*';", t):
+                raise SystemExit('Nie znaleziono KLUCZ w gra.js')
+            t = re.sub(r"const KLUCZ = '[^']*';", f"const KLUCZ = 'yaceq-survival-w{nr}';", t, count=1)
             # od wersji 5 gra ma własny wybór wersji: w kopii start od razu z menu, a przycisk wraca do głównej listy
             if 'pokazWersje();\n  requestAnimationFrame' in t:
                 t = zamien(t, 'pokazWersje();\n  requestAnimationFrame', 'pokazMenu();\n  requestAnimationFrame', p)

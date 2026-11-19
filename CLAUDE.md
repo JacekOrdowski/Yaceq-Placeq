@@ -55,10 +55,13 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
 - Zasoby: jagody (koszyczek) → sprzedaż na ladach daje pieniądze; drewno (siekiera, ścinalne drzewa) i kamień
   (kilof, głazy po zbudowaniu kamieniołomu) idą na budowy. Koszt budowli w `krainy.js` to `{ kasa, drewno, kamien }`.
 - Lady sprzedają tylko, gdy stoi przy nich Yaceq albo gdy zatrudniono sprzedawcę (`rodzaj: 'sprzedawca'`).
-  Siekiera (`rodzaj: 'narzedzie'`) odblokowuje drzewa (`wymaga: 'siekiera'` w `WEZLY`).
+  Siekiera (`rodzaj: 'narzedzie'`) daje poziom 1 siekiery, kamieniołom poziom 1 kilofa; wyższe poziomy w kuźni (`NARZEDZIA`).
 - Palisady nie da się przejść (tylko bramy, dziury i obejście od południa); trasy liczy `punktTrasy` w `gra.js`.
-- Na razie gra ma tylko pierwszą krainę („Jagodowa Polana”). Pozostałe są opisane w `survival/krainy.js`
-  (lista `WSZYSTKIE`), ale wyłączone przez `KRAINY = WSZYSTKIE.slice(0, 1)`, dopóki właściciel nie zdecyduje o rozbudowie.
+- Krainy są w `survival/krainy.js` (funkcja `zrob` buduje krainę według wspólnego wzoru: etapy bazy, regiony,
+  około 60 budynków z kosztem `{ kasa, drewno, kamien, deski }`, warunkiem `po` i etapem bazy `etap`).
+  Druga kraina to ten sam wzór, drożej i z groźniejszymi zwierzętami; kupuje się ją za pieniądze po Wielkim Piecu.
+- Las: drzewa są w instancjach (`zbudujLas`), strefy twardości wg odległości od `SRODEK` (`GRANICE_STREF`).
+  Drzewa w kawałkach przyszłych rozbudów nie odrastają (lista `sciete` w zapisie).
 - Liczby do strojenia (ceny, koszty budowli, fale, gwiazdki) są w `survival/krainy.js`.
 - Nowa wersja: podnieś `WERSJA` w `survival/gra.js` i dopisz sekcję w `survival/ZMIANY.md`
   (te same zasady co wyżej, w tym skrót commita w następnym commicie).
@@ -66,6 +69,7 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   `python narzedzia/survival-wersja.py NUMER SKROT_COMMITA` (skrót z `survival/ZMIANY.md`), a w `WERSJE` dopisz nową
   na górze i poprzedniej daj `adres: 'wersje/NUMER/'`. Kopie mają osobny zapis postępu (`yaceq-survival-wNUMER`).
 - Test bez klikania: w konsoli przeglądarki `window.__yaceq` (stan gry, `krok(sekundy)` przesuwa czas gry,
-  `cel` to miejsce, które pokazuje zielona strzałka). Robot idący za `celTrasy` (punkt, do którego prowadzi strzałka) przechodzi krainę w około 36 minut;
+  `cel` to miejsce, które pokazuje zielona strzałka). Robot idący za `celTrasy` (punkt, do którego prowadzi strzałka) przechodzi krainę w około 71 minut;
+  przy dłuższych symulacjach używaj `krok(0.1, 1/30)` (szybciej);
   `odNowa()` zaczyna krainę od zera.
   Kamera patrzy na ukos: kierunek w świecie (dx, dz) to na ekranie x = (dx − dz)/√2, z = (dx + dz)/√2.
