@@ -4,10 +4,10 @@ import * as MOD from './modele.js';
 import { PRZEDMIOTY, WEZLY, ZWIERZETA, WEJSCIA, WARSZTAT, STALE, CENY_STALE, KRAINY, ZAKRES, BRONIE, NARZEDZIA, SRODEK, GRANICE_STREF, ERY } from './krainy.js';
 import { rysujIkone, ikonaURL } from './ikony.js';
 
-const WERSJA = 2;
+const WERSJA = 3;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/); przy jednej wersji od razu menu
 const WERSJE = [
-  { nr: 2, opis: 'Przybliżanie i oddalanie uszczypnięciem dwoma palcami (albo kółkiem myszy). Do tego wszystko z wersji 1.' },
+  { nr: 3, opis: 'Budynki można stawiać też na dole placu, przy targu. Do tego wszystko z wersji 2.' },
 ];
 const KLUCZ = 'age-of-yaceq-1';
 const STARY_KLUCZ = 'age-of-yaceq';
@@ -626,7 +626,8 @@ function wyglądSegmentu(s) {
 }
 
 // ---------- trasy: przez palisadę tylko bramą (albo dziurą, albo dookoła od południa) ----------
-function strona(x, z) { const o = G.oboz; return (x > o.x0 && x < o.x1 && z > o.z0) || z > 5.2 ? 'w' : 'z'; }
+// palisada po bokach kończy się na z = 4.5: niżej (przy targu) wszystko jest po stronie obozu
+function strona(x, z) { const o = G.oboz; return (x > o.x0 && x < o.x1 && z > o.z0) || z > 4.8 ? 'w' : 'z'; }
 function punktTrasy(a, b) {
   // lady stoją w rzędzie na z = 7: z jednej strony na drugą trzeba przejść obok lady, nie przez nią
   if ((a.z > 7.7) !== (b.z > 7.7) && Math.abs(b.z - a.z) > 0.01) {
@@ -2667,7 +2668,9 @@ function miejsceOk(cfg, x, z) {
   const p = [x - hx, x + hx, z + dz - hz, z + dz + hz], o = G.oboz;
   if (cfg.rodzaj === 'lada') { if (Math.abs(x) > 24.5) return 'Lady stoją tylko na targu, przy drodze klientów'; }
   else if (cfg.rodzaj === 'domek') { if (Math.abs(x) < 25 || Math.abs(x) > 33 || z < 11 || z > 21) return 'Domki stoją na osiedlu po bokach targu'; }
-  else if (p[0] < o.x0 + 0.5 || p[1] > o.x1 - 0.5 || p[2] < o.z0 + 0.5 || p[3] > 3.7) return 'Tylko w środku palisady';
+  else if (p[0] < o.x0 + 0.5 || p[1] > o.x1 - 0.5 || p[2] < o.z0 + 0.5) return 'Tylko w środku palisady';
+  // na dole placu (przy targu) też wolno stawiać, ale nie na drodze klientów; zajęte miejsce nie zmieści już lady
+  else if (p[3] > 7.0) return 'Za blisko targu: tędy chodzą klienci';
   // klienci idą do lady prosto od dołu mapy: na ich drodze nie stawiamy domków
   const droga = L => [L.x - 1.7, L.x + 1.7, 7.6, 40];
   const naDrodze = q => p[0] < q[1] && p[1] > q[0] && p[2] < q[3] && p[3] > q[2];
@@ -2675,7 +2678,7 @@ function miejsceOk(cfg, x, z) {
   if (cfg.rodzaj === 'lada') { const d = droga({ x }); for (const D of S.k.budowle) if (D.rodzaj === 'domek' && D.x != null) { const q = prostokat(D); if (q[0] < d[1] && q[1] > d[0] && q[2] < d[3] && q[3] > d[2]) return 'Domek zasłania drogę klientom'; } }
   const M = 0.35;
   for (const b of S.k.budowle) {
-    if (b === cfg || b.x == null) continue;
+    if (b === cfg || b.x == null || b.lada === cfg.id || b.wieza === cfg.id) continue;
     const q = prostokat(b); if (!q) continue;
     if (p[0] < q[1] + M && p[1] > q[0] - M && p[2] < q[3] + M && p[3] > q[2] - M) return 'Tu już coś jest: ' + b.nazwa.split(' (')[0];
   }
@@ -2691,10 +2694,11 @@ function autoMiejsce(cfg, px, pz) {
   const kand = [];
   if (cfg.rodzaj === 'lada') for (let x = -24.5; x <= 24.5; x += 0.5) kand.push([x, 7]);
   else if (cfg.rodzaj === 'domek') for (const s of [-1, 1]) for (let x = 25; x <= 33; x += 0.5) for (let z = 11; z <= 21; z += 0.5) kand.push([s * x, z]);
-  else { const o = G.oboz; for (let x = Math.ceil(o.x0) + 1; x <= o.x1 - 1; x += 0.5) for (let z = Math.ceil(o.z0) + 1; z <= 3.5; z += 0.5) kand.push([x, z]); }
+  else { const o = G.oboz; for (let x = Math.ceil(o.x0) + 1; x <= o.x1 - 1; x += 0.5) for (let z = Math.ceil(o.z0) + 1; z <= 6.5; z += 0.5) kand.push([x, z]); }
   if (px == null) {
     const o = G.oboz, [hx, hz, dz] = STOPA[cfg.rodzaj] || [1.5, 1.5, 0];
-    const brzeg = ([x, z]) => Math.min(x - hx - o.x0, o.x1 - x - hx, z + dz - hz - o.z0) + Math.abs(x) * 0.01;
+    // przy samym podpowiadaniu omijamy dół placu, żeby zostało miejsce na lady
+    const brzeg = ([x, z]) => Math.min(x - hx - o.x0, o.x1 - x - hx, z + dz - hz - o.z0) + Math.abs(x) * 0.01 + (z + dz + hz > 3.7 ? 1000 : 0);
     // lady: najpierw równe miejsca co 7 kroków (wtedy zmieści się ich najwięcej), domki: jak najbliżej targu
     const lada = ([x]) => (x % 7 === 0 ? 0 : 100) + Math.abs(x);
     kand.sort((a, b) => cfg.rodzaj === 'lada' ? lada(a) - lada(b) : cfg.rodzaj === 'domek' ? Math.abs(a[0]) - Math.abs(b[0]) + (a[1] - b[1]) * 0.01 : brzeg(a) - brzeg(b));
@@ -3001,7 +3005,7 @@ function aktualizuj(dt) {
 
 // uchwyt do testów (konsola przeglądarki)
 window.__yaceq = { odNowa: () => { delete zapis.gry[S.k.id]; uruchomKraine(S.k.id, true); }, get S() { return S; }, get G() { return G; }, get cel() { return zadanieCel; }, get celTrasy() { return zadanieTrasa; }, wejscie, KRAINY, nowaFala: () => nowaFala(), dajKase,
-  get polecane() { return G && G.polecane; }, postawPolecane: () => { const b = G.polecane; if (!b) return false; const m = autoMiejsce(b); if (!m) return false; S.miejsca[b.id] = m; ustawMiejsca(); odswiezPola(); if (b.rodzaj === 'lada') odswiezZiemie(); return true; }, miejsceOk: (id, x, z) => miejsceOk(S.k.budowle.find(b => b.id === id), x, z),
+  get polecane() { return G && G.polecane; }, postawPolecane: () => { const b = G.polecane; if (!b) return false; if (b.x != null) return true; const m = autoMiejsce(b); if (!m) return false; S.miejsca[b.id] = m; ustawMiejsca(); odswiezPola(); if (b.rodzaj === 'lada') odswiezZiemie(); return true; }, miejsceOk: (id, x, z) => miejsceOk(S.k.budowle.find(b => b.id === id), x, z),
   krok(sek, dt = 1 / 60, rysuj = false) { for (let t = 0; t < sek; t += dt) aktualizuj(dt); if (rysuj) { ustawKamere(1, true); renderer.render(scene, camera); } } };
 
 // ================= logo w menu =================
