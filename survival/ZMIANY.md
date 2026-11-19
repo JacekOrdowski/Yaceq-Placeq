@@ -20,6 +20,8 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 - Zwierzęta nie zostawiają już pieniędzy, tylko mięso. Pieniądze daje jego sprzedaż.
 - Robot przechodzi krainę w około 57 minut.
 
+Zapis w repozytorium: `3a57c70`
+
 ## Wersja 12 (19.11.2026)
 
 **Dodane**
