@@ -4,6 +4,8 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
 ## Wersja 4 (19.11.2026)
 
+Zapis w repozytorium: `1356759`
+
 **Dodane**
 - Ścinanie drzew siekierą: przy obozie (od wschodu) rośnie las do ścinania. Ścięte drzewo przewraca się, zostaje pniak,
   a po chwili drzewo odrasta. Drewno jest potrzebne do budowy.
