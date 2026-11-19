@@ -15,6 +15,8 @@ Pomysł na ery wzięty z gier strategicznych, ale wygląd, budynki i nazwy są n
 - Telefon od razu bierze najnowszą wersję gry (wcześniej przez kilka minut po zmianie pokazywał starą).
   Ta poprawka działa we wszystkich naszych grach.
 
+Zapis w repozytorium: `7f1ad95`
+
 ## Wersja 4 (19.11.2026)
 
 **Zmienione**
