@@ -4,6 +4,8 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
 ## Wersja 3 (19.11.2026)
 
+Zapis w repozytorium: `69c612f`
+
 **Zmienione** (żeby gra wyglądała i grała się bardziej jak na filmiku)
 - Kamera patrzy na ukos i jest bliżej, a ścieżki, płoty i pola budowy biegną skośnie. Sterowanie jest dopasowane:
   palec w górę = ludzik idzie w górę ekranu.
