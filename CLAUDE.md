@@ -45,3 +45,17 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   uruchom kilka razy `node narzedzia/balans-robocza.js` (kilkadziesiąt sekund) i sprawdź, ile bitew wygrywa się
   na kolejnych etapach, w tym że Strażnik, który stoi, przegrywa.
 - Muzyka bierze pliki z `muzyka/` (ścieżka `../muzyka/`).
+
+## Yaceq Survival (osobna gra w folderze `survival/`)
+
+- Gra 3D (three.js 0.170 w `survival/three.module.min.js`, bez internetu). Zasady wzięte z filmiku z reklamą gry
+  z zimowym obozem, ale wygląd, postacie i nazwy są własne: nie kopiujemy cudzej gry.
+- Zamiast rąbania drzew: zbieranie jagód kamczackich, zamiast siekiery: koszyczek (życzenie właściciela).
+  Zwierzęta się przegania (uciekają), nikt nie ginie.
+- Na razie gra ma tylko pierwszą krainę („Jagodowa Polana”). Pozostałe są opisane w `survival/krainy.js`
+  (lista `WSZYSTKIE`), ale wyłączone przez `KRAINY = WSZYSTKIE.slice(0, 1)`, dopóki właściciel nie zdecyduje o rozbudowie.
+- Liczby do strojenia (ceny, koszty budowli, fale, gwiazdki) są w `survival/krainy.js`.
+- Nowa wersja: podnieś `WERSJA` w `survival/gra.js` i dopisz sekcję w `survival/ZMIANY.md`
+  (te same zasady co wyżej, w tym skrót commita w następnym commicie).
+- Test bez klikania: w konsoli przeglądarki `window.__yaceq` (stan gry, `krok(sekundy)` przesuwa czas gry,
+  `cel` to miejsce, które pokazuje zielona strzałka). Robot idący za strzałką przechodzi krainę w około 15 minut.
