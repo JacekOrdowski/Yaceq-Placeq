@@ -9,6 +9,12 @@ Gra jest pod adresem https://jacekordowski.github.io/Yaceq-Placeq/wersja-robocza
 
 ---
 
+## Wersja 7 (19 listopada 2026)
+
+### Dodane
+- **Przycisk „Inne gry” w menu:** lista wszystkich naszych gier (Śmierdzipacha, Yaceq Survival, Age of Yaceq,
+  Obrona bazy).
+
 ## Wersja 6 (24 października 2026)
 
 Zapis w repozytorium: `c48e1fa`

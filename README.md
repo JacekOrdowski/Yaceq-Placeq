@@ -6,6 +6,9 @@ Wcześniej gra nazywała się „Armia Liczb” (wersje 1–4) i „Głupia Gra�
 W folderze `wersja-robocza` powstaje osobna, nowa gra (obrona bazy przed meteorami), opisana w `wersja-robocza/ZMIANY.md`.
 W folderze `survival` jest trzecia gra, **Yaceq Survival** (zbieranie jagód kamczackich i budowa zimowego obozu, 3D),
 opisana w `survival/ZMIANY.md`: https://jacekordowski.github.io/Yaceq-Placeq/survival/
+W folderze `age` jest czwarta gra, **Age of Yaceq** (budowanie miasta gdzie chcesz i kolejne ery w ratuszu),
+opisana w `age/ZMIANY.md`: https://jacekordowski.github.io/Yaceq-Placeq/age/
+W menu każdej gry jest przycisk „Inne gry” (wspólny plik `gry.js`).
 
 Armia biegnie przez różne światy. Przed każdą bramką pojawia się działanie, a na bramkach dwie odpowiedzi.
 Wbiegasz w bramkę z dobrym wynikiem i dostajesz tylu żołnierzy, ile pokazuje zielona liczba (na przykład +14).

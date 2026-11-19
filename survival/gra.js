@@ -4,10 +4,11 @@ import * as MOD from './modele.js';
 import { PRZEDMIOTY, WEZLY, ZWIERZETA, WEJSCIA, WARSZTAT, STALE, CENY_STALE, KRAINY, ZAKRES, BRONIE, NARZEDZIA, SRODEK, GRANICE_STREF } from './krainy.js';
 import { rysujIkone, ikonaURL } from './ikony.js';
 
-const WERSJA = 13;
+const WERSJA = 14;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 13, opis: 'Zwierzęta dają mięso (lada z mięsem), hodowla świnek, rzemieślnicy naprawiają płot i budynki, pola działają po 1 s, siekiera odbija się od za twardych drzew.' },
+  { nr: 14, opis: 'Przycisk „Inne gry” w menu (Śmierdzipacha, Age of Yaceq i inne). Do tego wszystko z wersji 13.' },
+  { nr: 13, opis: 'Zwierzęta dają mięso (lada z mięsem), hodowla świnek, rzemieślnicy naprawiają płot i budynki, pola działają po 1 s, siekiera odbija się od za twardych drzew.', adres: 'wersje/13/' },
   { nr: 12, opis: 'Ulepszenia pokazują poziom (np. 3 z 10) i nie kupują się same po kolei, pokonane zwierzęta się przewracają, skład desek przy tartaku.', adres: 'wersje/12/' },
   { nr: 11, opis: 'Podpowiedzi na dole ekranu, duże napisy u góry; środek ekranu wolny. Do tego wszystko z wersji 10.', adres: 'wersje/11/' },
   { nr: 10, opis: 'Lada z kamieniem, pomocnicy niosą zbiory na lady, magazyn dla ciebie, wszystko po 1,5 s stania na polu, duże obrazki ulepszeń, mniejsze chatki.', adres: 'wersje/10/' },

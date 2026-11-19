@@ -78,3 +78,25 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   przy dłuższych symulacjach używaj `krok(0.1, 1/30)` (szybciej);
   `odNowa()` zaczyna krainę od zera.
   Kamera patrzy na ukos: kierunek w świecie (dx, dz) to na ekranie x = (dx − dz)/√2, z = (dx + dz)/√2.
+
+## Age of Yaceq (osobna gra w folderze `age/`)
+
+- Silnik skopiowany z Yaceq Survival 13 (biblioteka 3D brana z `survival/three.module.min.js`), zapis `age-of-yaceq-1`.
+  Survivalu przy pracy nad Age of Yaceq nie ruszamy (i odwrotnie).
+- Budynki z `stawiane: true` gracz stawia sam: menu „Buduj” → półprzezroczysty podgląd → „Postaw tutaj”.
+  Miejsca są w zapisie (`S.miejsca`), położenie liczy `ustawMiejsca` w `age/gra.js` (sprzedawca przy ladzie,
+  myśliwy na wieży, taśmociąg prosto od przetwórni do lady). Zasady miejsc: `miejsceOk`, rozmiary budynków: `STOPA`.
+- Ery: pola `rodzaj: 'era'` w `age/krainy.js` (przed ratuszem); wszystko po polu „era N” należy do ery N (`ERY`).
+- Burzenie oddaje połowę kosztu i przebudowuje świat z zapisu (`zburz`). Taśmociągi nie mogą być w `po` innych budynków.
+- Plan następnych er (od właściciela): Wioska: soki, cegły i mur, owce (siano, owies, ogrodzenie z drewna), muły;
+  Miasteczko: kopalnia rudy żelaza, metalowe siekiery i kilofy, gwoździe, stalowe groty strzał;
+  Miasto: stalowe tory z kolejką (wcześniej noszą pracownicy i muły), mur ze stalowymi sztabami, chłodnia, mroźnia,
+  sortownia (1. klasa: +15% wydajności liofilizatorni i tłoczni soków, odsort ok. 3% idzie dla owiec), liofilizaty.
+- Nowa wersja: podnieś `WERSJA` w `age/gra.js`, dopisz sekcję w `age/ZMIANY.md` (te same zasady co wyżej).
+- Test: `window.__yaceq` jak w Survivalu, a do tego `polecane` (co gra radzi postawić) i `postawPolecane()`
+  (robot stawia to w wolnym miejscu). Robot przechodzi grę w około 108 minut.
+
+## Lista naszych gier
+
+- Każda gra ma w menu przycisk „Inne gry” (`data-inne-gry`) i wczytuje wspólny `gry.js` z głównego folderu.
+  Nowa gra: dopisz ją do listy `GRY` w `gry.js` i dodaj przycisk w jej menu.

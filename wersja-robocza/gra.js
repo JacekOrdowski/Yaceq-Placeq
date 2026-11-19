@@ -5,7 +5,7 @@
 (() => {
 'use strict';
 const HAS_DOM = typeof document !== 'undefined';
-const WERSJA = 6;          // numer wersji gry; opis zmian w wersja-robocza/ZMIANY.md
+const WERSJA = 7;          // numer wersji gry; opis zmian w wersja-robocza/ZMIANY.md
 
 /* ============================================================
    Helpers

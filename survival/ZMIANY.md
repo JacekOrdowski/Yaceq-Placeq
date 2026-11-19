@@ -2,6 +2,14 @@
 
 Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
+## Wersja 14 (19.11.2026)
+
+**Dodane**
+- W menu jest przycisk „Inne gry”: lista wszystkich naszych gier (Śmierdzipacha, Yaceq Survival, Age of Yaceq, Obrona bazy).
+
+**Zmienione**
+- Wersja 13 jest na liście wersji do wyboru przy starcie.
+
 ## Wersja 13 (19.11.2026)
 
 **Dodane**
