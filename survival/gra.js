@@ -4,10 +4,11 @@ import * as MOD from './modele.js';
 import { PRZEDMIOTY, WEZLY, ZWIERZETA, WEJSCIA, WARSZTAT, STALE, CENY_STALE, KRAINY, ZAKRES, BRONIE, NARZEDZIA, SRODEK, GRANICE_STREF } from './krainy.js';
 import { rysujIkone, ikonaURL } from './ikony.js';
 
-const WERSJA = 7;
+const WERSJA = 8;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 7, opis: 'Wielka rozbudowa: cały las do ścinania, powiększanie bazy, wieże z myśliwymi, kuźnia, tartak, piekarnia, skarbnik i druga kraina.' },
+  { nr: 8, opis: 'Wielka rozbudowa (las, powiększanie bazy, wieże, kuźnia, tartak, piekarnia, skarbnik, druga kraina); pierwszego sprzedawcę kupujesz po około 5 minutach.' },
+  { nr: 7, opis: 'Wielka rozbudowa: cały las do ścinania, powiększanie bazy, wieże z myśliwymi, kuźnia, tartak, piekarnia, skarbnik i druga kraina.', adres: 'wersje/7/' },
   { nr: 6, opis: 'Sprzedawcy przy ladach (bez nich sprzedajesz sam), lada z drewnem, siekiera za pieniądze, plecak na start 10 miejsc.', adres: 'wersje/6/' },
   { nr: 5, opis: 'Wybór wersji przy starcie, drewno i kamień do budowy, bramy, wózek, taśmociąg, drwal i górnik.', adres: 'wersje/5/' },
   { nr: 4, opis: 'Drewno i kamień do budowy, siekiera i kilof, bramy w palisadzie, wózek, taśmociąg, drwal i górnik.', taSama: true },

@@ -120,7 +120,7 @@ function zrob(p) {
     budowle: [
       // ----- początek: jagody, siekiera, pierwsze lady -----
       K(lada('ladaJ', 'jagody', -9.5), 0),
-      K(sprzedawca('sprzJ', 'ladaJ', -11.6, 5.0), 30, 'ladaJ'),
+      K(sprzedawca('sprzJ', 'ladaJ', -11.6, 5.0), 150, 'kuchnia'), // pierwszy sprzedawca: ok. 5 minut gry
       K(domek('domek1', -25, 12, ['ladaJ']), 20, 'ladaJ'),
       K({ id: 'siekiera', rodzaj: 'narzedzie', narzedzie: 'siekiera', x: -6, z: -1.2, nazwa: 'Siekiera (ścinanie drzew)' }, 25, 'ladaJ'),
       K(lada('ladaD', 'dzem', 3.5), { kasa: 30, drewno: 5 }, ['domek1', 'siekiera']),
