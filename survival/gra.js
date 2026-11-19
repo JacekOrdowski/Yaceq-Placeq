@@ -4,7 +4,7 @@ import * as MOD from './modele.js';
 import { PRZEDMIOTY, WEZLY, ZWIERZETA, WEJSCIA, WARSZTAT, STALE, CENY_STALE, KRAINY, OBOZ, ZAKRES } from './krainy.js';
 import { rysujIkone, ikonaURL } from './ikony.js';
 
-const WERSJA = 2;
+const WERSJA = 3;
 const KLUCZ = 'yaceq-survival';
 const $ = id => document.getElementById(id);
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
@@ -125,7 +125,7 @@ function rysujPasek(s, r) {
   if (r > 0) { zaokr(c, 3, 3, Math.max(8, 90 * r), 10, 4); c.fillStyle = r > 0.5 ? '#4cd964' : r > 0.25 ? '#ffcc00' : '#ff4d3d'; c.fill(); }
   s.material.map.needsUpdate = true;
 }
-function dymek() { const cv = plotno(160, 120), s = nowySprite(cv, 1.25); s.userData.cv = cv; s.userData.ost = ''; return s; }
+function dymek() { const cv = plotno(160, 120), s = nowySprite(cv, 1.7); s.userData.cv = cv; s.userData.ost = ''; return s; }
 function rysujDymek(s, typ, liczba) {
   const k = typ + liczba; if (k === s.userData.ost) return; s.userData.ost = k;
   const c = s.userData.cv.getContext('2d'); c.clearRect(0, 0, 160, 120);
@@ -240,7 +240,7 @@ function nowyStan(k) {
     zapasy: {}, kasy: {}, kopalnia: 0, ogrzewanie: 0, palisada: [], plecak: [], gracz: [...k.start],
   };
 }
-const pojemnosc = () => 8 + 2 * stale('kosz') + 4 * S.warsztat.kosz;
+const pojemnosc = () => 20 + 4 * stale('kosz') + 10 * S.warsztat.kosz;
 const szybkosc = () => 5.0 * (1 + 0.05 * stale('buty') + 0.1 * S.warsztat.buty);
 const tempoZbierania = () => 0.4 / (1 + 0.08 * stale('rece') + 0.15 * S.warsztat.rece);
 const silaMachu = () => 1 + 0.2 * stale('mach');
@@ -316,7 +316,7 @@ function zbudujSwiat() {
 
   const r = rng(k.id * 1000 + 17);
   const wObozie = (x, z, m) => x > OBOZ.x0 - m && x < OBOZ.x1 + m && z > OBOZ.z0 - m && z < OBOZ.z1 + m;
-  const strefaKlientow = (x, z, m = 0) => Math.abs(x) < 26 + m && z > 4 && z < 34;
+  const strefaKlientow = (x, z, m = 0) => Math.abs(x) < 14 + m && z > 4 && z < 60;
   const wRegionie = (x, z, m) => k.regiony.some(g => ((x - g.x) / (g.rx + m)) ** 2 + ((z - g.z) / (g.rz + m)) ** 2 < 1);
   const wJeziorze = (x, z, m) => k.jezioro && Math.hypot(x - k.jezioro.x, z - k.jezioro.z) < k.jezioro.r + m;
   const zajete = [];
@@ -328,33 +328,29 @@ function zbudujSwiat() {
     while (zrobione < reg.ile && proby++ < 3000) {
       const a = r() * Math.PI * 2, d = Math.sqrt(r());
       const x = reg.x + Math.cos(a) * d * reg.rx, z = reg.z + Math.sin(a) * d * reg.rz;
-      if (Math.abs(x) > ZAKRES - 2 || Math.abs(z) > ZAKRES - 2 || wObozie(x, z, 3) || strefaKlientow(x, z) || !wolne(x, z, 2.3)) continue;
+      if (Math.abs(x) > ZAKRES - 2 || Math.abs(z) > ZAKRES - 2 || wObozie(x, z, 3) || strefaKlientow(x, z) || !wolne(x, z, reg.wezel === 'krzak' ? 1.75 : 2.3)) continue;
       if (reg.wezel === 'przerebel' && !wJeziorze(x, z, -1.2)) continue;
       if (reg.wezel !== 'przerebel' && wJeziorze(x, z, 1.5)) continue;
       zajete.push([x, z]); zrobione++;
       dodajWezel(reg.wezel, x, z, r() * Math.PI * 2);
     }
   }
-  // las dookoła i drzewa w środku
+  // gęsty las wszędzie tam, gdzie nie ma obozu, klientów, krzaków i budowli
   const sosny = [];
-  for (let i = 0; i < 520 && sosny.length < 300; i++) {
-    const x = (r() * 2 - 1) * 62, z = (r() * 2 - 1) * 62;
-    if (Math.max(Math.abs(x), Math.abs(z)) < ZAKRES + 1) continue;
-    if (z > 30 && Math.abs(x) < 40 && z < ZAKRES + 6) continue;
-    sosny.push({ x, z, s: 0.9 + r() * 0.7, rot: r() * 6 });
-  }
-  for (let i = 0; i < 400 && sosny.length < 345; i++) {
-    const x = (r() * 2 - 1) * (ZAKRES - 3), z = (r() * 2 - 1) * (ZAKRES - 3);
-    if (wObozie(x, z, 6) || strefaKlientow(x, z, 4) || wRegionie(x, z, 3) || wJeziorze(x, z, 3) || !wolne(x, z, 3.5)) continue;
-    if (Math.abs(x) < 4 && z < -10) continue;
-    zajete.push([x, z]); sosny.push({ x, z, s: 0.8 + r() * 0.6, rot: r() * 6 });
-    G.kolizje.push({ x, z, r: 0.8 });
+  const przyBudowli = (x, z, m) => k.budowle.some(b => Math.hypot(b.x - x, b.z - z) < m);
+  for (let gx = -46; gx <= 46; gx += 2.1) for (let gz = -46; gz <= 46; gz += 2.1) {
+    const x = gx + (r() - 0.5) * 1.3, z = gz + (r() - 0.5) * 1.3;
+    const wew = Math.abs(x) < ZAKRES + 1.5 && Math.abs(z) < ZAKRES + 1.5;
+    if (wObozie(x, z, 3.2) || strefaKlientow(x, z, 1.5) || wRegionie(x, z, 1.3) || wJeziorze(x, z, 2) || przyBudowli(x, z, 3.3) || !wolne(x, z, 1.5)) continue;
+    sosny.push({ x, z, s: 0.75 + r() * 0.55, rot: r() * 6 });
+    if (wew) G.kolizje.push({ x, z, r: 0.65 });
   }
   swiat.add(sosnyInstancje(k, sosny));
   for (let i = 0; i < 40; i++) {
     const x = (r() * 2 - 1) * (ZAKRES - 2), z = (r() * 2 - 1) * (ZAKRES - 2);
     if (wObozie(x, z, 2) || strefaKlientow(x, z) || wJeziorze(x, z, 1)) continue;
-    const m = i % 3 ? MOD.zaspa(0.6 + r() * 1.2) : MOD.kamyk(0.7 + r());
+    if (i % 3) continue;
+    const m = MOD.kamyk(0.6 + r() * 0.8);
     m.position.set(x, 0, z); m.rotation.y = r() * 6; swiat.add(m);
   }
   zbudujPalisade();
@@ -378,6 +374,12 @@ function zbudujSwiat() {
   const ksz = new THREE.Shape(); ksz.moveTo(0, 0.55); ksz.lineTo(0.42, -0.25); ksz.lineTo(0, -0.05); ksz.lineTo(-0.42, -0.25); ksz.closePath();
   G.kierunek = new THREE.Mesh(new THREE.ShapeGeometry(ksz), new THREE.MeshBasicMaterial({ color: '#3fdc6a', transparent: true, opacity: 0.85, depthWrite: false }));
   G.kierunek.rotation.x = -Math.PI / 2; G.kierunek.position.y = 0.06; G.kierunek.visible = false; swiat.add(G.kierunek);
+  G.wir = new THREE.Group();
+  for (const [pr, luk, obr, gr] of [[2.0, Math.PI * 1.25, 0, 0.09], [1.55, Math.PI * 0.85, 2.4, 0.06], [2.3, Math.PI * 0.5, 4.2, 0.04]]) {
+    const m = new THREE.Mesh(new THREE.TorusGeometry(pr, gr, 4, 36, luk), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.5, depthWrite: false }));
+    m.rotation.x = Math.PI / 2; m.rotation.z = obr; m.renderOrder = 3; G.wir.add(m);
+  }
+  G.wir.visible = false; swiat.add(G.wir);
 }
 
 function dodajWezel(typ, x, z, rot) {
@@ -421,6 +423,8 @@ function wyglądSegmentu(s) {
   if (s.wew) s.zew.remove(s.wew);
   const mocna = zbudowane('palisada');
   s.wew = kopia('pal' + s.dl.toFixed(2) + mocna, () => MOD.slupki(s.dl, mocna));
+  s.mat = MAT_V.clone(); s.kolor = -1;
+  s.wew.traverse(o => { if (o.isMesh && o.material === MAT_V) o.material = s.mat; });
   s.zew.add(s.wew);
   s.zlamany = s.hp <= 0;
   s.wew.rotation.x = s.zlamany ? -1.4 : 0;
@@ -440,10 +444,10 @@ function wyglądSegmentu(s) {
 function zbudujGracza() {
   const obj = kopia('gracz', () => MOD.gracz());
   obj.position.set(S.gracz[0], 0, S.gracz[1]); swiat.add(obj);
-  const stos = new THREE.Group(); stos.position.set(0, 0.95, -0.42); obj.add(stos);
+  const stos = new THREE.Group(); stos.position.set(0, 0.95, -0.36); obj.add(stos);
   const pelny = napis('PEŁNY', 2.2, '#ffde59'); pelny.position.set(0, 0, 0); pelny.visible = false; swiat.add(pelny);
   G.gracz = { obj, x: S.gracz[0], z: S.gracz[1], kat: 0, ruch: 0, faza: 0, nogi: czesci(obj, 'noga'), rece: czesci(obj, 'reka'),
-    stos, pelny, plecak: [], zbierzT: 0, machT: 0, mach: 0, padT: 0 };
+    stos, pelny, plecak: [], zbierzT: 0, machT: 0, mach: 0, padT: 0, wir: 0 };
   for (const typ of S.plecak) {
     const e = { typ, h: wys(typ), mesh: przedmiot(typ), dotarl: true, cy: 0 };
     stos.add(e.mesh); G.gracz.plecak.push(e);
@@ -572,7 +576,8 @@ function postaw(cfg, nowa) {
       dodajObj(kopia('lada' + cfg.item, () => MOD.lada(kolory[cfg.item] || '#e0413a')));
       const tab = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1), new THREE.MeshBasicMaterial({ map: tekstura((() => { const cv = plotno(128, 128), c = cv.getContext('2d'); c.beginPath(); c.arc(64, 64, 60, 0, 7); c.fillStyle = '#fff'; c.fill(); rysujIkone(c, cfg.item, 64, 64, 96); return cv; })()), transparent: true }));
       tab.position.set(0, 2.85, -0.5); B.obj.add(tab);
-      B.zapas = S.zapasy[cfg.id] || 0; B.dolot = 0; B.maks = 30; B.meshe = []; B.kolejka = []; B.spawnT = 2; B.sprzedT = 0; B.item = cfg.item;
+      B.zapas = S.zapasy[cfg.id] || 0; B.dolot = 0; B.maks = 40; B.meshe = []; B.kolejka = []; B.spawnT = 1; B.sprzedT = 0; B.item = cfg.item;
+      B.kier = Math.round((cfg.x + 9) / 4.5) % 2 ? 1 : -1;
       B.pad = { typ: 'zrzut', x: cfg.x, z: 5.3, r: 1.05, B, przyjmuje: cfg.item };
       B.znak = znacznik(cfg.item); B.znak.position.set(B.pad.x, 0.035, B.pad.z); swiat.add(B.znak);
       G.pady.push(B.pad);
@@ -722,7 +727,7 @@ function zdejmijZeStosu(B) {
 // ---------- pieniądze na kupce ----------
 function dodajKase(k, ile) {
   k.wartosc += ile;
-  const cel = Math.min(48, Math.ceil(k.wartosc / Math.max(1, 2 * S.k.ceny)));
+  const cel = Math.min(90, Math.ceil(k.wartosc / Math.max(1, 1.5 * S.k.ceny)));
   while (k.meshe.length < cel) {
     const i = k.meshe.length, m = przedmiot('kasa');
     m.position.set(k.x - 0.3 + (i % 2) * 0.55, Math.floor(i / 4) * 0.08, k.z - 0.3 + (Math.floor(i / 2) % 2) * 0.32);
@@ -747,14 +752,14 @@ function aktualizujKlientow(dt) {
   for (const id in G.budowle) {
     const B = G.budowle[id]; if (B.cfg.rodzaj !== 'lada') continue;
     B.spawnT -= dt;
-    const co = 7.5 / (1 + 0.65 * (klienciNaLady[id] || 0)) * (c === 'zimno' ? 1.8 : 1);
-    if (B.spawnT <= 0 && B.kolejka.length < 6) { B.spawnT = co * losowo(0.8, 1.2); nowyKlient(B); }
+    const co = 4.2 / (1 + 0.6 * (klienciNaLady[id] || 0)) * (c === 'zimno' ? 1.8 : 1);
+    if (B.spawnT <= 0 && B.kolejka.length < 15) { B.spawnT = co * losowo(0.8, 1.2); nowyKlient(B); }
     // obsługa pierwszego w kolejce
     const k0 = B.kolejka[0];
     if (k0 && k0.stan === 'czeka' && k0.ma < k0.chce) {
       B.sprzedT -= dt;
       if (B.zapas > 0 && B.sprzedT <= 0) {
-        B.sprzedT = 0.2; B.zapas--; k0.ma++; k0.dolot++;
+        B.sprzedT = 0.13; B.zapas--; k0.ma++; k0.dolot++;
         const m = zdejmijZLady(B);
         if (m) {
           const p = B.obj.localToWorld(m.position.clone()); swiat.add(m);
@@ -771,8 +776,8 @@ function aktualizujKlientow(dt) {
         const m = przedmiot('kasa'); swiat.add(m);
         lot(m, V(k0.x, 1.3, k0.z), V(kasa.x, 0.3, kasa.z), 0.35, 1.2, () => { swiat.remove(m); dodajKase(kasa, czesc); dzwiek('kasa'); }, i * 0.07);
       }
-      k0.stan = 'odchodzi'; rysujDymek(k0.dymek, 'serce', 0);
-      k0.cel = V(B.x + (Math.random() < 0.5 ? -1 : 1) * losowo(10, 16), 0, 32);
+      k0.stan = 'odchodzi'; k0.serceT = 1.5; rysujDymek(k0.dymek, 'serce', 0);
+      k0.cel = V(B.x + B.kier * 4 + losowo(-1, 1), 0, 38);
       B.kolejka.shift();
       B.kolejka.forEach((k, i) => { k.miejsce = i; });
     }
@@ -780,7 +785,7 @@ function aktualizujKlientow(dt) {
   for (let i = G.klienci.length - 1; i >= 0; i--) {
     const k = G.klienci[i];
     let cel = k.cel;
-    if (k.stan !== 'odchodzi') cel = V(k.B.x, 0, 8.6 + k.miejsce * 1.15);
+    if (k.stan !== 'odchodzi') cel = miejsceKolejki(k.B, k.miejsce);
     const dx = cel.x - k.x, dz = cel.z - k.z, d = Math.hypot(dx, dz);
     const v = 2.8;
     if (d > 0.05) {
@@ -792,17 +797,24 @@ function aktualizujKlientow(dt) {
     k.obj.position.set(k.x, 0, k.z); k.obj.rotation.y = k.kat;
     k.nogi.forEach((n, j) => { n.rotation.x = ruch * Math.sin(k.faza + j * Math.PI) * 0.6; });
     k.rece.forEach((n, j) => { n.rotation.x = ruch * -Math.sin(k.faza + j * Math.PI) * 0.5; });
-    k.dymek.position.set(k.x, 2.05, k.z);
-    if (k.stan !== 'odchodzi') rysujDymek(k.dymek, k.B.item, k.chce - k.ma);
-    k.dymek.visible = k.stan === 'odchodzi' ? d > 8 : k.miejsce < 3;
-    if (k.stan === 'odchodzi' && d < 0.3) { swiat.remove(k.obj); swiat.remove(k.dymek); G.klienci.splice(i, 1); }
+    k.dymek.position.set(k.x, 2.3, k.z);
+    if (k.serceT > 0) k.serceT -= dt;
+    k.dymek.visible = k.stan === 'odchodzi' ? k.serceT > 0 : k.miejsce === 0;
+    if (k.dymek.visible && k.stan !== 'odchodzi') rysujDymek(k.dymek, k.B.item, k.chce - k.ma);
+    if (k.stan === 'odchodzi' && (d < 0.3 || k.z > 36)) { swiat.remove(k.obj); swiat.remove(k.dymek); G.klienci.splice(i, 1); }
   }
+}
+// kolejka wije się wężykiem: 3 rzędy po 5 osób, w bok od lady
+function miejsceKolejki(B, i) {
+  const rzad = Math.floor(i / 5), j = i % 5;
+  return V(B.x + B.kier * rzad * 1.25, 0, 8.6 + (rzad % 2 ? 4 - j : j) * 1.0);
 }
 function nowyKlient(B) {
   const obj = kopia('klient' + (G.liczKlient % 8), () => MOD.klient(G.liczKlient % 8));
   G.liczKlient++;
   const [a, b] = S.k.chca;
-  const k = { B, obj, x: B.x + losowo(-6, 6), z: 33, kat: Math.PI, faza: 0, stan: 'idzie', chce: Math.floor(losowo(a, b + 1)), ma: 0, dolot: 0,
+  const start = miejsceKolejki(B, 14);
+  const k = { B, obj, x: start.x + losowo(-1, 1), z: 36, kat: Math.PI, faza: 0, stan: 'idzie', chce: Math.floor(losowo(a, b + 1)), ma: 0, dolot: 0,
     miejsce: B.kolejka.length, nogi: czesci(obj, 'noga'), rece: czesci(obj, 'reka'), dymek: dymek() };
   B.kolejka.push(k); G.klienci.push(k);
   swiat.add(obj, k.dymek);
@@ -930,6 +942,8 @@ function aktualizujZwierzeta(dt) {
     else if (!s.zlamany && s.hp < s.max) s.hp = Math.min(s.max, s.hp + dt * 0.4);
     const r = s.hp / s.max;
     s.pasek.visible = !s.zlamany && r < 0.999;
+    const kol = Math.round(r * 20) / 20;
+    if (kol !== s.kolor) { s.kolor = kol; s.mat.color.setRGB(1, 0.35 + 0.65 * kol, 0.35 + 0.65 * kol); }
     if (s.pasek.visible) rysujPasek(s.pasek, r);
     if (s.wew && !s.zlamany) s.wew.position.x = s.atak > 0 ? Math.sin(czasGry * 50) * 0.04 : 0;
   }
@@ -1153,6 +1167,7 @@ function aktualizujGracza(dt) {
   const k = wejscie.klaw;
   if (k.ArrowLeft || k.a) ix -= 1; if (k.ArrowRight || k.d) ix += 1; if (k.ArrowUp || k.w) iz -= 1; if (k.ArrowDown || k.s) iz += 1;
   const dl = Math.hypot(ix, iz); if (dl > 1) { ix /= dl; iz /= dl; }
+  { const sx = ix, sz = iz; ix = (sx + sz) * Math.SQRT1_2; iz = (sz - sx) * Math.SQRT1_2; } // ekran → świat
   const v = szybkosc() * Math.min(1, dl);
   gr.x += ix * v * dt; gr.z += iz * v * dt;
   gr.x = Math.max(-ZAKRES, Math.min(ZAKRES, gr.x)); gr.z = Math.max(-ZAKRES, Math.min(ZAKRES, gr.z));
@@ -1163,8 +1178,6 @@ function aktualizujGracza(dt) {
   gr.ruch = dl > 0.1 ? 1 : 0;
   if (gr.ruch) { gr.kat = Math.atan2(ix, iz); gr.faza += dt * 11; }
   gr.obj.position.set(gr.x, 0, gr.z);
-  let dk = gr.kat - gr.obj.rotation.y; dk = Math.atan2(Math.sin(dk), Math.cos(dk));
-  gr.obj.rotation.y += dk * Math.min(1, dt * 14);
   gr.nogi.forEach((n, j) => { n.rotation.x = gr.ruch * Math.sin(gr.faza + j * Math.PI) * 0.7; });
   gr.rece[0].rotation.x = gr.ruch * Math.sin(gr.faza) * 0.6;
 
@@ -1177,25 +1190,35 @@ function aktualizujGracza(dt) {
     for (const zw of G.zwierzeta) if (Math.hypot(zw.x - gr.x, zw.z - gr.z) < 2.6) uderz(zw, silaMachu(), gr);
     wybuch('puch', V(gr.x, 1, gr.z), 6, 4, 0.35, 0.5);
   }
-  // zbieranie
-  let zbiera = null;
-  if (gr.plecak.length < pojemnosc()) {
-    let nd = 2.1;
-    for (const w of G.wezly) { if (w.zostalo <= 0) continue; const d = Math.hypot(w.x - gr.x, w.z - gr.z); if (d < nd) { nd = d; zbiera = w; } }
-  }
+  // zbieranie: Yaceq kręci się z koszyczkiem i zbiera ze wszystkich krzaków dookoła naraz
+  const wZasiegu = [];
+  if (gr.plecak.length < pojemnosc()) for (const w of G.wezly) if (w.zostalo > 0 && Math.hypot(w.x - gr.x, w.z - gr.z) < 2.5) wZasiegu.push(w);
+  const zbiera = wZasiegu.length > 0;
   if (zbiera) {
     gr.zbierzT += dt;
-    const t = tempoZbierania() * zbiera.def.trud;
+    const t = tempoZbierania() * Math.max(...wZasiegu.map(w => w.def.trud));
     if (gr.zbierzT >= t) {
-      gr.zbierzT = 0; zbiera.zostalo--; pokazWezel(zbiera); zbiera.drga = 0.2;
-      doPlecaka(zbiera.def.daje, V(zbiera.x, 0.9, zbiera.z));
+      gr.zbierzT = 0;
+      for (const w of wZasiegu.slice(0, 4)) {
+        if (gr.plecak.length >= pojemnosc()) break;
+        w.zostalo--; pokazWezel(w); w.drga = 0.2;
+        doPlecaka(w.def.daje, V(w.x, 0.9, w.z));
+      }
       dzwiek('zbierz');
-      if (zbiera.def.daje === 'jagody' && Math.random() < 0.5) czastka('puch', V(zbiera.x, 1, zbiera.z), V(0, 1, 0), 0.4, 0.4, 1.5);
     }
   } else gr.zbierzT = Math.min(gr.zbierzT, 0.2);
-  // ręka z koszyczkiem
-  if (gr.mach > 0) { gr.mach -= dt; gr.rece[1].rotation.x = -2.6 * Math.sin((gr.mach / 0.3) * Math.PI); gr.rece[1].rotation.z = 0.6 * Math.sin((gr.mach / 0.3) * Math.PI); }
-  else if (zbiera) { gr.rece[1].rotation.x = -1.3 + Math.sin(czasGry * 16) * 0.35; gr.rece[1].rotation.z = 0; }
+  // wir koszyczka: przy zbieraniu i przeganianiu Yaceq kręci się z wyciągniętym koszyczkiem
+  const wir = zbiera || blisko;
+  gr.wir = Math.max(0, Math.min(1, gr.wir + (wir ? dt * 6 : -dt * 4)));
+  G.wir.visible = gr.wir > 0.05;
+  if (G.wir.visible) {
+    G.wir.position.set(gr.x, 0.8, gr.z); G.wir.rotation.y -= dt * 13;
+    G.wir.children.forEach(c => { c.material.opacity = 0.6 * gr.wir; });
+  }
+  if (wir) gr.obj.rotation.y -= dt * 13;
+  else { let dk = gr.kat - gr.obj.rotation.y; dk = Math.atan2(Math.sin(dk), Math.cos(dk)); gr.obj.rotation.y += dk * Math.min(1, dt * 14); }
+  if (gr.mach > 0) gr.mach -= dt;
+  if (wir) { gr.rece[1].rotation.x = -0.15; gr.rece[1].rotation.z = 1.35; }
   else { gr.rece[1].rotation.x = -gr.ruch * Math.sin(gr.faza) * 0.6; gr.rece[1].rotation.z = 0; }
 
   // plecak: kołysanie stosu
@@ -1203,7 +1226,7 @@ function aktualizujGracza(dt) {
   for (const e of gr.plecak) {
     if (e.dotarl) {
       e.mesh.position.y += (e.cy - e.mesh.position.y) * Math.min(1, dt * 14);
-      e.mesh.position.x = Math.sin(czasGry * 4 + i * 0.35) * 0.012 * i * (0.4 + gr.ruch);
+      e.mesh.position.x = Math.sin(czasGry * 4 + i * 0.3) * Math.min(0.25, 0.005 * i) * (0.4 + gr.ruch);
     }
     i++;
   }
@@ -1413,15 +1436,15 @@ function ustawKamere(dt, natychmiast) {
   const w = window.innerWidth, h = window.innerHeight, asp = w / h;
   camera.aspect = asp; camera.fov = asp < 1 ? 46 : 40; camera.updateProjectionMatrix();
   const tv = Math.tan(camera.fov * Math.PI / 360);
-  const d = Math.max(5.6 / (tv * asp), 7.5 / tv, 13);
+  const d = Math.max(4.4 / (tv * asp), 6.2 / tv, 11);
   const gr = G.gracz;
-  const cel = V(gr.x, 0, gr.z + 1.0);
+  const cel = V(gr.x, 0, gr.z);
   if (!ustawKamere.cel || natychmiast) ustawKamere.cel = cel.clone();
   ustawKamere.cel.lerp(cel, Math.min(1, dt * 6));
   const c = ustawKamere.cel, kat = 0.95;
-  camera.position.set(c.x, c.y + Math.sin(kat) * d, c.z + Math.cos(kat) * d);
+  camera.position.set(c.x + Math.SQRT1_2 * Math.cos(kat) * d, c.y + Math.sin(kat) * d, c.z + Math.SQRT1_2 * Math.cos(kat) * d);
   camera.lookAt(c);
-  sun.position.set(c.x + 12, 30, c.z + 10); sun.target.position.copy(c);
+  sun.position.set(c.x - 8, 30, c.z + 14); sun.target.position.copy(c);
   scene.fog.near = d + 6; scene.fog.far = d + 60;
   if (G.snieg) G.snieg.position.set(c.x, 0, c.z);
 }
@@ -1604,12 +1627,8 @@ cel.addEventListener('pointermove', e => {
   if (!dotyk || e.pointerId !== dotyk.id) return;
   const max = 50;
   let dx = e.clientX - dotyk.x, dy = e.clientY - dotyk.y, d = Math.hypot(dx, dy);
-  // palec za kółkiem: kółko jedzie za palcem, a ludzik idzie pełną szybkością
-  if (d > max) {
-    dotyk.x = e.clientX - dx / d * max; dotyk.y = e.clientY - dy / d * max;
-    joy.style.left = dotyk.x + 'px'; joy.style.top = dotyk.y + 'px';
-    dx = dx / d * max; dy = dy / d * max; d = max;
-  }
+  // kółko stoi tam, gdzie dotknięto; palec za kółkiem: gałka na brzegu, ludzik idzie pełną szybkością
+  if (d > max) { dx = dx / d * max; dy = dy / d * max; d = max; }
   galka.style.transform = `translate(${dx}px, ${dy}px)`;
   // małe wychylenie: wolniej; od 40% wychylenia: pełna szybkość
   const sila = d < 4 ? 0 : Math.min(1, d / (max * 0.4));

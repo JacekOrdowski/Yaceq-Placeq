@@ -261,7 +261,7 @@ const PRZ = {};
 function nowyPrzedmiot(typ) {
   const g = new THREE.Group();
   let h = 0.25;
-  if (typ === 'jagody') { const k = koszyczek(1.05); k.position.y = 0.1; g.add(k); h = 0.27; }
+  if (typ === 'jagody') { const k = koszyczek(0.85); k.position.y = 0.08; g.add(k); h = 0.22; }
   else if (typ === 'dzem') {
     dodaj(g, cyl(0.15, 0.15, 0.22, '#5b2077', 9), 0, 0.11, 0);
     dodaj(g, cyl(0.16, 0.16, 0.06, '#e0413a', 9), 0, 0.25, 0);

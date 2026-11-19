@@ -2,6 +2,28 @@
 
 Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
+## Wersja 3 (19.11.2026)
+
+**Zmienione** (żeby gra wyglądała i grała się bardziej jak na filmiku)
+- Kamera patrzy na ukos i jest bliżej, a ścieżki, płoty i pola budowy biegną skośnie. Sterowanie jest dopasowane:
+  palec w górę = ludzik idzie w górę ekranu.
+- Kółko sterowania pojawia się tam, gdzie dotkniesz palcem albo klikniesz myszką, i stoi w miejscu.
+  Gdy palec wyjedzie poza kółko, gałka zatrzymuje się na brzegu, a ludzik idzie pełną szybkością.
+- Gęsty, niebieski, ośnieżony las dookoła obozu zamiast pustego śniegu. Mapa jest mniejsza i ciaśniejsza.
+- Yaceq zbiera kręcąc się z wyciągniętym koszyczkiem i zbiera ze wszystkich krzaków dookoła naraz (biały wir wokół niego).
+  Tak samo przegania zwierzęta.
+- Dużo większy plecak (na start 20 koszyczków, w warsztacie +10 za poziom), więc stos na plecach rośnie wysoko.
+- Krzaki są gęściej i bliżej obozu, mają po 8 jagód i szybciej odrastają.
+- Klienci stoją w długiej kolejce wijącej się wężykiem (do 15 osób przy ladzie), przychodzą częściej i kupują więcej.
+  Dymek z liczbą jest tylko nad pierwszym w kolejce.
+- Pieniądze przy ladach rosną w wysokie, równe stosy.
+- Liczniki są w prawym górnym rogu, pauza w lewym.
+- Palisada czerwienieje, gdy zwierzęta ją psują. Od 4. fali przychodzą też białe niedźwiedzie.
+- Budowle są droższe o około jedną trzecią, a Wielki Piec kosztuje 1000 zł, żeby kraina nie kończyła się za szybko.
+
+**Usunięte**
+- Białe zaspy na ziemi (wyglądały jak dziury).
+
 ## Wersja 2 (19.11.2026)
 
 Zapis w repozytorium: `208e7bb`

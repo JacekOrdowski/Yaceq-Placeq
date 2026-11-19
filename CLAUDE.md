@@ -59,3 +59,4 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   (te same zasady co wyżej, w tym skrót commita w następnym commicie).
 - Test bez klikania: w konsoli przeglądarki `window.__yaceq` (stan gry, `krok(sekundy)` przesuwa czas gry,
   `cel` to miejsce, które pokazuje zielona strzałka). Robot idący za strzałką przechodzi krainę w około 15 minut.
+  Kamera patrzy na ukos: kierunek w świecie (dx, dz) to na ekranie x = (dx − dz)/√2, z = (dx + dz)/√2.

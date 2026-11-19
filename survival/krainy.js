@@ -14,7 +14,7 @@ export const PRZEDMIOTY = {
 
 // miejsca, z których się zbiera (ile = ile sztuk naraz, odrost w sekundach, trud = ile razy dłużej niż jagody)
 export const WEZLY = {
-  krzak:    { daje: 'jagody', ile: 5, odrost: 16, trud: 1, kolizja: 0.75 },
+  krzak:    { daje: 'jagody', ile: 8, odrost: 14, trud: 1, kolizja: 0.7 },
   przerebel:{ daje: 'ryba', ile: 3, odrost: 18, trud: 1.5, kolizja: 0 },
   skala:    { daje: 'ruda', ile: 6, odrost: 26, trud: 1.6, kolizja: 0.9 },
   wegla:    { daje: 'wegiel', ile: 6, odrost: 26, trud: 1.4, kolizja: 0.9 },
@@ -38,12 +38,12 @@ export const WEJSCIA = {
 
 // Ulepszenia w Warsztacie (w danej krainie) i stałe (za kryształki, w menu)
 export const WARSZTAT = [
-  { id: 'kosz', nazwa: 'Większy kosz', opis: '+4 miejsca na plecach', ceny: [40, 90, 160, 260, 400, 600, 850] },
+  { id: 'kosz', nazwa: 'Większy kosz', opis: '+10 miejsc na plecach', ceny: [40, 90, 160, 260, 400, 600, 850] },
   { id: 'buty', nazwa: 'Szybkie buty', opis: '+10% szybkości', ceny: [50, 110, 190, 300, 460] },
   { id: 'rece', nazwa: 'Zręczne ręce', opis: '+15% szybsze zbieranie', ceny: [50, 110, 190, 300, 460] },
 ];
 export const STALE = [
-  { id: 'kosz', nazwa: 'Wielki koszyk', opis: '+2 miejsca na plecach na start', max: 8 },
+  { id: 'kosz', nazwa: 'Wielki koszyk', opis: '+4 miejsca na plecach na start', max: 8 },
   { id: 'buty', nazwa: 'Śnieżne buty', opis: '+5% szybkości', max: 8 },
   { id: 'rece', nazwa: 'Szybkie palce', opis: '+8% szybsze zbieranie', max: 8 },
   { id: 'mach', nazwa: 'Mocny zamach', opis: '+20% siły koszyczka na zwierzęta', max: 8 },
@@ -88,31 +88,31 @@ function K(o, k, po) { o.koszt = k; o.po = po ? [].concat(po) : []; return o; }
 const WSZYSTKIE = [
   {
     id: 1, nazwa: 'Jagodowa Polana', opis: 'Zbieraj jagody kamczackie, rób dżem i przeganiaj lisy.',
-    paleta: { snieg: '#e8eff8', plac: '#c98c5e', mgla: '#d6e3f2', igly: '#2d6c5c' },
-    ceny: 1, chca: [2, 4], start: [-7, 0],
+    paleta: { snieg: '#eef4fb', plac: '#d4895a', mgla: '#dbe8f6', igly: '#86bfe9' },
+    ceny: 1, chca: [3, 7], start: [-7, 0],
     regiony: [
-      { wezel: 'krzak', x: 0, z: -23, rx: 16, rz: 8, ile: 26 },
-      { wezel: 'krzak', x: -27, z: -2, rx: 6, rz: 9, ile: 9 },
+      { wezel: 'krzak', x: 1, z: -18.5, rx: 14, rz: 5.5, ile: 46 },
+      { wezel: 'krzak', x: -20.5, z: -2, rx: 4.5, rz: 7, ile: 14 },
     ],
     wejscia: ['N', 'NE', 'NW'],
     budowle: [
       K(lada('ladaJ', 'jagody', 0, { gotowe: true }), 0),
-      K(domek('domek1', 0, ['ladaJ']), 15, 'ladaJ'),
-      K(lada('ladaD', 'dzem', 1), 30, 'domek1'),
-      K(przetwornia('kuchnia', 'kuchnia', 'jagody', 'dzem', 1, 1.3, 'ladaD'), 40, 'ladaD'),
-      K(armatka('armatka1', 0), 50, 'kuchnia'),
-      K(warsztat(), 60, 'kuchnia'),
-      K(chatka('chatka1', 0, 'jagody', 'ladaJ'), 90, 'warsztat'),
-      K(domek('domek2', 1, ['ladaD']), 90, 'warsztat'),
-      K(armatka('armatka2', 1), 120, ['armatka1', 'warsztat']),
-      K(chatka('chatka2', 1, 'jagody', 'kuchnia'), 140, 'chatka1'),
-      K(domek('domek3', 2, ['ladaJ', 'ladaD']), 150, 'domek2'),
-      K(palisada(), 160, 'armatka2'),
-      K(armatka('armatka3', 2), 180, 'palisada'),
-      K(armatka('armatka4', 3), 180, 'palisada'),
-      K(cel('Wielki Piec'), 600, ['domek3', 'chatka2', 'armatka3']),
+      K(domek('domek1', 0, ['ladaJ']), 20, 'ladaJ'),
+      K(lada('ladaD', 'dzem', 1), 40, 'domek1'),
+      K(przetwornia('kuchnia', 'kuchnia', 'jagody', 'dzem', 1, 1.3, 'ladaD'), 50, 'ladaD'),
+      K(armatka('armatka1', 0), 60, 'kuchnia'),
+      K(warsztat(), 80, 'kuchnia'),
+      K(chatka('chatka1', 0, 'jagody', 'ladaJ'), 120, 'warsztat'),
+      K(domek('domek2', 1, ['ladaD']), 120, 'warsztat'),
+      K(armatka('armatka2', 1), 150, ['armatka1', 'warsztat']),
+      K(chatka('chatka2', 1, 'jagody', 'kuchnia'), 180, 'chatka1'),
+      K(domek('domek3', 2, ['ladaJ', 'ladaD']), 200, 'domek2'),
+      K(palisada(), 220, 'armatka2'),
+      K(armatka('armatka3', 2), 240, 'palisada'),
+      K(armatka('armatka4', 3), 240, 'palisada'),
+      K(cel('Wielki Piec'), 1000, ['domek3', 'chatka2', 'armatka3']),
     ],
-    fale: { po: 'armatka1', pierwsza: 35, co: 70, sklad: n => [...rep('lis', Math.min(7, 1 + Math.floor(n * 0.7))), ...rep('wilk', n >= 6 ? Math.floor((n - 4) / 2) : 0)] },
+    fale: { po: 'armatka1', pierwsza: 35, co: 70, sklad: n => [...rep('lis', Math.min(7, 1 + Math.floor(n * 0.7))), ...rep('wilk', n >= 6 ? Math.floor((n - 4) / 2) : 0), ...rep('niedzwiedz', n >= 4 ? Math.min(3, Math.floor((n - 1) / 3)) : 0)] },
     gwiazdki: [15 * 60, 22 * 60],
   },
   {
@@ -307,4 +307,4 @@ function rep(x, n) { return Array.from({ length: Math.max(0, n) }, () => x); }
 
 // obóz: palisada wokół (bez południa, gdzie są lady i klienci)
 export const OBOZ = { x0: -12, x1: 12, z0: -10, z1: 7 };
-export const ZAKRES = 40; // gracz chodzi w kwadracie -40..40
+export const ZAKRES = 30; // gracz chodzi w kwadracie -40..40
