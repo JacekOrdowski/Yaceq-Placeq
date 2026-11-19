@@ -72,10 +72,28 @@ export function koszyczek(skala = 1) {
 }
 
 // postać trzymająca koszyczek w prawej ręce
+function siekiera() {
+  const g = new THREE.Group();
+  dodaj(g, box(0.07, 0.75, 0.07, '#8e5629'), 0, -0.3, 0);
+  dodaj(g, box(0.06, 0.26, 0.32, '#b8c0cc'), 0, -0.62, 0.13);
+  dodaj(g, box(0.07, 0.27, 0.06, '#e8edf3'), 0, -0.62, 0.3);
+  return g;
+}
+function kilof() {
+  const g = new THREE.Group();
+  dodaj(g, box(0.07, 0.75, 0.07, '#8e5629'), 0, -0.3, 0);
+  const o = dodaj(g, box(0.07, 0.09, 0.62, '#8d939d'), 0, -0.66, 0);
+  o.rotation.x = 0.12;
+  return g;
+}
+function narzedzia(reka, skala) {
+  const k = koszyczek(1.1 * skala); k.position.set(0, -0.58, 0.12); k.name = 'narjagody'; reka.add(k);
+  const s = siekiera(); s.scale.setScalar(skala); s.position.set(0, -0.5, 0); s.name = 'nardrewno'; s.visible = false; reka.add(s);
+  const t = kilof(); t.scale.setScalar(skala); t.position.set(0, -0.5, 0); t.name = 'narkamien'; t.visible = false; reka.add(t);
+}
 export function gracz() {
   const g = osoba({ kurtka: '#ff7a2f', czapka: '#e0302a' });
-  const k = koszyczek(1.1); k.position.set(0, -0.58, 0.12);
-  g.userData.rece[1].add(k);
+  narzedzia(g.userData.rece[1], 1);
   g.userData = {};
   return g;
 }
@@ -88,7 +106,7 @@ export function klient(i) {
 }
 export function pomocnik() {
   const g = osoba({ kurtka: '#4caf50', czapka: '#ffd23f', pompon: '#4caf50', skala: 0.85 });
-  const k = koszyczek(1); k.position.set(0, -0.58, 0.12); g.userData.rece[1].add(k);
+  narzedzia(g.userData.rece[1], 0.95);
   g.userData = {};
   return g;
 }
@@ -227,14 +245,14 @@ export function przerebel() {
 }
 export function skala(rodzaj) {
   const g = new THREE.Group();
-  const kol = rodzaj === 'wegla' ? '#4b4e57' : '#8d939d';
+  const kol = rodzaj === 'wegla' ? '#4b4e57' : rodzaj === 'glaz' ? '#9aa1ab' : '#8d939d';
   const k = dodaj(g, dode(0.75, kol), 0, 0.5, 0); k.scale.set(1.1, 0.85, 1);
   const k2 = dodaj(g, dode(0.45, kol), 0.55, 0.3, 0.3);
   k2.rotation.y = 1;
   dodaj(g, sph(0.4, '#f7fbff', 7, 4), -0.1, 1.08, 0).scale.set(1, 0.35, 0.9);
   const grudki = [];
   for (const [x, y, z] of [[0.35, 0.65, 0.5], [-0.4, 0.55, 0.55], [0.1, 0.9, 0.42], [0.7, 0.45, 0.6], [-0.6, 0.38, 0.2], [0.2, 0.3, 0.8]]) {
-    const gr = dodaj(g, rodzaj === 'wegla' ? dode(0.13, '#16161b') : okta(0.12, '#ffcc33'), x, y, z);
+    const gr = dodaj(g, rodzaj === 'wegla' ? dode(0.13, '#16161b') : rodzaj === 'glaz' ? dode(0.16, '#c3c9d2') : okta(0.12, '#ffcc33'), x, y, z);
     gr.name = 'cz'; grudki.push(gr);
   }
   return cien(g);
@@ -288,6 +306,14 @@ function nowyPrzedmiot(typ) {
   } else if (typ === 'krysztal') {
     const o = dodaj(g, okta(0.2, '#7fe0fb'), 0, 0.2, 0); o.scale.y = 1.3;
     h = 0.4;
+  } else if (typ === 'drewno') {
+    const b = dodaj(g, cyl(0.13, 0.13, 0.62, '#9a6236', 8), 0, 0.13, 0); b.rotation.z = Math.PI / 2;
+    for (const x of [-0.315, 0.315]) { const c = dodaj(g, cyl(0.11, 0.11, 0.02, '#e3b47c', 8), x, 0.13, 0); c.rotation.z = Math.PI / 2; }
+    h = 0.26;
+  } else if (typ === 'kamien') {
+    dodaj(g, box(0.42, 0.24, 0.3, '#a3a9b3'), 0, 0.12, 0);
+    dodaj(g, box(0.3, 0.05, 0.22, '#c3c9d2'), 0.02, 0.26, 0);
+    h = 0.27;
   } else if (typ === 'kasa') {
     dodaj(g, box(0.46, 0.07, 0.25, '#2f9b45'), 0, 0.035, 0);
     dodaj(g, box(0.47, 0.072, 0.06, '#d8f3dc'), 0, 0.035, 0);
@@ -508,3 +534,64 @@ export function slupki(dlugosc, mocna) {
 }
 
 export { THREE };
+
+// brama w palisadzie: dwa skrzydła na zawiasach (otwierają się do środka obozu)
+export function brama(dlugosc, mocna) {
+  const g = new THREE.Group();
+  for (const x of [-dlugosc / 2, dlugosc / 2]) {
+    dodaj(g, cyl(0.26, 0.28, 2.1, '#8e5629', 6), x, 1.05, 0);
+    dodaj(g, cone(0.27, 0.4, '#c98a52', 6), x, 2.3, 0);
+    dodaj(g, sph(0.2, '#f7fbff', 6, 4), x, 2.5, 0).scale.set(1, 0.5, 1);
+  }
+  const szer = dlugosc / 2 - 0.25;
+  [-1, 1].forEach((s, i) => {
+    const sk = new THREE.Group(); sk.name = 'skrz' + i; sk.position.set(s * (dlugosc / 2 - 0.22), 0, 0); g.add(sk);
+    const n = 3;
+    for (let j = 0; j < n; j++) dodaj(sk, box(szer / n - 0.03, 1.45, 0.14, '#b9773f'), -s * (szer * (j + 0.5) / n), 0.85, 0);
+    for (const y of [0.35, 1.35]) dodaj(sk, box(szer, 0.13, 0.18, '#8e5629'), -s * szer / 2, y, 0);
+    const k = Math.atan2(1.0, szer);
+    const p1 = dodaj(sk, box(Math.hypot(szer, 1.0), 0.12, 0.2, mocna ? '#5a5d66' : '#a8432f'), -s * szer / 2, 0.85, 0);
+    p1.rotation.z = s * k;
+    dodaj(sk, box(szer, 0.08, 0.2, '#f7fbff'), -s * szer / 2, 1.6, 0);
+  });
+  return cien(g);
+}
+
+// taśmociąg z punktu a do b (na wysokości ok. 0.6)
+export function tasmociag(ax, az, bx, bz) {
+  const g = new THREE.Group();
+  const dx = bx - ax, dz = bz - az, d = Math.hypot(dx, dz), kat = Math.atan2(dx, dz);
+  const t = new THREE.Group(); t.position.set((ax + bx) / 2, 0, (az + bz) / 2); t.rotation.y = kat; g.add(t);
+  dodaj(t, box(0.8, 0.12, d + 0.4, '#2e3038'), 0, 0.58, 0);
+  for (const s of [-1, 1]) dodaj(t, box(0.1, 0.22, d + 0.5, '#8e939c'), s * 0.45, 0.62, 0);
+  for (let z = -d / 2; z <= d / 2 + 0.01; z += 0.45) {
+    const w = dodaj(t, cyl(0.07, 0.07, 0.82, '#5a5d66', 6), 0, 0.5, z); w.rotation.z = Math.PI / 2;
+  }
+  for (let z = -d / 2; z <= d / 2 + 0.01; z += Math.max(1, d / 3)) for (const s of [-1, 1]) dodaj(t, box(0.1, 0.5, 0.1, '#5a5d66'), s * 0.38, 0.25, z);
+  const pasy = new THREE.Group(); pasy.name = 'cz'; t.add(pasy);
+  for (let z = -d / 2; z < d / 2; z += 0.3) dodaj(pasy, box(0.78, 0.02, 0.06, '#4a4d57'), 0, 0.65, z);
+  return cien(g);
+}
+
+// ścinalne drzewo: pniak zostaje, korona (z pniem) przewraca się i odrasta
+export function drzewo(igly = '#86bfe9') {
+  const g = new THREE.Group();
+  dodaj(g, cyl(0.24, 0.3, 0.35, '#7a4f32', 7), 0, 0.17, 0);
+  dodaj(g, cyl(0.22, 0.22, 0.03, '#e3b47c', 7), 0, 0.36, 0);
+  const k = new THREE.Group(); k.name = 'cz'; g.add(k);
+  dodaj(k, cyl(0.16, 0.22, 0.8, '#6b4630', 6), 0, 0.4, 0);
+  for (const [r, h, y] of [[1.15, 1.25, 1.1], [0.92, 1.1, 1.8], [0.66, 0.95, 2.45], [0.38, 0.75, 3.0]]) {
+    dodaj(k, cone(r, h, igly, 7), 0, y, 0);
+    dodaj(k, cone(r * 0.72, h * 0.42, '#f7fbff', 7), 0, y + h * 0.3, 0);
+  }
+  return cien(g);
+}
+// skład: drewniany podest z niskimi bokami
+export function sklad(kolor = '#8e5629') {
+  const g = new THREE.Group();
+  dodaj(g, box(2.6, 0.14, 2.6, '#b9773f'), 0, 0.07, 0);
+  for (const [x, z] of [[-1.25, -1.25], [1.25, -1.25], [-1.25, 1.25], [1.25, 1.25]]) dodaj(g, box(0.16, 0.9, 0.16, kolor), x, 0.45, z);
+  for (const z of [-1.25, 1.25]) dodaj(g, box(2.6, 0.12, 0.1, kolor), 0, 0.7, z);
+  dodaj(g, box(0.1, 0.12, 2.6, kolor), -1.25, 0.7, 0);
+  return cien(g);
+}

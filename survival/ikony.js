@@ -70,6 +70,19 @@ const RYS = {
     poly(c, [[0, -0.46 * s], [0.3 * s, -0.08 * s], [0, 0.02 * s]], '#c9f6ff');
     poly(c, [[0, -0.46 * s], [-0.3 * s, -0.08 * s], [0, 0.02 * s]], '#94ecff');
   },
+  drewno(c, s) {
+    rr(c, -0.42 * s, -0.17 * s, 0.7 * s, 0.34 * s, 0.1 * s); c.fillStyle = '#9a6236'; c.fill();
+    c.strokeStyle = '#7a4520'; c.lineWidth = s * 0.03;
+    for (const y of [-0.06, 0.06]) { c.beginPath(); c.moveTo(-0.38 * s, y * s); c.lineTo(0.2 * s, y * s); c.stroke(); }
+    ell(c, 0.28 * s, 0, 0.17 * s, 0.17 * s, 0, '#e3b47c');
+    c.beginPath(); c.arc(0.28 * s, 0, 0.1 * s, 0, Math.PI * 2); c.stroke();
+    c.beginPath(); c.arc(0.28 * s, 0, 0.04 * s, 0, Math.PI * 2); c.stroke();
+  },
+  kamien(c, s) {
+    poly(c, [[-0.4 * s, 0.28 * s], [-0.4 * s, -0.08 * s], [-0.18 * s, -0.3 * s], [0.38 * s, -0.3 * s], [0.38 * s, 0.1 * s], [0.18 * s, 0.28 * s]], '#a3a9b3');
+    poly(c, [[-0.4 * s, -0.08 * s], [-0.18 * s, -0.3 * s], [0.38 * s, -0.3 * s], [0.16 * s, -0.08 * s]], '#c9ced6');
+    poly(c, [[0.16 * s, -0.08 * s], [0.38 * s, -0.3 * s], [0.38 * s, 0.1 * s], [0.16 * s, 0.28 * s]], '#868d98');
+  },
   kasa(c, s) {
     rr(c, -0.46 * s, -0.26 * s, 0.92 * s, 0.52 * s, 0.07 * s); c.fillStyle = '#2f9b45'; c.fill();
     rr(c, -0.38 * s, -0.18 * s, 0.76 * s, 0.36 * s, 0.05 * s); c.lineWidth = s * 0.04; c.strokeStyle = '#8fe09c'; c.stroke();

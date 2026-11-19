@@ -52,11 +52,15 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   z zimowym obozem, ale wygląd, postacie i nazwy są własne: nie kopiujemy cudzej gry.
 - Zamiast rąbania drzew: zbieranie jagód kamczackich, zamiast siekiery: koszyczek (życzenie właściciela).
   Zwierzęta się przegania (uciekają), nikt nie ginie.
+- Zasoby: jagody (koszyczek) → sprzedaż na ladach daje pieniądze; drewno (siekiera, ścinalne drzewa) i kamień
+  (kilof, głazy po zbudowaniu kamieniołomu) idą na budowy. Koszt budowli w `krainy.js` to `{ kasa, drewno, kamien }`.
+- Palisady nie da się przejść (tylko bramy, dziury i obejście od południa); trasy liczy `punktTrasy` w `gra.js`.
 - Na razie gra ma tylko pierwszą krainę („Jagodowa Polana”). Pozostałe są opisane w `survival/krainy.js`
   (lista `WSZYSTKIE`), ale wyłączone przez `KRAINY = WSZYSTKIE.slice(0, 1)`, dopóki właściciel nie zdecyduje o rozbudowie.
 - Liczby do strojenia (ceny, koszty budowli, fale, gwiazdki) są w `survival/krainy.js`.
 - Nowa wersja: podnieś `WERSJA` w `survival/gra.js` i dopisz sekcję w `survival/ZMIANY.md`
   (te same zasady co wyżej, w tym skrót commita w następnym commicie).
 - Test bez klikania: w konsoli przeglądarki `window.__yaceq` (stan gry, `krok(sekundy)` przesuwa czas gry,
-  `cel` to miejsce, które pokazuje zielona strzałka). Robot idący za strzałką przechodzi krainę w około 15 minut.
+  `cel` to miejsce, które pokazuje zielona strzałka). Robot idący za `celTrasy` (punkt, do którego prowadzi strzałka) przechodzi krainę w około 26 minut;
+  `odNowa()` zaczyna krainę od zera.
   Kamera patrzy na ukos: kierunek w świecie (dx, dz) to na ekranie x = (dx − dz)/√2, z = (dx + dz)/√2.

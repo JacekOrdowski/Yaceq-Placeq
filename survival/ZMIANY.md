@@ -2,6 +2,36 @@
 
 Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
+## Wersja 4 (19.11.2026)
+
+**Dodane**
+- Ścinanie drzew siekierą: przy obozie (od wschodu) rośnie las do ścinania. Ścięte drzewo przewraca się, zostaje pniak,
+  a po chwili drzewo odrasta. Drewno jest potrzebne do budowy.
+- Kamieniołom: po jego zbudowaniu można kopać kilofem głazy (od północnego wschodu), a kamieniołom sam wydobywa kamień
+  na kupkę obok siebie. Kamień jest potrzebny do późniejszych budów.
+- Yaceq trzyma w ręku to narzędzie, którego używa: koszyczek przy jagodach, siekierę przy drzewach, kilof przy głazach.
+  Pomocnicy też.
+- Budowanie kosztuje zasoby: na polu budowy widać, ile trzeba pieniędzy, drewna i kamienia. Pieniądze idą z portfela,
+  a drewno i kamień trzeba przynieść na plecach i wejść z nimi na pole.
+  Kolejność: najpierw jagody (sprzedaż daje pieniądze), potem drewno, potem kamieniołom, wózek, taśmociąg i pomocnicy.
+- Skład drewna i skład kamienia: pomocnicy (drwal i górnik) znoszą tam zbiory, a Yaceq bierze z nich, wchodząc na skład.
+- Wózek na torach sam wozi kamień z kamieniołomu do składu kamienia.
+- Taśmociąg: kuchnia odkłada słoiki dżemu obok siebie i trzeba je zanieść na ladę. Po zbudowaniu taśmociągu
+  dżem sam jedzie na ladę (razem z tym, co już leży przy kuchni).
+- Pomocnicy: zbieracze jagód (na ladę i do kuchni), drwal i górnik.
+- Bramy w palisadzie co kawałek (3 od północy, po 2 od wschodu i zachodu). Otwierają się, gdy ktoś podchodzi.
+  Zwierzęta mogą też psuć bramy.
+
+**Zmienione**
+- Przez palisadę nie da się przejść: tylko bramą, dziurą albo dookoła od strony lad. Pomocnicy też chodzą bramami,
+  a zielona strzałka na ziemi prowadzi do najbliższej bramy.
+- Przez krzaki jagód można przechodzić.
+- Naprawa dziury w palisadzie kosztuje drewno (3 bale) zamiast pieniędzy.
+- Ulepszenia w warsztacie kosztują pieniądze i drewno.
+- Licznik plecaka (🎒) jest osobno, a każdy zasób ma swój licznik.
+- Niedźwiedzie przychodzą od 7. fali, fale co 85 sekund. Lady mieszczą więcej towaru.
+- Gwiazdki: 3 do 20 minut, 2 do 30 minut (robot przechodzi krainę w około 26 minut).
+
 ## Wersja 3 (19.11.2026)
 
 Zapis w repozytorium: `69c612f`

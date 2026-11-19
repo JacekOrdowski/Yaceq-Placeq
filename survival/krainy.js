@@ -10,11 +10,15 @@ export const PRZEDMIOTY = {
   zloto:    { nazwa: 'Sztabka złota', cena: 14 },
   wegiel:   { nazwa: 'Węgiel', cena: 3 },
   krysztal: { nazwa: 'Lodowy kryształ', cena: 10 },
+  drewno:   { nazwa: 'Drewno', cena: 0 },
+  kamien:   { nazwa: 'Kamień', cena: 0 },
 };
 
 // miejsca, z których się zbiera (ile = ile sztuk naraz, odrost w sekundach, trud = ile razy dłużej niż jagody)
 export const WEZLY = {
-  krzak:    { daje: 'jagody', ile: 8, odrost: 14, trud: 1, kolizja: 0.7 },
+  krzak:    { daje: 'jagody', ile: 8, odrost: 14, trud: 1, kolizja: 0 },
+  drzewo:   { daje: 'drewno', ile: 6, odrost: 25, trud: 1.0, kolizja: 0.4, calosc: true },
+  glaz:     { daje: 'kamien', ile: 6, odrost: 30, trud: 1.3, kolizja: 0.85, wymaga: 'kamieniolom' },
   przerebel:{ daje: 'ryba', ile: 3, odrost: 18, trud: 1.5, kolizja: 0 },
   skala:    { daje: 'ruda', ile: 6, odrost: 26, trud: 1.6, kolizja: 0.9 },
   wegla:    { daje: 'wegiel', ile: 6, odrost: 26, trud: 1.4, kolizja: 0.9 },
@@ -72,48 +76,62 @@ const ARMATKI = [[-6, -8.6], [6, -8.6], [-11, -7.6], [11, -7.6], [0, -8.6], [-11
 function armatka(id, n, extra = {}) {
   return { id, rodzaj: 'armatka', x: ARMATKI[n][0], z: ARMATKI[n][1], nazwa: 'Armatka śnieżna', ...extra };
 }
-const CHATKI = [[-8.5, -4.8], [-4.2, -5.6], [-8.5, -0.8]];
+const CHATKI = [[-8.5, -4.8], [-4.2, -5.6], [-8.5, -0.8], [4.2, -6.4]];
 function chatka(id, n, zbiera, doId, extra = {}) {
-  const nazwy = { jagody: 'Chatka zbieracza jagód', ryba: 'Chatka rybaka', ruda: 'Chatka górnika', wegiel: 'Chatka węglarza', krysztal: 'Chatka lodziarza' };
+  const nazwy = { jagody: 'Chatka zbieracza jagód', drewno: 'Chatka drwala', kamien: 'Chatka górnika', ryba: 'Chatka rybaka', ruda: 'Chatka górnika rudy', wegiel: 'Chatka węglarza', krysztal: 'Chatka lodziarza' };
   return { id, rodzaj: 'chatka', x: CHATKI[n][0], z: CHATKI[n][1], zbiera, do: doId, nazwa: nazwy[zbiera], ...extra };
 }
 function warsztat(extra = {}) { return { id: 'warsztat', rodzaj: 'warsztat', x: 8.5, z: -5.4, nazwa: 'Warsztat (ulepszenia)', ...extra }; }
 function palisada(extra = {}) { return { id: 'palisada', rodzaj: 'palisada', x: -1, z: 0.6, nazwa: 'Mocna palisada', ...extra }; }
 function cel(nazwa, extra = {}) { return { id: 'cel', rodzaj: 'cel', x: 0.6, z: -3.6, nazwa, ...extra }; }
 
-// koszt (k) i warunek (po) dopisywane przy krainie
-function K(o, k, po) { o.koszt = k; o.po = po ? [].concat(po) : []; return o; }
+function tasma(id, skad, doId, punkty, x, z) { return { id, rodzaj: 'tasmociag', skad, do: doId, tasma: punkty, x, z, nazwa: 'Taśmociąg: dżem sam jedzie na ladę' }; }
+function sklad(id, item, x, z) { return { id, rodzaj: 'sklad', item, x, z, nazwa: item === 'drewno' ? 'Skład drewna' : 'Skład kamienia' }; }
+
+// koszt (k: liczba = złotówki albo { kasa, drewno, kamien }) i warunek (po) dopisywane przy krainie
+function K(o, k, po) { o.koszt = typeof k === 'number' ? { kasa: k } : k; o.po = po ? [].concat(po) : []; return o; }
 
 // Wszystkie krainy są tu opisane, ale w grze na razie jest tylko pierwsza (reszta: gdy pierwsza się spodoba).
 const WSZYSTKIE = [
   {
-    id: 1, nazwa: 'Jagodowa Polana', opis: 'Zbieraj jagody kamczackie, rób dżem i przeganiaj lisy.',
+    id: 1, nazwa: 'Jagodowa Polana', opis: 'Zbieraj jagody, ścinaj drzewa, kop kamień i buduj obóz. Przeganiaj zwierzęta!',
     paleta: { snieg: '#eef4fb', plac: '#d4895a', mgla: '#dbe8f6', igly: '#86bfe9' },
     ceny: 1, chca: [3, 7], start: [-7, 0],
     regiony: [
-      { wezel: 'krzak', x: 1, z: -18.5, rx: 14, rz: 5.5, ile: 46 },
+      { wezel: 'krzak', x: -1, z: -18.5, rx: 12, rz: 5.5, ile: 40 },
       { wezel: 'krzak', x: -20.5, z: -2, rx: 4.5, rz: 7, ile: 14 },
+      { wezel: 'drzewo', x: 21, z: -0.5, rx: 5, rz: 7, ile: 22 },
+      { wezel: 'glaz', x: 20, z: -18, rx: 5, rz: 3.5, ile: 10 },
     ],
     wejscia: ['N', 'NE', 'NW'],
+    // najpierw jagody (sprzedaż = pieniądze na życie), potem drewno do budowy, potem kamieniołom, wózki, taśmociąg i pomocnicy
     budowle: [
       K(lada('ladaJ', 'jagody', 0, { gotowe: true }), 0),
       K(domek('domek1', 0, ['ladaJ']), 20, 'ladaJ'),
-      K(lada('ladaD', 'dzem', 1), 40, 'domek1'),
-      K(przetwornia('kuchnia', 'kuchnia', 'jagody', 'dzem', 1, 1.3, 'ladaD'), 50, 'ladaD'),
-      K(armatka('armatka1', 0), 60, 'kuchnia'),
-      K(warsztat(), 80, 'kuchnia'),
-      K(chatka('chatka1', 0, 'jagody', 'ladaJ'), 120, 'warsztat'),
-      K(domek('domek2', 1, ['ladaD']), 120, 'warsztat'),
-      K(armatka('armatka2', 1), 150, ['armatka1', 'warsztat']),
-      K(chatka('chatka2', 1, 'jagody', 'kuchnia'), 180, 'chatka1'),
-      K(domek('domek3', 2, ['ladaJ', 'ladaD']), 200, 'domek2'),
-      K(palisada(), 220, 'armatka2'),
-      K(armatka('armatka3', 2), 240, 'palisada'),
-      K(armatka('armatka4', 3), 240, 'palisada'),
-      K(cel('Wielki Piec'), 1000, ['domek3', 'chatka2', 'armatka3']),
+      K(lada('ladaD', 'dzem', 1), { kasa: 30, drewno: 5 }, 'domek1'),
+      K(przetwornia('kuchnia', 'kuchnia', 'jagody', 'dzem', 1, 1.3, 'ladaD'), { kasa: 40, drewno: 10 }, 'ladaD'),
+      K(armatka('armatka1', 0), { kasa: 30, drewno: 15 }, 'kuchnia'),
+      K(warsztat(), { kasa: 60, drewno: 20 }, 'kuchnia'),
+      K(tasma('tasma1', 'kuchnia', 'ladaD', [[-3.0, 3.3], [-3.0, 6.2]], 0, 3.6), { kasa: 80, drewno: 20 }, 'warsztat'),
+      K(chatka('chatka1', 0, 'jagody', 'ladaJ'), { kasa: 80, drewno: 20 }, 'warsztat'),
+      K(sklad('skladD', 'drewno', 8, 1.6), { kasa: 40, drewno: 10 }, 'warsztat'),
+      K(chatka('chatka2', 2, 'drewno', 'skladD'), { kasa: 100, drewno: 25 }, 'skladD'),
+      K(domek('domek2', 1, ['ladaD']), { kasa: 90, drewno: 25 }, 'chatka1'),
+      K({ id: 'kamieniolom', rodzaj: 'kopalnia', wyj: 'kamien', co: 6, x: 16, z: -11.5, nazwa: 'Kamieniołom' }, { kasa: 120, drewno: 35 }, 'chatka2'),
+      K(sklad('skladK', 'kamien', 8, 5.2), { kasa: 60, drewno: 20, kamien: 5 }, 'kamieniolom'),
+      K({ id: 'wozek', rodzaj: 'wagonik', skad: 'kamieniolom', do: 'skladK', x: 14.4, z: -2, nazwa: 'Wózek: kamień sam jedzie do składu',
+          tory: [[17.8, -9.4], [14.4, -7.8], [14.4, 5.6], [10.6, 5.6]] }, { kasa: 150, drewno: 35, kamien: 10 }, 'skladK'),
+      K(chatka('chatka3', 3, 'kamien', 'skladK'), { kasa: 150, drewno: 30, kamien: 10 }, 'skladK'),
+      K(armatka('armatka2', 1), { drewno: 25, kamien: 10 }, ['armatka1', 'kamieniolom']),
+      K(chatka('chatka4', 1, 'jagody', 'kuchnia'), { kasa: 140, drewno: 30 }, 'tasma1'),
+      K(domek('domek3', 2, ['ladaJ', 'ladaD']), { kasa: 180, drewno: 35, kamien: 10 }, ['domek2', 'skladK']),
+      K(palisada(), { drewno: 40, kamien: 25 }, 'armatka2'),
+      K(armatka('armatka3', 2), { drewno: 25, kamien: 15 }, 'palisada'),
+      K(armatka('armatka4', 3), { drewno: 25, kamien: 15 }, 'palisada'),
+      K(cel('Wielki Piec'), { kasa: 600, drewno: 60, kamien: 45 }, ['domek3', 'wozek', 'chatka3', 'chatka4', 'armatka3']),
     ],
-    fale: { po: 'armatka1', pierwsza: 35, co: 70, sklad: n => [...rep('lis', Math.min(7, 1 + Math.floor(n * 0.7))), ...rep('wilk', n >= 6 ? Math.floor((n - 4) / 2) : 0), ...rep('niedzwiedz', n >= 4 ? Math.min(3, Math.floor((n - 1) / 3)) : 0)] },
-    gwiazdki: [15 * 60, 22 * 60],
+    fale: { po: 'armatka1', pierwsza: 45, co: 85, sklad: n => [...rep('lis', Math.min(6, 1 + Math.floor(n * 0.6))), ...rep('wilk', n >= 6 ? Math.floor((n - 4) / 2) : 0), ...rep('niedzwiedz', n >= 7 ? Math.min(3, Math.floor((n - 4) / 3)) : 0)] },
+    gwiazdki: [20 * 60, 30 * 60],
   },
   {
     id: 2, nazwa: 'Zamarznięte Jezioro', opis: 'Łów ryby w przeręblach i wędź je. Uwaga na pingwiny-łasuchy!',
