@@ -16,6 +16,8 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 - Poprawka: przy ladzie z kamieniem strzałka czasem kręciła się w kółko i nie prowadziła dalej.
 - Robot przechodzi krainę w około 55 minut.
 
+Zapis w repozytorium: `eca7d95`
+
 ## Wersja 11 (19.11.2026)
 
 **Zmienione**
