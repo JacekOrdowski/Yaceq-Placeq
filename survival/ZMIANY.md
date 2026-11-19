@@ -4,6 +4,8 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
 ## Wersja 6 (19.11.2026)
 
+Zapis w repozytorium: `8a91f3e`
+
 **Dodane**
 - Sprzedawcy: przy każdej ladzie można zatrudnić sprzedawcę (pole obok lady, płaci się pieniędzmi). Dopóki go nie ma,
   klientów obsługuje tylko Yaceq: musi stanąć przy ladzie (strzałka podpowiada „Stań przy ladzie i sprzedawaj”).
