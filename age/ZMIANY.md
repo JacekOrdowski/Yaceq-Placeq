@@ -13,6 +13,8 @@ Pomysł na ery wzięty z gier strategicznych, ale wygląd, budynki i nazwy są n
   Uwaga: budynek na dole placu zajmuje miejsce, na którym mogłaby stanąć lada.
 - Strzałka prowadzi dookoła końca palisady do lady postawionej tuż przy nim (wcześniej kazała iść wzdłuż płotu).
 
+Zapis w repozytorium: `c73900c`
+
 ## Wersja 2 (19.11.2026)
 
 **Dodane**
