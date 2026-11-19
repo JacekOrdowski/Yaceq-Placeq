@@ -65,19 +65,21 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 .okragly:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(33, 48, 71, 0.25); }
 #fala { background: rgba(33, 48, 71, 0.72); color: #fff; border-radius: 12px; padding: 4px 10px; font-weight: 900; font-size: 14px; text-align: left; }
 #fala.blisko { background: rgba(224, 65, 58, 0.9); }
-#zadanie { margin: 8px auto 0; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.92); color: var(--ink);
+/* podpowiedź na dole ekranu, żeby nie zasłaniała środka gry */
+#zadanie { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); transform: translateX(-50%);
+  width: max-content; max-width: min(92vw, 420px); text-align: center; background: rgba(255, 255, 255, 0.9); color: var(--ink);
   border-radius: 14px; padding: 6px 12px; font-weight: 900; font-size: 15px; box-shadow: 0 3px 0 rgba(33, 48, 71, 0.18); }
 #zadanie:empty { display: none; }
 
-#baner { position: fixed; left: 50%; top: 30%; transform: translate(-50%, -50%) scale(0.6); z-index: 12; pointer-events: none;
-  font-family: var(--display); font-size: clamp(26px, 8vw, 46px); color: #fff; text-align: center; white-space: nowrap;
+#baner { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 70px); transform: translate(-50%, 0) scale(0.6); z-index: 12; pointer-events: none;
+  font-family: var(--display); font-size: clamp(24px, 7vw, 42px); color: #fff; text-align: center; white-space: nowrap;
   -webkit-text-stroke: 7px #2b3a8f; paint-order: stroke fill;
   text-shadow: 0 4px 0 rgba(20, 30, 70, 0.35); opacity: 0; transition: opacity 0.25s, transform 0.25s; }
-#baner.widac { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+#baner.widac { opacity: 1; transform: translate(-50%, 0) scale(1); }
 #baner small { display: block; font-size: 0.42em; font-family: var(--body); font-weight: 900; margin-top: 6px; -webkit-text-stroke: 5px #2b3a8f; white-space: normal; max-width: 86vw; }
 #baner.zly { color: #ffe1de; -webkit-text-stroke-color: #a3221b; }
 #baner.zly small { -webkit-text-stroke-color: #a3221b; }
-#toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 26px); transform: translateX(-50%);
+#toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 58px); transform: translateX(-50%);
   z-index: 12; background: rgba(33, 48, 71, 0.85); color: #fff; border-radius: 14px; padding: 8px 14px; font-weight: 900;
   font-size: 15px; pointer-events: none; opacity: 0; transition: opacity 0.25s; max-width: 86vw; text-align: center; }
 #toast.widac { opacity: 1; }

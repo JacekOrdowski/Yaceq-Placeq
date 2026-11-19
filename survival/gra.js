@@ -4,10 +4,11 @@ import * as MOD from './modele.js';
 import { PRZEDMIOTY, WEZLY, ZWIERZETA, WEJSCIA, WARSZTAT, STALE, CENY_STALE, KRAINY, ZAKRES, BRONIE, NARZEDZIA, SRODEK, GRANICE_STREF } from './krainy.js';
 import { rysujIkone, ikonaURL } from './ikony.js';
 
-const WERSJA = 10;
+const WERSJA = 11;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 10, opis: 'Lada z kamieniem, pomocnicy niosą zbiory na lady, magazyn dla ciebie, wszystko po 1,5 s stania na polu, duże obrazki ulepszeń, mniejsze chatki.' },
+  { nr: 11, opis: 'Podpowiedzi na dole ekranu, duże napisy u góry; środek ekranu wolny. Do tego wszystko z wersji 10.' },
+  { nr: 10, opis: 'Lada z kamieniem, pomocnicy niosą zbiory na lady, magazyn dla ciebie, wszystko po 1,5 s stania na polu, duże obrazki ulepszeń, mniejsze chatki.', adres: 'wersje/10/' },
   { nr: 9, opis: 'Wielka rozbudowa; siekierę kupujesz dopiero po ladzie z drewnem, sprzedawcy dobrze widać za ladą, pierwszy sprzedawca po około 5 minutach.', adres: 'wersje/9/' },
   { nr: 8, opis: 'Wielka rozbudowa (las, powiększanie bazy, wieże, kuźnia, tartak, piekarnia, skarbnik, druga kraina); pierwszego sprzedawcę kupujesz po około 5 minutach.', adres: 'wersje/8/' },
   { nr: 7, opis: 'Wielka rozbudowa: cały las do ścinania, powiększanie bazy, wieże z myśliwymi, kuźnia, tartak, piekarnia, skarbnik i druga kraina.', adres: 'wersje/7/' },

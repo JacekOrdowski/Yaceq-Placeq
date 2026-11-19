@@ -2,6 +2,14 @@
 
 Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
+## Wersja 11 (19.11.2026)
+
+**Zmienione**
+- Podpowiedź („Zbuduj: …”, „Idź do …”) jest teraz na dole ekranu, a nie na środku. Środek gry jest wolny.
+- Krótkie komunikaty (np. „Za mało drewna”) pojawiają się nad podpowiedzią, też na dole.
+- Duże napisy (nowa fala, nowy etap bazy) są u góry ekranu.
+- Wersja 10 jest na liście wersji do wyboru przy starcie.
+
 ## Wersja 10 (19.11.2026)
 
 Zapis w repozytorium: `739d786`
