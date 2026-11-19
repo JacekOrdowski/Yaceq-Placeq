@@ -12,6 +12,8 @@ Pomysł na ery wzięty z gier strategicznych, ale wygląd, budynki i nazwy są n
   a na komputerze kółko myszy. Gra pamięta ostatnie ustawienie.
 - Uszczypnięcie nie rusza Yaceqa ani przesuwanego budynku: chodzenie wraca, gdy podniesiesz oba palce.
 
+Zapis w repozytorium: `2fe813a`
+
 ## Wersja 1 (19.11.2026)
 
 **Dodane**
