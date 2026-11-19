@@ -4,10 +4,10 @@ import * as MOD from './modele.js';
 import { PRZEDMIOTY, WEZLY, ZWIERZETA, WEJSCIA, WARSZTAT, STALE, CENY_STALE, KRAINY, ZAKRES, BRONIE, NARZEDZIA, SRODEK, GRANICE_STREF, ERY } from './krainy.js';
 import { rysujIkone, ikonaURL } from './ikony.js';
 
-const WERSJA = 1;
+const WERSJA = 2;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/); przy jednej wersji od razu menu
 const WERSJE = [
-  { nr: 1, opis: 'Pierwsza wersja: ratusz z erami (Osada, Wioska), budowanie tam, gdzie chcesz, burzenie za połowę kosztu.' },
+  { nr: 2, opis: 'Przybliżanie i oddalanie uszczypnięciem dwoma palcami (albo kółkiem myszy). Do tego wszystko z wersji 1.' },
 ];
 const KLUCZ = 'age-of-yaceq-1';
 const STARY_KLUCZ = 'age-of-yaceq';
@@ -2398,7 +2398,7 @@ function ustawKamere(dt, natychmiast) {
   const w = window.innerWidth, h = window.innerHeight, asp = w / h;
   camera.aspect = asp; camera.fov = asp < 1 ? 46 : 40; camera.updateProjectionMatrix();
   const tv = Math.tan(camera.fov * Math.PI / 360);
-  const d = Math.max(4.4 / (tv * asp), 6.2 / tv, 11);
+  const d = Math.max(4.4 / (tv * asp), 6.2 / tv, 11) * zoom;
   const gr = G.gracz;
   const cel = tryb && tryb.x != null ? V(tryb.x, 0, tryb.z) : V(gr.x, 0, gr.z);
   if (!ustawKamere.cel || natychmiast) ustawKamere.cel = cel.clone();
@@ -2886,8 +2886,25 @@ $('st-tak').onclick = postawTutaj;
 const joy = $('joy'), galka = $('galka');
 let dotyk = null;
 const cel = renderer.domElement;
+// przybliżanie i oddalanie: uszczypnięcie dwoma palcami albo kółko myszy (0.6 = blisko, 2 = daleko; zapamiętane)
+let zoom = Math.min(2, Math.max(0.6, zapis.zoom || 1));
+const palce = new Map(); let szczyp = null;
+function odlPalcow() { const [a, b] = [...palce.values()]; return Math.hypot(a.x - b.x, a.y - b.y); }
+function ustawZoom(z) { zoom = Math.min(2, Math.max(0.6, z)); zapis.zoom = Math.round(zoom * 100) / 100; }
+cel.addEventListener('wheel', e => { e.preventDefault(); ustawZoom(zoom * Math.exp(e.deltaY * 0.0012)); }, { passive: false });
+document.addEventListener('gesturestart', e => e.preventDefault()); // iPhone: nie powiększaj całej strony
 cel.addEventListener('pointerdown', e => {
   audio();
+  palce.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (palce.size >= 2) {
+    // drugi palec: koniec chodzenia (i przesuwania budynku), zaczyna się uszczypnięcie
+    szczyp = { d: Math.max(10, odlPalcow()), z: zoom };
+    if (dotyk) { dotyk = null; joy.hidden = true; wejscie.x = 0; wejscie.z = 0; }
+    if (tryb) tryb.ciagnie = false;
+    try { cel.setPointerCapture(e.pointerId); } catch (er) { /* stary telefon */ }
+    return;
+  }
+  if (szczyp) return;
   if (tryb) { dotykTrybu(e, 'dol'); return; }
   if (pauza || dotyk) return;
   dotyk = { id: e.pointerId, x: e.clientX, y: e.clientY };
@@ -2895,6 +2912,8 @@ cel.addEventListener('pointerdown', e => {
   try { cel.setPointerCapture(e.pointerId); } catch (er) { /* stary telefon */ }
 });
 cel.addEventListener('pointermove', e => {
+  if (palce.has(e.pointerId)) palce.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (szczyp) { if (palce.size >= 2) ustawZoom(szczyp.z * szczyp.d / Math.max(10, odlPalcow())); return; }
   if (tryb) { dotykTrybu(e, 'ruch'); return; }
   if (!dotyk || e.pointerId !== dotyk.id) return;
   const max = 50;
@@ -2907,7 +2926,10 @@ cel.addEventListener('pointermove', e => {
   wejscie.x = d < 4 ? 0 : dx / d * sila;
   wejscie.z = d < 4 ? 0 : dy / d * sila;
 });
-const puscDotyk = e => { if (tryb) { dotykTrybu(e, 'gora'); return; } if (!dotyk || e.pointerId !== dotyk.id) return; dotyk = null; joy.hidden = true; wejscie.x = 0; wejscie.z = 0; };
+const puscDotyk = e => {
+  palce.delete(e.pointerId);
+  if (szczyp) { if (!palce.size) szczyp = null; return; } // po uszczypnięciu: czekamy, aż wszystkie palce się podniosą
+  if (tryb) { dotykTrybu(e, 'gora'); return; } if (!dotyk || e.pointerId !== dotyk.id) return; dotyk = null; joy.hidden = true; wejscie.x = 0; wejscie.z = 0; };
 cel.addEventListener('pointerup', puscDotyk); cel.addEventListener('pointercancel', puscDotyk);
 window.addEventListener('keydown', e => {
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; wejscie.klaw[k] = true; audio();

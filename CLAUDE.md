@@ -95,6 +95,7 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
 - Nowa wersja: podnieś `WERSJA` w `age/gra.js`, dopisz sekcję w `age/ZMIANY.md` (te same zasady co wyżej).
 - Test: `window.__yaceq` jak w Survivalu, a do tego `polecane` (co gra radzi postawić) i `postawPolecane()`
   (robot stawia to w wolnym miejscu). Robot przechodzi grę w około 108 minut.
+- Przybliżanie: uszczypnięcie dwoma palcami albo kółko myszy (`zoom` w `age/gra.js`, od 0,6 do 2, zapamiętane w `zapis.zoom`).
 
 ## Lista naszych gier
 
