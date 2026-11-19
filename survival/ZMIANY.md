@@ -4,6 +4,8 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
 ## Wersja 8 (19.11.2026)
 
+Zapis w repozytorium: `d5f30d8`
+
 **Zmienione**
 - Pierwszego sprzedawcę (przy ladzie z jagodami) można kupić dopiero po zbudowaniu kuchni i za 85 zł,
   czyli mniej więcej po 5 minutach gry (robot kupuje go w 4,9 minucie). Do tego czasu przy ladzie sprzedaje sam Yaceq.
