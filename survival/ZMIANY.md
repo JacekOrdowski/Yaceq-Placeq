@@ -10,6 +10,8 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 - Duże napisy (nowa fala, nowy etap bazy) są u góry ekranu.
 - Wersja 10 jest na liście wersji do wyboru przy starcie.
 
+Zapis w repozytorium: `53d7392`
+
 ## Wersja 10 (19.11.2026)
 
 Zapis w repozytorium: `739d786`
