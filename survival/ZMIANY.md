@@ -4,6 +4,8 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
 ## Wersja 10 (19.11.2026)
 
+Zapis w repozytorium: `739d786`
+
 **Dodane**
 - Lada z kamieniem (obok lady z dżemem): klienci kupują kamień, więc nadmiar kamienia ma gdzie iść.
   Ma swojego sprzedawcę do zatrudnienia.
