@@ -2,6 +2,24 @@
 
 Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
+## Wersja 13 (19.11.2026)
+
+**Dodane**
+- Pokonane zwierzę zostawia mięso (lis 1 kawałek, wilk 2, niedźwiedź 4, Yeti 10). Zbiera się je jak zapasy z półki.
+- Lada z mięsem (obok lady z kamieniem) i sprzedawca do niej. Domki po wschodniej stronie przysyłają też klientów po mięso.
+- Hodowla: zagroda z różowymi świnkami. Karmi się je jagodami, a one dają mięso. Pasterz sam nosi im jagody.
+- Rzemieślnicy (chata z pomarańczowym dachem, 2 osoby z młotkami): biorą z magazynu kamień albo drewno
+  i sami naprawiają dziury w płocie i zepsute budynki.
+- Zwierzęta, które jedzą zapasy, psują ladę albo budynek (pasek nad budynkiem). Zepsuty budynek nie pracuje,
+  dopóki ktoś go nie naprawi (pole z młotkiem: 3 drewna albo rzemieślnicy).
+- Przy drzewie albo głazie, na które narzędzie jest za słabe, siekiera (kilof) odbija się z brzdękiem i iskrami,
+  a gra podpowiada, żeby ulepszyć ją w kuźni.
+
+**Zmienione**
+- Pola (odkładanie, branie, płacenie) działają już po 1 s stania, a nie po 1,5 s.
+- Zwierzęta nie zostawiają już pieniędzy, tylko mięso. Pieniądze daje jego sprzedaż.
+- Robot przechodzi krainę w około 57 minut.
+
 ## Wersja 12 (19.11.2026)
 
 **Dodane**

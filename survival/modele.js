@@ -111,6 +111,39 @@ export function pomocnik() {
   return g;
 }
 
+export function rzemieslnik() {
+  const g = osoba({ kurtka: '#e07b2b', czapka: '#6b4a2b', pompon: '#e07b2b', skala: 0.85 });
+  const r = g.userData.rece[1], m = new THREE.Group(); m.name = 'mlotek';
+  dodaj(m, box(0.07, 0.6, 0.07, '#8e5629'), 0, -0.25, 0);
+  dodaj(m, box(0.12, 0.14, 0.32, '#8d939d'), 0, -0.55, 0.06);
+  m.position.set(0, -0.3, 0); r.add(m);
+  g.userData = {};
+  return g;
+}
+
+// hodowla: zagroda z różowymi świnkami, korytem i słomą
+export function zagroda() {
+  const g = new THREE.Group();
+  dodaj(g, box(2.8, 0.06, 2.3, '#d9c27a'), 0, 0.03, 0);
+  for (const [x, z] of [[-1.4, -1.15], [1.4, -1.15], [-1.4, 1.15], [1.4, 1.15], [0, -1.15], [0, 1.15], [-1.4, 0], [1.4, 0]]) dodaj(g, box(0.12, 0.75, 0.12, '#8e5629'), x, 0.37, z);
+  for (const y of [0.3, 0.6]) {
+    for (const z of [-1.15, 1.15]) dodaj(g, box(2.9, 0.08, 0.06, '#9a6236'), 0, y, z);
+    for (const x of [-1.4, 1.4]) dodaj(g, box(0.06, 0.08, 2.35, '#9a6236'), x, y, 0);
+  }
+  dodaj(g, box(1.0, 0.22, 0.32, '#7a4520'), 0.6, 0.12, -0.75);
+  dodaj(g, box(0.85, 0.06, 0.2, '#5b4bb5'), 0.6, 0.24, -0.75);
+  for (const [x, z, k] of [[-0.6, 0.2, 0.5], [0.3, 0.45, -0.8], [-0.2, -0.55, 2.2]]) {
+    const s = new THREE.Group(); s.position.set(x, 0, z); s.rotation.y = k; g.add(s);
+    dodaj(s, box(0.42, 0.34, 0.6, '#f4a6b8'), 0, 0.32, 0);
+    dodaj(s, box(0.32, 0.3, 0.26, '#f4a6b8'), 0, 0.42, 0.38);
+    dodaj(s, box(0.16, 0.1, 0.06, '#e07a95'), 0, 0.38, 0.52);
+    for (const ex of [-0.08, 0.08]) dodaj(s, sph(0.03, '#1b1b1f', 6, 4), ex, 0.5, 0.51);
+    for (const ex of [-0.1, 0.1]) dodaj(s, box(0.08, 0.1, 0.04, '#e07a95'), ex, 0.6, 0.36);
+    for (const [lx, lz] of [[-0.13, 0.2], [0.13, 0.2], [-0.13, -0.2], [0.13, -0.2]]) dodaj(s, box(0.09, 0.16, 0.09, '#e07a95'), lx, 0.08, lz);
+  }
+  return cien(g);
+}
+
 // ---------------- zwierzęta (przodem do +z) ----------------
 function czworonog(o) {
   const g = new THREE.Group(); const nogi = [];
@@ -321,6 +354,12 @@ function nowyPrzedmiot(typ) {
     const b = dodaj(g, sph(0.2, '#e3b06b', 10, 6), 0, 0.1, 0); b.scale.set(1, 0.55, 1);
     dodaj(g, sph(0.11, '#4a3aa8', 8, 4), 0, 0.19, 0).scale.set(1, 0.4, 1);
     h = 0.22;
+  } else if (typ === 'mieso') {
+    const m = dodaj(g, sph(0.19, '#c0473a', 10, 6), -0.06, 0.13, 0); m.scale.set(1.25, 0.75, 1);
+    dodaj(g, sph(0.12, '#e07a5f', 8, 4), -0.1, 0.2, 0.04).scale.set(1, 0.4, 1);
+    const k = dodaj(g, cyl(0.045, 0.045, 0.26, '#f4ecd8', 6), 0.22, 0.1, 0); k.rotation.z = Math.PI / 2;
+    for (const z of [-0.05, 0.05]) dodaj(g, sph(0.055, '#f4ecd8', 6, 4), 0.36, 0.1, z);
+    h = 0.24;
   } else if (typ === 'kasa') {
     dodaj(g, box(0.46, 0.07, 0.25, '#2f9b45'), 0, 0.035, 0);
     dodaj(g, box(0.47, 0.072, 0.06, '#d8f3dc'), 0, 0.035, 0);
@@ -425,8 +464,9 @@ export function armatka() {
 // mała chatka pracownika; każdy rodzaj pracy ma inne ściany, dach i dodatki
 export function chatka(rodzaj = 'jagody') {
   const g = new THREE.Group();
-  const w = { jagody: ['#d9b48a', '#5b4bb5', '#33449e'], drewno: ['#9a6236', '#3f7f4f', '#7a4520'], kamien: ['#a3a9b3', '#5a5d66', '#868d98'] }[rodzaj] || ['#9a6236', '#3f7f4f', '#7a4520'];
-  dodaj(g, box(1.6, 1.15, 1.4, w[0]), 0, 0.58, 0);
+  const w = { jagody: ['#d9b48a', '#5b4bb5', '#33449e'], drewno: ['#9a6236', '#3f7f4f', '#7a4520'], kamien: ['#a3a9b3', '#5a5d66', '#868d98'], rzemieslnik: ['#c98a4e', '#e07b2b', '#6b4a2b'] }[rodzaj] || ['#9a6236', '#3f7f4f', '#7a4520'];
+  const duza = rodzaj === 'rzemieslnik';
+  dodaj(g, box(duza ? 2.2 : 1.6, 1.15, 1.4, w[0]), 0, 0.58, 0);
   if (rodzaj === 'drewno') for (let i = 0; i < 3; i++) dodaj(g, cyl(0.08, 0.08, 1.65, '#7a4520', 6), 0, 0.2 + i * 0.36, 0.72).rotation.z = Math.PI / 2;
   if (rodzaj === 'kamien') for (const [x, y] of [[-0.45, 0.3], [0.3, 0.7], [0.5, 0.25]]) dodaj(g, box(0.4, 0.22, 0.06, '#868d98'), x, y, 0.72);
   const d = dodaj(g, new THREE.Mesh(geo('dachC', () => new THREE.CylinderGeometry(1.05, 1.05, 1.9, 3)), mat(w[1])), 0, 1.45, 0);
@@ -436,7 +476,9 @@ export function chatka(rodzaj = 'jagody') {
   dodaj(g, box(0.08, 0.7, 0.08, '#7a4520'), -0.95, 0.35, 0.7);
   if (rodzaj === 'jagody') { dodaj(g, cyl(0.2, 0.15, 0.2, '#c48a4e', 8), -0.95, 0.8, 0.7); dodaj(g, sph(0.16, w[2], 8, 4), -0.95, 0.9, 0.7).scale.set(1, 0.45, 1); }
   else if (rodzaj === 'drewno') { const b = dodaj(g, cyl(0.13, 0.13, 0.5, '#9a6236', 8), -0.95, 0.82, 0.7); b.rotation.z = Math.PI / 2; }
+  else if (duza) { dodaj(g, box(0.07, 0.5, 0.07, '#8e5629'), -0.95, 0.85, 0.7).rotation.z = 0.5; dodaj(g, box(0.32, 0.14, 0.16, '#8d939d'), -1.05, 1.07, 0.7).rotation.z = 0.5; }
   else dodaj(g, dode(0.2, '#a3a9b3'), -0.95, 0.85, 0.7);
+  if (duza) { dodaj(g, box(0.9, 0.12, 0.5, '#8e5629'), 0.6, 0.55, 0.95); for (const x of [0.25, 0.95]) dodaj(g, box(0.08, 0.55, 0.08, '#7a4520'), x, 0.27, 0.95); }
   if (rodzaj !== 'kamien') dodaj(g, box(0.25, 0.6, 0.25, '#8d939d'), 0.45, 1.8, -0.3);
   return cien(g);
 }

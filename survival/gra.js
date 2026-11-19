@@ -4,10 +4,11 @@ import * as MOD from './modele.js';
 import { PRZEDMIOTY, WEZLY, ZWIERZETA, WEJSCIA, WARSZTAT, STALE, CENY_STALE, KRAINY, ZAKRES, BRONIE, NARZEDZIA, SRODEK, GRANICE_STREF } from './krainy.js';
 import { rysujIkone, ikonaURL } from './ikony.js';
 
-const WERSJA = 12;
+const WERSJA = 13;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 12, opis: 'Ulepszenia pokazują poziom (np. 3 z 10) i nie kupują się same po kolei, pokonane zwierzęta się przewracają, skład desek przy tartaku.' },
+  { nr: 13, opis: 'Zwierzęta dają mięso (lada z mięsem), hodowla świnek, rzemieślnicy naprawiają płot i budynki, pola działają po 1 s, siekiera odbija się od za twardych drzew.' },
+  { nr: 12, opis: 'Ulepszenia pokazują poziom (np. 3 z 10) i nie kupują się same po kolei, pokonane zwierzęta się przewracają, skład desek przy tartaku.', adres: 'wersje/12/' },
   { nr: 11, opis: 'Podpowiedzi na dole ekranu, duże napisy u góry; środek ekranu wolny. Do tego wszystko z wersji 10.', adres: 'wersje/11/' },
   { nr: 10, opis: 'Lada z kamieniem, pomocnicy niosą zbiory na lady, magazyn dla ciebie, wszystko po 1,5 s stania na polu, duże obrazki ulepszeń, mniejsze chatki.', adres: 'wersje/10/' },
   { nr: 9, opis: 'Wielka rozbudowa; siekierę kupujesz dopiero po ladzie z drewnem, sprzedawcy dobrze widać za ladą, pierwszy sprzedawca po około 5 minutach.', adres: 'wersje/9/' },
@@ -174,7 +175,7 @@ function rysujDymek(s, typ, liczba) {
   }
   s.material.map.needsUpdate = true;
 }
-const EMOJI = { magazyn: '📦', wieza: '🏹', mysliwy: '🧑', kuznia: '⚒️', zbrojownia: '🏹', efekt: '🏪', skarbnik: '🏦', rozbudowa: '🌲', kraina: '🗺️', narzedzie: '🪓', sprzedawca: '🙋', sklad: '📦', tasmociag: '⚙️', domek: '🏠', armatka: '❄️', chatka: '👷', warsztat: '🔨', palisada: '🛡️', cel: '⭐', kopalnia: '⛏️', wagonik: '🚃', piec: '🔥', napraw: '🔨', kosz: '🎒', buty: '👟', rece: '🧤' };
+const EMOJI = { magazyn: '📦', wieza: '🏹', mysliwy: '🧑', kuznia: '⚒️', zbrojownia: '🏹', efekt: '🏪', skarbnik: '🏦', rozbudowa: '🌲', kraina: '🗺️', narzedzie: '🪓', sprzedawca: '🙋', sklad: '📦', tasmociag: '⚙️', domek: '🏠', armatka: '❄️', chatka: '👷', warsztat: '🔨', palisada: '🛡️', rzemieslnicy: '🔨', cel: '⭐', kopalnia: '⛏️', wagonik: '🚃', piec: '🔥', napraw: '🔨', kosz: '🎒', buty: '👟', rece: '🧤' };
 const TYPY_KOSZTU = ['kasa', 'drewno', 'kamien', 'deski'];
 const PRZEDMIOTY_KOSZTU = ['drewno', 'kamien', 'deski'];
 function reszta(p) {
@@ -305,6 +306,8 @@ function dzwiek(n) {
     case 'koniec': [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => ton(f, f, 0.25, 'triangle', 0.14, i * 0.12)); break;
     case 'klik': ton(800, 600, 0.05, 'triangle', 0.08); break;
     case 'rab': szum(0.08, 0.12, 500); ton(170, 90, 0.09, 'square', 0.05); break;
+    case 'brzdek': ton(1500, 1300, 0.07, 'square', 0.05); ton(2300, 2000, 0.14, 'triangle', 0.05, 0.02); break;
+    case 'stuk': ton(320, 200, 0.06, 'square', 0.06); szum(0.05, 0.08, 1200); break;
   }
 }
 const UTWORY = ['chill', 'wesola', 'elektro', 'neon', 'turbo', 'skok'];
@@ -329,7 +332,7 @@ function nowyStan(k) {
   return {
     k, czas: 0, kasa: 20 * stale('kasa'), warsztat: { kosz: 0, buty: 0, rece: 0 },
     zbudowane: [], wplacone: {}, fala: 0, doFali: null, nieskonczona: false, ukonczona: false,
-    zapasy: {}, kasy: {}, kopalnia: 0, ogrzewanie: 0, palisada: [], plecak: [], gracz: [...k.start],
+    zapasy: {}, kasy: {}, kopalnia: 0, ogrzewanie: 0, palisada: [], plecak: [], gracz: [...k.start], uszk: {},
     etap: 0, narz: { siekiera: 0, kilof: 0 }, bron: 0, sciete: [], dochod: 0, zarobione: 0, dochodT: 0,
   };
 }
@@ -405,7 +408,7 @@ function zbudujSwiat() {
   scene.background = new THREE.Color(k.paleta.mgla);
   scene.fog = new THREE.Fog(k.paleta.mgla, 40, 95);
   G = {
-    kolizje: [], wezly: [], budowle: {}, pola: {}, pady: [], klienci: [], zwierzeta: [], pomocnicy: [],
+    kolizje: [], wezly: [], budowle: {}, pola: {}, pady: [], klienci: [], zwierzeta: [], pomocnicy: [], rzemieslnicy: [], miesa: [],
     loty: [], pociski: [], czastki: [], segmenty: [], doWypuszczenia: [], gracz: null, liczKlient: 0,
     oboz: { ...k.etapy[S.etap], z1: 7 }, drzewaStrefy: [0, 0, 0, 0, 0], dzikieT: 20, siatka: new Map(), siatkaW: new Map(),
   };
@@ -874,7 +877,7 @@ function postaw(cfg, nowa) {
   const kol = (x, z, r) => dodajKolizje({ x, z, r, b: cfg.id });
   switch (cfg.rodzaj) {
     case 'lada': {
-      const kolory = { kamien: '#6c717b', jagody: '#3a4bb0', dzem: '#8a2f9e', drewno: '#7a4520', wedzona: '#c96a1f', zloto: '#d99a00', krysztal: '#2aa6c9' };
+      const kolory = { mieso: '#b33a3a', kamien: '#6c717b', jagody: '#3a4bb0', dzem: '#8a2f9e', drewno: '#7a4520', wedzona: '#c96a1f', zloto: '#d99a00', krysztal: '#2aa6c9' };
       dodajObj(kopia('lada' + cfg.item, () => MOD.lada(kolory[cfg.item] || '#e0413a')));
       const tab = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1), new THREE.MeshBasicMaterial({ map: tekstura((() => { const cv = plotno(128, 128), c = cv.getContext('2d'); c.beginPath(); c.arc(64, 64, 60, 0, 7); c.fillStyle = '#fff'; c.fill(); rysujIkone(c, cfg.item, 64, 64, 96); return cv; })()), transparent: true }));
       tab.position.set(1.4, 3.05, -0.5); tab.scale.setScalar(0.85); B.obj.add(tab);
@@ -888,6 +891,7 @@ function postaw(cfg, nowa) {
       dodajKase(B.kasa, S.kasy[cfg.id] || 0);
       for (const dx of [-1, 0, 1]) kol(cfg.x + dx, cfg.z, 0.7);
       for (let i = 0; i < B.zapas; i++) dodajNaLade(B);
+      zdrowieBudynku(B);
       break;
     }
     case 'przetwornia': {
@@ -904,6 +908,7 @@ function postaw(cfg, nowa) {
       B.znakWyj = znacznik(cfg.wyj); B.znakWyj.position.set(B.odbior.x, 0.035, B.odbior.z); swiat.add(B.znakWyj);
       G.pady.push(B.odbior);
       for (let i = 0; i < B.wyj; i++) dodajWyjscie(B, cfg.wyj);
+      zdrowieBudynku(B);
       break;
     }
     case 'tasmociag': {
@@ -965,6 +970,14 @@ function postaw(cfg, nowa) {
       const tab = napis(PRZEDMIOTY[cfg.zbiera].nazwa, 2.2); tab.position.set(cfg.x, 2.4, cfg.z); swiat.add(tab);
       kol(cfg.x, cfg.z, 1.0);
       dodajPomocnika(B);
+      break;
+    }
+    case 'rzemieslnicy': {
+      dodajObj(kopia('chatkaRz', () => MOD.chatka('rzemieslnik')), 0.4);
+      const tab = napis('Rzemieślnicy', 2.4); tab.position.set(cfg.x, 2.5, cfg.z); swiat.add(tab);
+      kol(cfg.x, cfg.z, 1.2);
+      for (let i = 0; i < 2; i++) dodajRzemieslnika(B, i);
+      if (nowa) baner('Rzemieślnicy!', 'Sami naprawią płot i budynki drewnem i kamieniem z magazynu');
       break;
     }
     case 'warsztat': {
@@ -1216,6 +1229,58 @@ function dodajKase(k, ile) {
     m.rotation.y = (i % 3 - 1) * 0.08; swiat.add(m); k.meshe.push(m);
   }
 }
+// mięso z pokonanego zwierzęcia leży na ziemi; Yaceq podnosi je jak z półki (kawałki leżące blisko łączą się w kupkę)
+function miesoNaZiemi(x, z, ile) {
+  let k = G.miesa.find(q => Math.hypot(q.x - x, q.z - z) < 2.5 && q.n < 12);
+  if (!k) {
+    const o = { x, z }; przesun(o, 0, 0, 0.9);
+    k = { typ: 'odbior', x: o.x, z: o.z, r: 1.1, daje: 'mieso', n: 0, meshe: [] };
+    k.ile = () => k.n;
+    k.zdejmij = () => { k.n--; const m = k.meshe.pop(); if (m) swiat.remove(m); if (k.n <= 0) usunMieso(k); return m; };
+    G.miesa.push(k); G.pady.push(k);
+    if (G.miesa.length > 15) usunMieso(G.miesa[0]);
+  }
+  for (let i = 0; i < ile; i++) {
+    const j = k.meshe.length, m = przedmiot('mieso');
+    m.position.set(k.x + (j % 3 - 1) * 0.42, Math.floor(j / 6) * 0.2, k.z + (Math.floor(j / 3) % 2 - 0.5) * 0.45);
+    m.rotation.y = j * 1.3; swiat.add(m); k.meshe.push(m); k.n++;
+  }
+}
+function usunMieso(k) {
+  for (const m of k.meshe) swiat.remove(m);
+  k.meshe.length = 0; k.n = 0;
+  const i = G.pady.indexOf(k); if (i >= 0) G.pady.splice(i, 1);
+  const j = G.miesa.indexOf(k); if (j >= 0) G.miesa.splice(j, 1);
+}
+
+// ---------- budynki mogą się zepsuć (zwierzęta, które jedzą zapasy, psują też budynek) ----------
+function zdrowieBudynku(B) {
+  B.hpMax = 40; B.hp = S.uszk && S.uszk[B.id] !== undefined ? S.uszk[B.id] : B.hpMax;
+  pokazUszkodzenie(B);
+}
+function uszkodz(B, ile) {
+  if (!B.hpMax || B.hp <= 0) return;
+  B.hp = Math.max(0, B.hp - ile);
+  if (B.hp <= 0) { dzwiek('pek'); wybuch('puch', V(B.x, 1, B.z), 12, 3, 0.8, 1.1); toast(`Zwierzęta zepsuły: ${B.cfg.nazwa}! Trzeba naprawić`); }
+  pokazUszkodzenie(B);
+}
+function pokazUszkodzenie(B) {
+  const r = B.hp / B.hpMax;
+  if (!B.pasekU) { B.pasekU = pasekZycia(); B.pasekU.position.set(B.x, 3.3, B.z); swiat.add(B.pasekU); }
+  B.pasekU.visible = r < 0.999; if (B.pasekU.visible) rysujPasek(B.pasekU, r);
+  B.zepsuty = B.hp <= 0;
+  if (B.obj) B.obj.rotation.z = B.zepsuty ? 0.12 : 0;
+  if (B.zepsuty && !B.padNapraw) {
+    const o = { x: B.x, z: B.cfg.rodzaj === 'lada' ? 3.4 : B.z + 2.4 }; if (G.gracz) przesun(o, 0, 0, 0.8);
+    const p = { typ: 'napraw', x: o.x, z: o.z, r: 1.1, koszt: { drewno: 3 }, wpl: {}, bud: B, ikona: EMOJI.napraw, dol: 'napraw', ost: '' };
+    p.mesh = pole(2.0); p.mesh.position.set(p.x, 0.05, p.z); swiat.add(p.mesh); rysujPad(p);
+    G.pady.push(p); B.padNapraw = p;
+  } else if (!B.zepsuty && B.padNapraw) {
+    swiat.remove(B.padNapraw.mesh); G.pady.splice(G.pady.indexOf(B.padNapraw), 1); B.padNapraw = null;
+  }
+}
+function naprawBudynek(B) { B.hp = B.hpMax; pokazUszkodzenie(B); dzwiek('buduj'); wybuch('gwiazda', V(B.x, 1.5, B.z), 10, 2, 0.6, 0.5); }
+
 function lupNaZiemi(x, z, ile) {
   // pieniądze nie mogą wylądować w środku budynku
   const o = { x, z }; przesun(o, 0, 0, 0.9); x = o.x; z = o.z;
@@ -1244,7 +1309,7 @@ function aktualizujKlientow(dt) {
       B.sprzedT -= dt;
       const obsluga = B.sprzedawca || Math.hypot(G.gracz.x - B.pad.x, G.gracz.z - B.pad.z) < 1.7;
       if (B.sprzedawca) B.sprzedawca.userData.sprzedaje = 0.3;
-      if (B.zapas > 0 && B.sprzedT <= 0 && obsluga) {
+      if (B.zapas > 0 && B.sprzedT <= 0 && obsluga && !B.zepsuty) {
         B.sprzedT = 0.13; B.zapas--; k0.ma++; k0.dolot++;
         const m = zdejmijZLady(B);
         if (m) {
@@ -1381,7 +1446,7 @@ function przegon(zw) {
   wybuch('gwiazda', p, 10, 3.5, 0.7, 0.55);
   wybuch('puch', p, 6, 2, 0.6, 0.9);
   dzwiek('ucieka');
-  lupNaZiemi(zw.x, zw.z, Math.round(zw.def.nagroda * S.k.ceny));
+  miesoNaZiemi(zw.x, zw.z, zw.def.mieso || 1);
 }
 function aktualizujZwierzeta(dt) {
   for (let i = G.zwierzeta.length - 1; i >= 0; i--) {
@@ -1423,7 +1488,7 @@ function aktualizujZwierzeta(dt) {
       zw.T += dt;
       if (zw.T > 0.9) {
         zw.T = 0;
-        if (zjedz(zw.cel.B)) { zw.zjadl++; dzwiek('zjada'); czastka('puch', V(zw.x, 0.8, zw.z), V(0, 2, 0), 0.4, 0.6, 1.4); }
+        if (zjedz(zw.cel.B)) { zw.zjadl++; dzwiek('zjada'); uszkodz(zw.cel.B, def.sila * 2); czastka('puch', V(zw.x, 0.8, zw.z), V(0, 2, 0), 0.4, 0.6, 1.4); }
         else { zw.cel = celJedzenia(zw); zw.stan = zw.cel ? 'wchodzi' : 'wraca'; }
         if (zw.zjadl >= def.je) zw.stan = 'wraca';
       }
@@ -1554,6 +1619,97 @@ function atakNaGracza(zw) {
 }
 
 // ================= pomocnicy =================
+function dodajRzemieslnika(B, i) {
+  const obj = kopia('rzemieslnik', () => MOD.rzemieslnik());
+  const dom = { x: B.x + (i ? 0.9 : -0.9), z: B.z + 1.5 };
+  obj.position.set(dom.x, 0, dom.z); swiat.add(obj);
+  const stos = new THREE.Group(); stos.position.set(0, 0.95, -0.42); obj.add(stos);
+  G.rzemieslnicy.push({ B, obj, dom, x: dom.x, z: dom.z, kat: 0, faza: 0, stan: 'czeka', T: Math.random(), zad: null, niesie: [], stos, nogi: czesci(obj, 'noga'), rece: czesci(obj, 'reka') });
+}
+// rzemieślnik szuka pracy: najpierw zepsute budynki (kamień albo drewno), potem dziurawy płot (drewno)
+function zadanieRzemieslnika(r) {
+  const zajete = new Set(G.rzemieslnicy.filter(q => q.zad).map(q => q.zad.seg || q.zad.bud));
+  const mag = t => { const m = G.budowle['mag_' + t]; return m && m.wej >= 2 ? m : null; };
+  let naj = null, nd = Infinity;
+  for (const id in G.budowle) {
+    const B = G.budowle[id];
+    if (!B.hpMax || B.hp >= B.hpMax * 0.6 || zajete.has(B)) continue;
+    const typ = mag('kamien') ? 'kamien' : mag('drewno') ? 'drewno' : null; if (!typ) continue;
+    const d = Math.hypot(B.x - r.x, B.z - r.z) - 1000;
+    if (d < nd) { nd = d; naj = { bud: B, typ }; }
+  }
+  if (!naj && mag('drewno')) for (const s of G.segmenty) {
+    if (zajete.has(s) || !(s.zlamany || s.hp < s.max * 0.5)) continue;
+    const d = Math.hypot(s.x - r.x, s.z - r.z);
+    if (d < nd) { nd = d; naj = { seg: s, typ: 'drewno' }; }
+  }
+  return naj;
+}
+function miejscePracy(zad) {
+  const o = zad.seg ? { x: zad.seg.x - zad.seg.nx * 1.3, z: zad.seg.z - zad.seg.nz * 1.3 }
+    : zad.bud.padNapraw ? { x: zad.bud.padNapraw.x, z: zad.bud.padNapraw.z } : { x: zad.bud.x, z: zad.bud.cfg.rodzaj === 'lada' ? 4.6 : zad.bud.z + 2.3 };
+  przesun(o, 0, 0, 0.5); return o;
+}
+function porzuc(r) {
+  if (r.zad && r.zad.bud && r.zad.bud.naprawia === r) r.zad.bud.naprawia = null;
+  for (const p of r.niesie) r.stos.remove(p); r.niesie.length = 0;
+  r.zad = null; r.stan = 'czeka'; r.T = 0.5;
+}
+function aktualizujRzemieslnikow(dt) {
+  const v = 3.2 * tempoPomocy();
+  for (const r of G.rzemieslnicy) {
+    let ruch = false;
+    const idzDo = (x, z) => {
+      if (Math.hypot(x - r.x, z - r.z) < 0.15) return true;
+      const w = punktTrasy(r, { x, z });
+      const dx = w.x - r.x, dz = w.z - r.z, d = Math.hypot(dx, dz);
+      if (d < 0.0001) return false;
+      const s = Math.min(d, v * dt); r.x += dx / d * s; r.z += dz / d * s; r.kat = Math.atan2(dx, dz); r.faza += dt * 10; ruch = true;
+      return false;
+    };
+    const z = r.zad;
+    // zadanie już nieaktualne: płot przebudowany przy powiększaniu bazy albo budynku nie ma
+    if (z && ((z.seg && !G.segmenty.includes(z.seg)) || (z.bud && !G.budowle[z.bud.id]))) porzuc(r);
+    if (r.stan === 'czeka') {
+      if (Math.hypot(r.dom.x - r.x, r.dom.z - r.z) > 0.2) idzDo(r.dom.x, r.dom.z);
+      r.T -= dt;
+      if (r.T <= 0) {
+        r.T = 0.7;
+        const zad = zadanieRzemieslnika(r);
+        if (zad) { r.zad = zad; if (zad.bud) zad.bud.naprawia = r; r.stan = 'poMaterial'; }
+      }
+    } else if (r.stan === 'poMaterial') {
+      const m = G.budowle['mag_' + r.zad.typ];
+      if (!m) porzuc(r);
+      else if (idzDo(m.x, m.z + 1.4)) {
+        if (m.wej >= 2) {
+          for (let i = 0; i < 2; i++) { m.wej--; zdejmijZeStosu(m); const p = przedmiot(r.zad.typ); p.position.set(0, i * wys(r.zad.typ), 0); r.stos.add(p); r.niesie.push(p); }
+          r.stan = 'idzie'; r.cel = miejscePracy(r.zad);
+        } else porzuc(r);
+      }
+    } else if (r.stan === 'idzie') {
+      if (idzDo(r.cel.x, r.cel.z)) { r.stan = 'naprawia'; r.T = 0; r.stukT = 0; }
+    } else if (r.stan === 'naprawia') {
+      const cel = r.zad.seg || r.zad.bud;
+      r.kat = Math.atan2(cel.x - r.x, cel.z - r.z);
+      r.T += dt; r.stukT -= dt;
+      if (r.stukT <= 0) {
+        r.stukT = 0.35;
+        if (Math.hypot(G.gracz.x - r.x, G.gracz.z - r.z) < 14) dzwiek('stuk');
+        czastka('puch', V(cel.x, 0.9, cel.z), V(losowo(-1, 1), 1.5, losowo(-1, 1)), 0.4, 0.5, 1.4);
+      }
+      if (r.T > 2.4) {
+        if (r.zad.seg) { const s = r.zad.seg; s.hp = s.max; wyglądSegmentu(s); wybuch('gwiazda', V(s.x, 1, s.z), 8, 2, 0.6, 0.5); }
+        else naprawBudynek(r.zad.bud);
+        porzuc(r);
+      }
+    }
+    r.obj.position.set(r.x, 0, r.z); r.obj.rotation.y = r.kat;
+    r.nogi.forEach((n, j) => { n.rotation.x = ruch ? Math.sin(r.faza + j * Math.PI) * 0.6 : 0; });
+    r.rece[1].rotation.x = r.stan === 'naprawia' ? -1.3 + Math.sin(czasGry * 18) * 0.6 : ruch ? -Math.sin(r.faza) * 0.5 : 0;
+    r.rece[0].rotation.x = ruch ? Math.sin(r.faza) * 0.5 : 0;
+  }
+}
 function dodajPomocnika(B) {
   const obj = kopia('pomocnik', () => MOD.pomocnik());
   const x = B.x, z = B.z + 1.3;
@@ -1657,7 +1813,7 @@ function aktualizujProdukcje(dt) {
     if (c.rodzaj === 'przetwornia') {
       const L = G.budowle[c.dla], T = B.tasma;
       const miejsceL = !!L && L.zapas + L.dolot + (T ? T.naTasmie : 0) < L.maks;
-      const pracuje = B.wej > 0 && (T ? miejsceL : B.wyj < B.maks);
+      const pracuje = B.wej > 0 && !B.zepsuty && (T ? miejsceL : B.wyj < B.maks);
       if (T) {
         if (T.pasy) T.pasy.position.z = (czasGry * 1.6) % 0.3;
         if (B.wyj > 0 && miejsceL) { T.T -= dt; if (T.T <= 0) { T.T = 0.35; B.wyj--; zdejmijWyjscie(B); wyslijTasma(T, L, c.wyj); } }
@@ -1848,8 +2004,19 @@ function aktualizujGracza(dt) {
       dzwiek(wZasiegu[0].def.daje === 'jagody' ? 'zbierz' : 'rab');
     }
   } else gr.zbierzT = Math.min(gr.zbierzT, 0.2);
+  // za twarde drzewo albo głaz (narzędzie za słabe): Yaceq uderza, a narzędzie odbija się z brzdękiem
+  let twardy = null;
+  if (!zbiera && !blisko) {
+    let td = 1.9;
+    for (const w of zSiatki(G.siatkaW, gr.x, gr.z, 2.2)) {
+      if (w.zostalo <= 0 || w.usuniety || !w.def.narz) continue;
+      const lv = S.narz[w.def.narz] || 0;
+      if (lv < 1 || lv >= w.def.poziom) continue;
+      const d = Math.hypot(w.x - gr.x, w.z - gr.z); if (d < td) { td = d; twardy = w; }
+    }
+  }
   // narzędzie w ręku: koszyczek, siekiera albo kilof
-  const narz = zbiera ? wZasiegu[0].def.daje : 'jagody';
+  const narz = zbiera ? wZasiegu[0].def.daje : twardy ? twardy.def.daje : 'jagody';
   if (gr.narzTyp !== narz) { gr.narzTyp = narz; pokazNarzedzie(gr.obj, narz); }
   // wir: przy zbieraniu i walce Yaceq kręci się z wyciągniętym narzędziem
   const wir = zbiera || blisko;
@@ -1864,6 +2031,27 @@ function aktualizujGracza(dt) {
   if (gr.mach > 0) gr.mach -= dt;
   if (wir) { gr.rece[1].rotation.x = -0.15; gr.rece[1].rotation.z = 1.35; }
   else { gr.rece[1].rotation.x = -gr.ruch * Math.sin(gr.faza) * 0.6; gr.rece[1].rotation.z = 0; }
+  if (twardy) {
+    const przed = gr.odbijT || 0; gr.odbijT = przed + dt;
+    const u = (gr.odbijT % 0.75) / 0.75, up = (przed % 0.75) / 0.75;
+    // zamach w górę, szybkie uderzenie, a potem narzędzie odskakuje
+    const a = u < 0.5 ? -0.4 - 2.0 * (u / 0.5) : u < 0.58 ? -2.4 + 2.0 * ((u - 0.5) / 0.08) : -0.4 - 1.1 * Math.sin(Math.PI * (u - 0.58) / 0.42);
+    gr.rece[1].rotation.x = a; gr.rece[1].rotation.z = 0.2;
+    if (!gr.ruch) gr.obj.rotation.y = Math.atan2(twardy.x - gr.x, twardy.z - gr.z);
+    if (up < 0.58 && u >= 0.58) {
+      dzwiek('brzdek'); twardy.drga = 0.12; gr.odrzutT = 0.18;
+      wybuch('gwiazda', V((gr.x + twardy.x) / 2, 1.1, (gr.z + twardy.z) / 2), 6, 2.5, 0.35, 0.35);
+      if (czasGry - (gr.odbijToast ?? -99) > 6) {
+        gr.odbijToast = czasGry;
+        toast(twardy.def.narz === 'siekiera' ? 'Za słaba siekiera na to drzewo! Ulepsz ją w kuźni' : 'Za słaby kilof na ten głaz! Ulepsz go w kuźni');
+      }
+    }
+  } else gr.odbijT = 0;
+  if (gr.odrzutT > 0) {
+    gr.odrzutT -= dt;
+    const k = Math.sin(Math.max(0, gr.odrzutT) / 0.18 * Math.PI) * 0.15;
+    gr.obj.position.x -= Math.sin(gr.obj.rotation.y) * k; gr.obj.position.z -= Math.cos(gr.obj.rotation.y) * k;
+  }
 
   // plecak: kołysanie stosu
   let i = 0;
@@ -1879,7 +2067,7 @@ function aktualizujGracza(dt) {
   gr.pelny.visible = pelny;
   if (pelny) { let h = 0; for (const e of gr.plecak) h += e.h; gr.pelny.position.set(gr.x, 2.3 + h, gr.z); }
 
-  // miejsca: odkładanie, branie, płacenie; zaczynają działać po 1,5 s stania na polu
+  // miejsca: odkładanie, branie, płacenie; zaczynają działać po 1 s stania na polu
   gr.padT -= dt;
   let czeka = null;
   for (const p of G.pady) {
@@ -1892,7 +2080,7 @@ function aktualizujGracza(dt) {
   }
   pokazCzekanie(czeka);
 }
-const CZEKAJ = 1.5;
+const CZEKAJ = 1.0;
 let czekanieMesh = null, czekanieOst = -1;
 function pokazCzekanie(p) {
   if (!czekanieMesh || czekanieMesh.parent !== swiat) {
@@ -1968,7 +2156,8 @@ function obsluzPad(p, dt) {
         p.zablok = true;
         if (!p.max) toast('Chcesz następny poziom? Zejdź z pola i wejdź znowu');
         zmienionyPlecak(); zapiszGre();
-      } else {
+      } else if (p.bud) naprawBudynek(p.bud);
+      else {
         const sg = p.seg; sg.hp = sg.max; wyglądSegmentu(sg); dzwiek('buduj'); wybuch('gwiazda', V(sg.x, 1, sg.z), 8, 2, 0.6, 0.5);
       }
     } else rysujPad(p);
@@ -2008,7 +2197,15 @@ function wybierzZadanie() {
     if (!zw.dziki && (zw.stan === 'je' || zw.stan === 'wchodzi' || zw.stan === 'atakuje') && d < nd) { nd = d; naj = zw; }
   }
   if (naj && (naj.stan !== 'atakuje' || !Object.values(G.budowle).some(b => b.cfg.rodzaj === 'wieza' && b.mysliwy) || naj.seg.hp < naj.seg.max * 0.5)) {
-    return ustaw(naj.stan === 'atakuje' ? 'Przegoń zwierzęta od palisady!' : 'Przegoń zwierzęta od zapasów!', { x: naj.x, z: naj.z, y: naj.wys + 1 });
+    return ustaw(naj.stan === 'atakuje' ? 'Pokonaj zwierzęta przy palisadzie!' : 'Pokonaj zwierzęta przy zapasach!', { x: naj.x, z: naj.z, y: naj.wys + 1 });
+  }
+  // 1b. zepsuty budynek: napraw go (rzemieślnicy robią to sami, jeśli mają drewno albo kamień w magazynie)
+  for (const id in G.budowle) {
+    const zb = G.budowle[id];
+    if (!zb.zepsuty || !zb.padNapraw || zb.naprawia) continue;
+    const pn = zb.padNapraw, ile = reszta(pn).drewno, mg = G.budowle.mag_drewno;
+    if (wPlecakuGotowe('drewno') >= ile) return ustaw('Napraw zepsuty budynek: ' + zb.cfg.nazwa, { x: pn.x, z: pn.z });
+    if (!G.rzemieslnicy.length && mg && mg.wej >= ile && gr.plecak.length < pojemnosc()) return ustaw('Weź drewno z magazynu, żeby naprawić budynek', { x: mg.odbior.x, z: mg.odbior.z });
   }
   // 2. dziura w palisadzie
   for (const sg of G.segmenty) if (sg.pad && stac(sg.pad)) return ustaw('Napraw dziurę w palisadzie', { x: sg.pad.x, z: sg.pad.z });
@@ -2082,6 +2279,13 @@ function wybierzZadanie() {
     }
     const w = najblizsze(t);
     if (w) return ustaw(t === 'drewno' ? 'Zetnij drzewa siekierą' : 'Kop kamień kilofem', { x: w.x, z: w.z, y: t === 'drewno' ? 4.3 : 2.4 });
+  }
+  // 5c. mięso z pokonanych zwierząt: zbierz je i zanieś na ladę z mięsem
+  const LM = G.budowle.ladaM;
+  if (LM && !pelnyPl && G.miesa.length && miejsceW(LM)) {
+    let mk = null, md = 26;
+    for (const q of G.miesa) { const d = Math.hypot(q.x - gr.x, q.z - gr.z); if (d < md) { md = d; mk = q; } }
+    if (mk) return ustaw('Zbierz mięso', { x: mk.x, z: mk.z });
   }
   // 6. co zbierać
   const potrzeby = [];
@@ -2213,6 +2417,7 @@ function stanDoZapisu() {
     if (B.cfg.rodzaj === 'kopalnia') z.kopalnia = B.wyj;
     if (B.cfg.rodzaj === 'sklad') z.zapasy[id] = B.wej + B.dolot;
   }
+  z.uszk = {}; for (const id in G.budowle) { const B = G.budowle[id]; if (B.hpMax && B.hp < B.hpMax) z.uszk[id] = Math.round(B.hp); }
   // pieniądze z pokonanych zwierząt dolicz do kasy
   for (const p of G.pady) if (p.lup) z.kasa += p.wartosc;
   return z;
@@ -2233,7 +2438,7 @@ function uruchomKraine(id, odNowa) {
     Object.assign(S, {
       czas: z.czas || 0, kasa: z.kasa || 0, warsztat: { ...S.warsztat, ...z.warsztat }, zbudowane: [...(z.zbudowane || [])], wplacone: { ...(z.wplacone || {}) },
       fala: z.fala || 0, doFali: z.doFali ?? null, nieskonczona: !!z.nieskonczona, ukonczona: !!z.ukonczona,
-      zapasy: z.zapasy || {}, kasy: z.kasy || {}, kopalnia: z.kopalnia || 0, ogrzewanie: z.ogrzewanie || 0, palisada: z.palisada || [], plecak: z.plecak || [], gracz: z.gracz || [...k.start],
+      zapasy: z.zapasy || {}, kasy: z.kasy || {}, uszk: z.uszk || {}, kopalnia: z.kopalnia || 0, ogrzewanie: z.ogrzewanie || 0, palisada: z.palisada || [], plecak: z.plecak || [], gracz: z.gracz || [...k.start],
       narz: { ...S.narz, ...(z.narz || {}) }, bron: z.bron || 0, sciete: [...(z.sciete || [])], dochod: z.dochod || 0,
     });
     S.zbudowane = S.zbudowane.filter(id => k.budowle.some(b => b.id === id));
@@ -2443,6 +2648,7 @@ function aktualizuj(dt) {
     S.dochodT += dt;
     if (S.dochodT >= 60) { S.dochod = S.dochod * 0.6 + (S.zarobione / S.dochodT) * 0.4; S.zarobione = 0; S.dochodT = 0; }
     aktualizujPomocnikow(dt);
+    aktualizujRzemieslnikow(dt);
     aktualizujLoty(dt);
     aktualizujCzastki(dt);
     aktualizujPrzewodnik(dt);

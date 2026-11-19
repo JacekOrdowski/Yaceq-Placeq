@@ -8,6 +8,7 @@ export const PRZEDMIOTY = {
   drewno:     { nazwa: 'Drewno', cena: 2 },
   kamien:     { nazwa: 'Kamień', cena: 3 },
   deski:      { nazwa: 'Deski', cena: 0 },
+  mieso:      { nazwa: 'Mięso', cena: 6 },
 };
 
 // Miejsca do zbierania. Im dalej od bazy (strefa 1, 2, 3), tym większe, twardsze i więcej dają.
@@ -28,12 +29,12 @@ export const SRODEK = [0, -6];
 export const GRANICE_STREF = [28, 37]; // < 28: strefa 1, < 37: strefa 2, dalej: strefa 3
 
 // zwierzęta: zycie = ile uderzeń (siła 1), sila = ile palisady psują na sekundę,
-// je = ile zapasów zjedzą, zanim uciekną, nagroda = złotówki, które zostawiają, gdy się je pokona
+// je = ile zapasów zjedzą, zanim uciekną, mieso = ile kawałków mięsa zostawiają, gdy się je pokona
 export const ZWIERZETA = {
-  lis:        { nazwa: 'lisy', zycie: 3, v: 3.4, sila: 1, je: 3, nagroda: 3 },
-  wilk:       { nazwa: 'wilki', zycie: 8, v: 3.2, sila: 2.4, je: 4, nagroda: 7 },
-  niedzwiedz: { nazwa: 'niedźwiedzie', zycie: 22, v: 2.4, sila: 5, je: 8, nagroda: 16 },
-  yeti:       { nazwa: 'Yeti', zycie: 80, v: 2.0, sila: 12, je: 15, nagroda: 70 },
+  lis:        { nazwa: 'lisy', zycie: 3, v: 3.4, sila: 1, je: 3, nagroda: 3, mieso: 1 },
+  wilk:       { nazwa: 'wilki', zycie: 8, v: 3.2, sila: 2.4, je: 4, nagroda: 7, mieso: 2 },
+  niedzwiedz: { nazwa: 'niedźwiedzie', zycie: 22, v: 2.4, sila: 5, je: 8, nagroda: 16, mieso: 4 },
+  yeti:       { nazwa: 'Yeti', zycie: 80, v: 2.0, sila: 12, je: 15, nagroda: 70, mieso: 10 },
 };
 
 // skąd przychodzą fale zwierząt (zza lasu)
@@ -130,6 +131,9 @@ function zrob(p) {
       K(sprzedawca('sprzD', 'ladaD', 1.4, 5.0), 60, 'kuchnia'),
       K(wieza('wieza1', -4.2, -7.4), { kasa: 30, drewno: 15 }, 'kuchnia'),
       K(mysliwy('mys1', 'wieza1', -4.2, -5.2), 40, 'wieza1'),
+      // pokonane zwierzęta zostawiają mięso: sprzedaje się je na własnej ladzie
+      K(lada('ladaM', 'mieso', 17), { kasa: 60, drewno: 15 }, 'mys1'),
+      K(sprzedawca('sprzM', 'ladaM', 17, 3.2), 120, 'ladaM'),
       K({ id: 'warsztat', rodzaj: 'warsztat', x: 8.5, z: -5.0, nazwa: 'Warsztat (plecak, buty, ręce)' }, { kasa: 60, drewno: 20 }, 'kuchnia'),
       K(sprzedawca('sprzDr', 'ladaDr', -5.1, 5.0), 60, 'warsztat'),
       K(tasma('tasma1', 'kuchnia', 'ladaD', [[5.0, 0.9], [5.0, 6.2]], 2.6, 3.0, 'Taśmociąg: dżem sam jedzie na ladę'), { kasa: 80, drewno: 20 }, 'warsztat'),
@@ -137,7 +141,7 @@ function zrob(p) {
       K(chatka('chatka1', -9, -3.5, 'jagody', 'ladaJ', 'magazyn'), { kasa: 80, drewno: 20 }, 'warsztat'),
       K({ id: 'magazyn', rodzaj: 'magazyn', x: -4, z: 2.0, nazwa: 'Magazyn: jagody, drewno, kamień dla ciebie' }, { kasa: 60, drewno: 20 }, 'warsztat'),
       K(chatka('chatka2', -5.5, -3.5, 'drewno', 'ladaDr', 'magazyn'), { kasa: 100, drewno: 25 }, 'warsztat'),
-      K(domek('domek2', 25, 12, ['ladaD', 'ladaDr', 'ladaK']), { kasa: 90, drewno: 25 }, 'chatka1'),
+      K(domek('domek2', 25, 12, ['ladaD', 'ladaDr', 'ladaK', 'ladaM']), { kasa: 90, drewno: 25 }, 'chatka1'),
       K(wieza('wieza2', 5, -7.4), { kasa: 60, drewno: 30 }, 'mys1'),
       K(mysliwy('mys2', 'wieza2', 5, -5.2), 60, 'wieza2'),
       // ----- kamień -----
@@ -150,6 +154,8 @@ function zrob(p) {
       K(chatka('chatka4', -9, 0.3, 'jagody', 'kuchnia'), { kasa: 140, drewno: 30 }, 'tasma1'),
       K(domek('domek3', -25, 19, ['ladaJ', 'ladaD', 'ladaDr', 'ladaK']), { kasa: 180, drewno: 35, kamien: 10 }, ['domek2', 'ladaK']),
       K({ id: 'palisada', rodzaj: 'palisada', x: 2.5, z: -3.0, nazwa: 'Mocna palisada' }, { drewno: 40, kamien: 25 }, ['mys2', 'kamieniolom']),
+      // dwóch rzemieślników: biorą drewno i kamień z magazynu i sami naprawiają płot i budynki
+      K({ id: 'rzemieslnicy', rodzaj: 'rzemieslnicy', x: -9.5, z: -8.3, nazwa: 'Rzemieślnicy (naprawiają płot i budynki)' }, { kasa: 150, drewno: 40, kamien: 15 }, ['palisada', 'magazyn']),
       K(rozbudowa('rozb1', 1, -0.5, -7.6, 'Powiększ bazę na północ'), { kasa: 250, drewno: 50, kamien: 20 }, ['chatka3', 'mys2', 'domek2']),
       // ----- etap 1: północ (kuźnia, zbrojownia, wieże) -----
       K({ id: 'kuznia', rodzaj: 'kuznia', x: -5.5, z: -13.8, nazwa: 'Kuźnia (lepsze siekiery i kilofy)' }, { kasa: 200, drewno: 50, kamien: 30 }, 'rozb1', 1),
@@ -158,8 +164,11 @@ function zrob(p) {
       K(mysliwy('mys3', 'wieza3', -9.2, -12.2), 120, 'wieza3', 1),
       K(wieza('wieza4', 9.2, -14.4), { drewno: 40, kamien: 30 }, 'rozb1', 1),
       K(mysliwy('mys4', 'wieza4', 9.2, -12.2), 120, 'wieza4', 1),
-      K(domek('domek4', 25, 19, ['ladaD', 'ladaDr']), { kasa: 250, drewno: 50, kamien: 20 }, 'kuznia', 1),
-      K(rozbudowa('rozb2', 2, 10.3, 0.3, 'Powiększ bazę na wschód'), { kasa: 600, drewno: 100, kamien: 50 }, ['kuznia', 'zbrojownia', 'mys3', 'mys4'], 1),
+      // hodowla: świnki jedzą jagody i dają mięso; pasterz sam nosi im jagody
+      K(przetwornia('zagroda', 'zagroda', 'jagody', 'mieso', 0.3, -13.2, 3.0, null, 'Hodowla (jagody → mięso)'), { kasa: 300, drewno: 60, kamien: 20 }, 'rozb1', 1),
+      K({ ...chatka('chatka7', 9.5, -8.5, 'jagody', 'zagroda'), nazwa: 'Pasterz (nosi jagody do hodowli)' }, { kasa: 200, drewno: 40 }, 'zagroda', 1),
+      K(domek('domek4', 25, 19, ['ladaD', 'ladaDr', 'ladaM']), { kasa: 250, drewno: 50, kamien: 20 }, 'kuznia', 1),
+      K(rozbudowa('rozb2', 2, 10.3, 0.3, 'Powiększ bazę na wschód'), { kasa: 600, drewno: 100, kamien: 50 }, ['kuznia', 'zbrojownia', 'mys3', 'mys4', 'zagroda'], 1),
       // ----- etap 2: wschód (tartak, rynek) -----
       K({ ...przetwornia('tartak', 'tartak', 'drewno', 'deski', 15.5, 1.5, 1.4, null, 'Tartak (drewno → deski)'), sklad: 'skladDe' }, { kasa: 400, drewno: 80, kamien: 40 }, 'rozb2', 2),
       // skład desek: tartak sam odkłada do niego gotowe deski (mieści dużo więcej niż tartak)
@@ -180,7 +189,7 @@ function zrob(p) {
       K(mysliwy('mys6', 'wieza6', -16.2, -12.2), 250, 'wieza6', 3),
       K(domek('domek5', -31, 15.5, ['ladaDz', 'ladaJ']), { kasa: 600, deski: 40 }, 'ladaDz', 3),
       K(domek('domek6', 31, 15.5, ['ladaDz', 'ladaD', 'ladaDr']), { kasa: 800, deski: 60 }, 'domek5', 3),
-      K(rozbudowa('rozb4', 4, -1.2, -15.3, 'Powiększ bazę dalej na północ'), { kasa: 2500, drewno: 200, kamien: 150, deski: 80 }, ['tasma3', 'szkola', 'mys6', 'domek5'], 3),
+      K(rozbudowa('rozb4', 4, 0.3, -15.8, 'Powiększ bazę dalej na północ'), { kasa: 2500, drewno: 200, kamien: 150, deski: 80 }, ['tasma3', 'szkola', 'mys6', 'domek5'], 3),
       // ----- etap 4: koniec (skarbnik, Wielki Piec, nowa kraina) -----
       K({ id: 'skarbnik', rodzaj: 'skarbnik', x: 9, z: -20.5, nazwa: 'Skarbnik (sam zbiera pieniądze)' }, { kasa: 2000, deski: 80, kamien: 100 }, 'rozb4', 4),
       K(wieza('wieza7', -15, -21.4), { drewno: 80, kamien: 60 }, 'rozb4', 4),

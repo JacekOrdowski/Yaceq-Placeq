@@ -87,6 +87,14 @@ const RYS = {
     for (let i = 0; i < 3; i++) { rr(c, -0.44 * s, (-0.27 + i * 0.19) * s, 0.88 * s, 0.15 * s, 0.03 * s); c.fillStyle = i % 2 ? '#d9a467' : '#c48a4e'; c.fill(); }
     for (const x of [-0.3, 0.3]) for (let i = 0; i < 3; i++) ell(c, x * s, (-0.2 + i * 0.19) * s, 0.02 * s, 0.02 * s, 0, '#7a4520');
   },
+  mieso(c, s) {
+    c.save(); c.rotate(-0.5);
+    ell(c, -0.1 * s, 0, 0.3 * s, 0.22 * s, 0, '#c0473a');
+    ell(c, -0.16 * s, -0.06 * s, 0.14 * s, 0.07 * s, 0, '#e07a5f');
+    rr(c, 0.12 * s, -0.045 * s, 0.26 * s, 0.09 * s, 0.03 * s); c.fillStyle = '#f4ecd8'; c.fill();
+    for (const y of [-0.07, 0.07]) ell(c, 0.4 * s, y * s, 0.07 * s, 0.07 * s, 0, '#f4ecd8');
+    c.restore();
+  },
   drozdzowka(c, s) {
     ell(c, 0, 0.06 * s, 0.44 * s, 0.26 * s, 0, '#c98a45');
     ell(c, 0, 0, 0.42 * s, 0.24 * s, 0, '#e3b06b');
