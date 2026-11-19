@@ -4,7 +4,7 @@ import * as MOD from './modele.js';
 import { PRZEDMIOTY, WEZLY, ZWIERZETA, WEJSCIA, WARSZTAT, STALE, CENY_STALE, KRAINY, OBOZ, ZAKRES } from './krainy.js';
 import { rysujIkone, ikonaURL } from './ikony.js';
 
-const WERSJA = 1;
+const WERSJA = 2;
 const KLUCZ = 'yaceq-survival';
 const $ = id => document.getElementById(id);
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
@@ -1602,13 +1602,19 @@ cel.addEventListener('pointerdown', e => {
 });
 cel.addEventListener('pointermove', e => {
   if (!dotyk || e.pointerId !== dotyk.id) return;
-  let dx = e.clientX - dotyk.x, dy = e.clientY - dotyk.y; const d = Math.hypot(dx, dy), max = 50;
-  if (d > max) { dx = dx / d * max; dy = dy / d * max; }
+  const max = 50;
+  let dx = e.clientX - dotyk.x, dy = e.clientY - dotyk.y, d = Math.hypot(dx, dy);
+  // palec za kółkiem: kółko jedzie za palcem, a ludzik idzie pełną szybkością
+  if (d > max) {
+    dotyk.x = e.clientX - dx / d * max; dotyk.y = e.clientY - dy / d * max;
+    joy.style.left = dotyk.x + 'px'; joy.style.top = dotyk.y + 'px';
+    dx = dx / d * max; dy = dy / d * max; d = max;
+  }
   galka.style.transform = `translate(${dx}px, ${dy}px)`;
-  const sila = Math.min(1, d / max);
-  wejscie.x = d > 4 ? dx / max * (sila >= 0.35 ? 1 / Math.max(0.01, sila) * sila : 1) : 0;
-  wejscie.z = d > 4 ? dy / max * (sila >= 0.35 ? 1 / Math.max(0.01, sila) * sila : 1) : 0;
-  if (sila > 0.35) { wejscie.x = dx / d; wejscie.z = dy / d; }
+  // małe wychylenie: wolniej; od 40% wychylenia: pełna szybkość
+  const sila = d < 4 ? 0 : Math.min(1, d / (max * 0.4));
+  wejscie.x = d < 4 ? 0 : dx / d * sila;
+  wejscie.z = d < 4 ? 0 : dy / d * sila;
 });
 const puscDotyk = e => { if (!dotyk || e.pointerId !== dotyk.id) return; dotyk = null; joy.hidden = true; wejscie.x = 0; wejscie.z = 0; };
 cel.addEventListener('pointerup', puscDotyk); cel.addEventListener('pointercancel', puscDotyk);
