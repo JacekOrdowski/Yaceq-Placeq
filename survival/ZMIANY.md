@@ -4,6 +4,8 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/survival/
 
 ## Wersja 5 (19.11.2026)
 
+Zapis w repozytorium: `6838013`
+
 **Dodane**
 - Przy uruchamianiu gra pokazuje listę wersji do wyboru (od najnowszej), każdą z krótkim opisem i przyciskiem „Graj”.
   Starsze wersje (1, 2, 3) są zapisane jako osobne kopie w folderze `wersje/` i mają własny zapis postępu,
