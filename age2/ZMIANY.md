@@ -25,6 +25,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
   - Kolor gracza widać na kalenicach z deskami na krzyż, okiennicach i chorągiewkach.
 - W każdej skale z rudą jest teraz 450 żelaza zamiast 250 (żelaza brakowało w długich grach).
 
+Zapis w repozytorium: `46b73d6`
+
 ## Wersja 4 (20.11.2026)
 
 **Dodane**
