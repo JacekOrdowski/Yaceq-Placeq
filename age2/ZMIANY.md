@@ -25,6 +25,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 - Gracz, który nic nie robi, na łatwym przegrywa po 20–32 minutach.
 - Czy na telefonie duża mapa działa płynnie (na komputerze tak).
 
+Zapis w repozytorium: `1449d44`
+
 ## Wersja 13 (20.11.2026)
 
 **Dodane**
