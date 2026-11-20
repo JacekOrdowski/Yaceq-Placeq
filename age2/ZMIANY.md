@@ -29,6 +29,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 **Naprawione**
 - Gdy zbieracz niósł złoto, gra próbowała narysować stosik złota na plecach i przestawała się rysować.
 
+Zapis w repozytorium: `1705920`
+
 ## Wersja 10 (20.11.2026)
 
 **Dodane**
