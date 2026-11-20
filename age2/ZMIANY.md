@@ -23,6 +23,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 **Naprawione**
 - Żołnierz, który stanął dokładnie na rogu budynku, nie mógł go uderzyć i stał w miejscu. Teraz uderza.
 
+Zapis w repozytorium: `e584860`
+
 ## Wersja 9 (20.11.2026)
 
 **Dodane**
