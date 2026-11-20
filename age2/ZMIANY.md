@@ -20,6 +20,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 - Renifery i łosie zaokrąglone, z oczami i uszami; jeźdźcy siedzą w siodle.
 - Pień noszony na plecach jest mniejszy.
 
+Zapis w repozytorium: `97bb208`
+
 ## Wersja 3 (20.11.2026)
 
 **Zmienione**
