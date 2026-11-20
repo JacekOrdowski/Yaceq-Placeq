@@ -13,6 +13,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
   zawsze widać w całości (razem z ceną i opisem).
 - Mała mapka i przyciski z prawej strony same przesuwają się w górę, żeby wyższe okienko ich nie zasłaniało.
 
+Zapis w repozytorium: `763423d`
+
 ## Wersja 16 (20.11.2026)
 
 **Zmienione**
