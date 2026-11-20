@@ -4,12 +4,13 @@
 import * as THREE from '../survival/three.module.min.js';
 import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
-  ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY } from './dane.js';
+  ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY } from './dane.js';
 
-const WERSJA = 7;
+const WERSJA = 8;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 7, opis: 'Rozbudowa ambon: Wieża z cegły i Twierdza Jagodowa; ambony strzelają też w budynki wroga. Do tego wszystko z wersji 6.' },
+  { nr: 8, opis: 'Mury i bramy (palisada → cegła → stal), zaznaczanie ramką po przytrzymaniu palca, obracanie mapy dwoma palcami. Do tego wszystko z wersji 7.' },
+  { nr: 7, opis: 'Rozbudowa ambon: Wieża z cegły i Twierdza Jagodowa; ambony strzelają też w budynki wroga. Do tego wszystko z wersji 6.', adres: 'wersje/7/' },
   { nr: 6, opis: 'Bogatszy krajobraz: 5 gatunków drzew, trawa, kwiaty, paprocie, grzyby, kłody, ścieżki, cienie pod ludzikami. Do tego wszystko z wersji 5.', adres: 'wersje/6/' },
   { nr: 5, opis: 'Słowiańskie budynki z bali pod strzechą i gontem, stosiki na plecach, ulepszenia plecaka. Do tego wszystko z wersji 4.', adres: 'wersje/5/' },
   { nr: 4, opis: 'Nowe, zaokrąglone postacie z buziami, drzewa przewracają się przy ścinaniu, burzenie własnych budynków. Do tego wszystko z wersji 3.', adres: 'wersje/4/' },
@@ -37,7 +38,9 @@ const naKom = new Int32Array(N * N);  // id zasobu albo budynku w tej kratce
 const kom = (x, z) => { const i = Math.floor(x + POL), j = Math.floor(z + POL); return i < 0 || j < 0 || i >= N || j >= N ? -1 : j * N + i; };
 const kom2 = (i, j) => (i < 0 || j < 0 || i >= N || j >= N ? -1 : j * N + i);
 const srodekKom = c => [(c % N) - POL + 0.5, Math.floor(c / N) - POL + 0.5];
-const wolnaKom = c => c >= 0 && (blok[c] === 0 || blok[c] === 4);
+const bramaStr = new Int8Array(N * N).fill(-1); // właściciel bramy w kratce
+let RUCH = -1; // czyi ludzie teraz chodzą (przez swoje bramy przechodzą, przez cudze nie)
+const wolnaKom = c => c >= 0 && (blok[c] === 0 || blok[c] === 4 || blok[c] === 5 && bramaStr[c] === RUCH);
 const wolneXZ = (x, z) => wolnaKom(kom(x, z));
 
 function rng(seed) {
@@ -83,7 +86,7 @@ renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadow
 $('scena').appendChild(renderer.domElement);
 const plotno = renderer.domElement;
 const kamera = new THREE.PerspectiveCamera(40, 1, 0.5, 300);
-const kam = { x: 30, z: 30, d: 30 };
+const kam = { x: 30, z: 30, d: 30, kat: Math.PI / 4 };
 scena.add(new THREE.HemisphereLight('#f4f8ff', '#6b8f4e', 1.05));
 // niebo: od jasnego przy ziemi do błękitu u góry
 scena.background = (() => {
@@ -233,7 +236,7 @@ function wyczyscSwiat() {
   if (dalej) { scena.remove(dalej); dalej = null; }
   JED = []; BUD = []; POC = []; UMIERA = []; wybrane = []; E.clear(); ZAS.clear();
   for (const k in ZAS_TYP) ZAS_TYP[k] = [];
-  blok.fill(0); naKom.fill(0);
+  blok.fill(0); naKom.fill(0); bramaStr.fill(-1);
   if (tryb) zakonczStawianie();
 }
 const RODZAJ_SUR = { drzewo: 'drewno', krzak: 'jagody', kamien: 'kamien', ruda: 'zelazo' };
@@ -499,6 +502,7 @@ const celeBudynku = b => celeWokol(b.i0, b.j0, b.w);
 const celeZasobu = z0 => celeWokol(z0.c % N, (z0.c / N) | 0, 1);
 // ustawia drogę jednostki; zwraca false, gdy nie da się dojść
 function ustawDroge(u, cele, tx, tz, punkt = false) {
+  RUCH = u.strona;
   u.droga = { cele, tx, tz, punkt }; u.utkn = 0; u.ostPoz = [u.x, u.z];
   // prosto, jeśli nic nie zasłania
   if (cele.length === 1 && cele[0] >= 0) {
@@ -549,10 +553,17 @@ function atakJ(u) {
 }
 function zasiegJ(u) { return u.d.zasieg ? u.d.zasieg + (strzelec(u.d) ? zasiegPociskow(u.strona) : 0) : 0; }
 function pancerzJ(u) { const ul = S.ul[u.strona]; return u.d.pancerz + (u.d.wojsko ? (ul.zbroja1 ? 1 : 0) + (ul.zbroja2 ? 1 : 0) + (ul.zbroja3 ? 2 : 0) : 0); }
-function maxHpBud(strona, typ, poziom = 1) { return typ === 'wieza' ? WIEZA_POZIOMY[poziom].hp : BUDYNKI[typ].hp; }
-const nazwaBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].nazwa : b.d.nazwa;
-const emojiBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].emoji : b.d.emoji;
-const modelBud = (typ, poziom) => typ === 'wieza' && poziom > 1 ? 'wieza' + poziom : typ;
+const poziomMuru = strona => 1 + (S.ul[strona].mur_cegla ? 1 : 0) + (S.ul[strona].mur_stal ? 1 : 0);
+function maxHpBud(strona, typ, poziom = 1) {
+  if (typ === 'mur' || typ === 'brama') { const p = MUR_POZIOMY[poziomMuru(strona)]; return typ === 'mur' ? p.hpMur : p.hpBrama; }
+  return typ === 'wieza' ? WIEZA_POZIOMY[poziom].hp : BUDYNKI[typ].hp;
+}
+const nazwaBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].nazwa : b.d.mur || b.d.brama ? MUR_POZIOMY[poziomMuru(b.strona)][b.typ] : b.d.nazwa;
+const emojiBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].emoji : (b.d.mur || b.d.brama) && poziomMuru(b.strona) > 1 ? '🧱' : b.d.emoji;
+function modelBud(typ, poziom, strona) {
+  if ((typ === 'mur' || typ === 'brama') && strona != null && S) { const p = poziomMuru(strona); return p > 1 ? typ + p : typ; }
+  return typ === 'wieza' && poziom > 1 ? 'wieza' + poziom : typ;
+}
 // strzelanie budynku: ambona zależy od poziomu i ulepszeń pocisków
 function strzalBud(b) {
   if (b.typ === 'wieza') { const p = WIEZA_POZIOMY[b.poziom || 1]; return { atak: p.atak + poziomPociskow(b.strona), zasieg: p.zasieg + zasiegPociskow(b.strona), odstep: p.odstep }; }
@@ -584,6 +595,7 @@ function awansuj(strona, nowy) {
 }
 
 function przesun(u, nx, nz) {
+  RUCH = u.strona;
   nx = Math.max(-47.6, Math.min(47.6, nx)); nz = Math.max(-47.6, Math.min(47.6, nz));
   if (wolneXZ(nx, nz)) { u.x = nx; u.z = nz; } else if (wolneXZ(nx, u.z)) u.x = nx; else if (wolneXZ(u.x, nz)) u.z = nz;
 }
@@ -704,7 +716,7 @@ function zabij(u) {
 function zniszczBudynek(b, wlasnaReka = false) {
   E.delete(b.id); BUD.splice(BUD.indexOf(b), 1);
   wybrane = wybrane.filter(e => e !== b);
-  for (let j = b.j0; j < b.j0 + b.w; j++) for (let i = b.i0; i < b.i0 + b.w; i++) { const c = kom2(i, j); if (naKom[c] === b.id) { blok[c] = 0; naKom[c] = 0; } }
+  for (let j = b.j0; j < b.j0 + b.w; j++) for (let i = b.i0; i < b.i0 + b.w; i++) { const c = kom2(i, j); if (naKom[c] === b.id) { blok[c] = 0; naKom[c] = 0; bramaStr[c] = -1; } }
   if (b.plac) b.mesh.remove(b.plac);
   UMIERA.push({ mesh: b.mesh, t: 0, j: false });
   if (naEkranie(b)) dzwiek('zniszcz');
@@ -715,6 +727,7 @@ function zniszczBudynek(b, wlasnaReka = false) {
 
 // ---------- zadania jednostek ----------
 function aktualizujJednostke(u, dt) {
+  RUCH = u.strona;
   u.cd = Math.max(0, u.cd - dt); u.idzie = false; u.pracuje = false;
   const z = u.zad;
   if (!z) {
@@ -860,7 +873,7 @@ function atakuj(u, dt) {
 }
 
 // ================= budynki =================
-function wysokoscBud(b) { return b.typ === 'wieza' ? [0, 4.2, 4.6, 5.4][b.poziom || 1] : { ratusz: 4.6, dom: 1.8, pole: 0.6 }[b.typ] || 2.0; }
+function wysokoscBud(b) { return b.typ === 'wieza' ? [0, 4.2, 4.6, 5.4][b.poziom || 1] : { ratusz: 4.6, dom: 1.8, pole: 0.6, mur: 1.3, brama: 1.6 }[b.typ] || 2.0; }
 function miejsceWolne(typ, i0, j0, margines = 0) {
   const w = BUDYNKI[typ].w;
   for (let j = j0 - margines; j < j0 + w + margines; j++) for (let i = i0 - margines; i < i0 + w + margines; i++) {
@@ -873,12 +886,12 @@ const GEO_PLAC = {};
 function nowyBudynek(strona, typ, i0, j0, gotowy = false, id, poziom = 1) {
   const d = BUDYNKI[typ], w = d.w, max = maxHpBud(strona, typ, poziom);
   const b = { id: id || S.nextId++, strona, typ, d, i0, j0, w, poziom, x: i0 - POL + w / 2, z: j0 - POL + w / 2, max, hp: gotowy ? max : Math.max(1, max * 0.05), postep: gotowy ? 1 : 0, gotowy, kolejka: [], cd: 0, zbiorka: null, rolnik: 0 };
-  for (let j = j0; j < j0 + w; j++) for (let i = i0; i < i0 + w; i++) { const c = kom2(i, j); blok[c] = d.pole ? 4 : 2; naKom[c] = b.id; }
-  b.mesh = new THREE.Mesh(MOD.budynek(modelBud(typ, poziom), strona), MAT);
+  for (let j = j0; j < j0 + w; j++) for (let i = i0; i < i0 + w; i++) { const c = kom2(i, j); blok[c] = d.pole ? 4 : d.brama ? 5 : 2; naKom[c] = b.id; if (d.brama) bramaStr[c] = strona; }
+  b.mesh = new THREE.Mesh(MOD.budynek(modelBud(typ, poziom, strona), strona), MAT);
   b.mesh.castShadow = true; b.mesh.receiveShadow = true;
   b.mesh.position.set(b.x, 0, b.z);
   ukryjOzdoby(i0, j0, w);
-  if (!d.pole) { const k = new THREE.Mesh(GEO_KLEP[w] || (GEO_KLEP[w] = new THREE.PlaneGeometry(w + 1.1, w + 1.1).rotateX(-Math.PI / 2)), MAT_KLEP); k.position.y = 0.012; k.renderOrder = 1; k.receiveShadow = true; b.mesh.add(k); }
+  if (!d.pole && !d.mur && !d.brama) { const k = new THREE.Mesh(GEO_KLEP[w] || (GEO_KLEP[w] = new THREE.PlaneGeometry(w + 1.1, w + 1.1).rotateX(-Math.PI / 2)), MAT_KLEP); k.position.y = 0.012; k.renderOrder = 1; k.receiveShadow = true; b.mesh.add(k); }
   if (strona === KOMPUTER) b.mesh.rotation.y = Math.PI; // drzwi w stronę środka mapy
   if (!gotowy) {
     b.mesh.scale.y = 0.12;
@@ -1004,6 +1017,11 @@ function aktualizujBudynek(b, dt) {
     if (q.rodzaj === 'u') {
       S.ul[b.strona][q.typ] = true;
       if (ULEPSZENIA[q.typ].awans) awansuj(b.strona, ULEPSZENIA[q.typ].awans);
+      // nowe mury: wszystkie palisady i bramy zmieniają się naraz (rany zostają)
+      if (q.typ === 'mur_cegla' || q.typ === 'mur_stal') for (const o of BUD) if (o.strona === b.strona && (o.d.mur || o.d.brama)) {
+        const ubyl = o.max - o.hp; o.max = maxHpBud(o.strona, o.typ); o.hp = Math.max(1, o.max - ubyl);
+        o.mesh.geometry = MOD.budynek(modelBud(o.typ, 1, o.strona), o.strona);
+      }
       if (q.typ === 'rekawice') for (const u of JED) if (u.strona === b.strona && u.typ === 'osadnik') { u.max = maxHpJ(u.strona, 'osadnik'); u.hp += 15; }
       if (b.strona === STRONA_GRACZA && !S.aiGracz) { toast(ULEPSZENIA[q.typ].emoji + ' Ulepszone: ' + ULEPSZENIA[q.typ].nazwa); dzwiek('buduj'); }
     } else if (q.rodzaj === 'rozb') {
@@ -1246,7 +1264,7 @@ function nowaGra(trudnosc) {
     const r = nowyBudynek(s, 'ratusz', cx + POL - 2, cz + POL - 2, true);
     for (let k = 0; k < 3; k++) { const a = (s ? 0.8 : -2.35) + (k - 1) * 0.6; nowaJednostka(s, 'osadnik', r.x + Math.sin(a) * 3.2, r.z + Math.cos(a) * 3.2); }
   }
-  kam.x = 30; kam.z = 30; kam.d = 30;
+  kam.x = 30; kam.z = 30; kam.d = 30; kam.kat = Math.PI / 4;
   zapiszGre();
 }
 function zbudujZiemie() {
@@ -1268,7 +1286,7 @@ function stanDoZapisu() {
   o.zasoby = []; for (const z0 of ZAS.values()) if (z0.ile !== z0.start) o.zasoby.push([z0.id, Math.round(z0.ile * 10) / 10]);
   o.bud = BUD.map(b => [b.id, b.strona, b.typ, b.i0, b.j0, Math.round(b.hp), Math.round(b.postep * 1000) / 1000, b.kolejka.map(q => [q.rodzaj, q.typ, Math.round(q.t * 10) / 10, q.czas, q.koszt]), b.zbiorka, b.rolnik || 0, b.poziom || 1]);
   o.jed = JED.map(u => [u.id, u.strona, u.typ, Math.round(u.x * 100) / 100, Math.round(u.z * 100) / 100, Math.round(u.hp * 10) / 10, u.niesie.sur, Math.round(u.niesie.ile * 10) / 10, zadDoZapisu(u.zad)]);
-  o.kamera = [kam.x, kam.z, kam.d];
+  o.kamera = [kam.x, kam.z, kam.d, kam.kat];
   return o;
 }
 function zapiszGre() {
@@ -1305,15 +1323,15 @@ function wczytajGre(o) {
     const u = nowaJednostka(strona, typ, x, z, id);
     u.hp = hp; u.niesie = { sur, ile }; u.zad = zad;
   }
-  if (o.kamera) [kam.x, kam.z, kam.d] = o.kamera;
+  if (o.kamera) { [kam.x, kam.z, kam.d] = o.kamera; kam.kat = o.kamera[3] ?? Math.PI / 4; }
 }
 
 // ================= kamera i rysowanie =================
 const EL = 0.98; // nachylenie kamery
 function ustawKamere() {
   kam.x = Math.max(-46, Math.min(46, kam.x)); kam.z = Math.max(-46, Math.min(46, kam.z)); kam.d = Math.max(13, Math.min(62, kam.d));
-  const h = Math.sin(EL) * kam.d, p = Math.cos(EL) * kam.d / Math.SQRT2;
-  kamera.position.set(kam.x + p, h, kam.z + p); kamera.lookAt(kam.x, 0, kam.z); kamera.updateMatrixWorld();
+  const h = Math.sin(EL) * kam.d, p = Math.cos(EL) * kam.d;
+  kamera.position.set(kam.x + Math.sin(kam.kat) * p, h, kam.z + Math.cos(kam.kat) * p); kamera.lookAt(kam.x, 0, kam.z); kamera.updateMatrixWorld();
   slonce.position.set(kam.x - 14, 34, kam.z - 4); slonce.target.position.set(kam.x, 0, kam.z);
   const sc = slonce.shadow.camera, r = Math.min(38, kam.d * 0.85);
   if (sc.right !== r) { sc.left = -r; sc.right = r; sc.top = r; sc.bottom = -r; sc.near = 1; sc.far = 90; sc.updateProjectionMatrix(); }
@@ -1589,10 +1607,21 @@ plotno.addEventListener('pointerdown', e => {
   e.preventDefault(); audio();
   try { plotno.setPointerCapture(e.pointerId); } catch (er) { /* bez przechwycenia */ }
   palce.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (palce.size === 1) gest = { x0: e.clientX, y0: e.clientY, ruch: false, ziemia: naZiemi(e.clientX, e.clientY) };
-  else if (palce.size === 2) {
+  if (palce.size === 1) {
+    gest = { x0: e.clientX, y0: e.clientY, ruch: false, ziemia: naZiemi(e.clientX, e.clientY) };
+    // przytrzymanie palca przez 1 sekundę bez ruchu: ramka zaznaczania od tego miejsca
+    const g0 = gest;
+    clearTimeout(trzymanieT);
+    trzymanieT = setTimeout(() => {
+      if (gest !== g0 || g0.ruch || palce.size !== 1 || tryb) return;
+      g0.ruch = true; g0.ramka = { x0: g0.x0, y0: g0.y0, x1: g0.x0 + 1, y1: g0.y0 + 1 };
+      try { navigator.vibrate && navigator.vibrate(25); } catch (er) { /* bez wibracji */ }
+      dzwiek('klik');
+    }, 1000);
+  } else if (palce.size === 2) {
+    clearTimeout(trzymanieT);
     const [a, b] = [...palce.values()];
-    gest = { szczyp: true, d0: Math.hypot(a.x - b.x, a.y - b.y), kd: kam.d, ziemia: naZiemi((a.x + b.x) / 2, (a.y + b.y) / 2), ruch: true };
+    gest = { szczyp: true, d0: Math.hypot(a.x - b.x, a.y - b.y), kd: kam.d, k0: Math.atan2(b.y - a.y, b.x - a.x), kat0: kam.kat, ziemia: naZiemi((a.x + b.x) / 2, (a.y + b.y) / 2), ruch: true };
   }
 });
 plotno.addEventListener('pointermove', e => {
@@ -1600,24 +1629,33 @@ plotno.addEventListener('pointermove', e => {
   palce.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (gest.szczyp && palce.size >= 2) {
     const [a, b] = [...palce.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
-    kam.d = gest.kd * gest.d0 / Math.max(20, d); ustawKamere();
+    kam.d = gest.kd * gest.d0 / Math.max(20, d);
+    // obracanie mapy: obrót palców obraca widok
+    let dk = Math.atan2(b.y - a.y, b.x - a.x) - gest.k0; dk = Math.atan2(Math.sin(dk), Math.cos(dk));
+    kam.kat = gest.kat0 + dk; ustawKamere();
     const g = naZiemi((a.x + b.x) / 2, (a.y + b.y) / 2);
     if (g && gest.ziemia) { kam.x += gest.ziemia.x - g.x; kam.z += gest.ziemia.z - g.z; ustawKamere(); }
     return;
   }
   if (palce.size !== 1 || gest.szczyp) return;
   if (!gest.ruch && Math.hypot(e.clientX - gest.x0, e.clientY - gest.y0) > 10) {
-    gest.ruch = true;
-    if (tryb) gest.duch = true;
+    gest.ruch = true; clearTimeout(trzymanieT);
+    if (tryb) { gest.duch = true; if (tryb.mur && gest.ziemia) gest.startMuru = { x: gest.ziemia.x, z: gest.ziemia.z }; }
     else if (trybObszar) gest.ramka = { x0: gest.x0, y0: gest.y0, x1: e.clientX, y1: e.clientY };
   }
   if (!gest.ruch) return;
-  if (gest.duch) { const g = naZiemi(e.clientX, e.clientY - 40); if (g) przesunDucha(g.x, g.z); return; }
+  if (gest.duch) {
+    const g = naZiemi(e.clientX, e.clientY - (tryb && tryb.mur ? 0 : 40));
+    if (g) { przesunDucha(g.x, g.z, gest.startMuru); gest.startMuru = null; }
+    return;
+  }
   if (gest.ramka) { gest.ramka.x1 = e.clientX; gest.ramka.y1 = e.clientY; return; }
   const g = naZiemi(e.clientX, e.clientY);
   if (g && gest.ziemia) { kam.x += gest.ziemia.x - g.x; kam.z += gest.ziemia.z - g.z; ustawKamere(); }
 });
+let trzymanieT = 0;
 function puscPalec(e) {
+  clearTimeout(trzymanieT);
   if (!palce.has(e.pointerId)) return;
   palce.delete(e.pointerId);
   if (!gest) return;
@@ -1645,9 +1683,39 @@ $('mini').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropa
 $('mini').addEventListener('pointermove', e => { if (e.buttons || e.pressure) miniDotyk(e); });
 
 // ---------- stawianie budynku ----------
+// mur: przeciągasz palcem linię od początku do końca, każda kratka to jeden odcinek
+const MAKS_MUR = 40;
+function linia(i0, j0, i1, j1) {
+  const out = [], dx = Math.abs(i1 - i0), dy = Math.abs(j1 - j0), sx = i0 < i1 ? 1 : -1, sy = j0 < j1 ? 1 : -1;
+  let e = dx - dy, i = i0, j = j0;
+  for (;;) { out.push([i, j]); if (out.length >= MAKS_MUR || i === i1 && j === j1) break; const e2 = 2 * e; if (e2 > -dy) { e -= dy; i += sx; } if (e2 < dx) { e += dx; j += sy; } if (e2 > -dy && e2 < dx) out.push([i - sx, j]); }
+  return out.filter((p, k, a) => a.findIndex(q => q[0] === p[0] && q[1] === p[1]) === k).slice(0, MAKS_MUR);
+}
+function zacznijMur() {
+  const duch = new THREE.InstancedMesh(MOD.budynek('mur', STRONA_GRACZA), new THREE.MeshLambertMaterial({ vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false }), MAKS_MUR);
+  duch.count = 0; duch.frustumCulled = false; duch.renderOrder = 3; scena.add(duch);
+  tryb = { typ: 'mur', mur: true, duch, plama: new THREE.Group(), A: null, B: null, odcinki: [], ok: false };
+  const g = naZiemi(innerWidth / 2, innerHeight * 0.45) || { x: kam.x, z: kam.z };
+  ustawMur(g.x, g.z, g.x, g.z, true);
+  $('panel').hidden = true; $('stawianie').hidden = false;
+}
+function ustawMur(ax, az, bx, bz, podglad = false) {
+  const A = [Math.floor(ax + POL), Math.floor(az + POL)], B = [Math.floor(bx + POL), Math.floor(bz + POL)];
+  tryb.A = A; tryb.B = B; tryb.podglad = podglad;
+  tryb.odcinki = linia(A[0], A[1], B[0], B[1]).map(([i, j]) => ({ i, j, ok: miejsceWolne('mur', i, j) }));
+  const m = new THREE.Matrix4(), kz = new THREE.Color('#9dffb0'), kc = new THREE.Color('#ff7a6a');
+  tryb.odcinki.forEach((o, k) => { m.makeTranslation(o.i - POL + 0.5, 0, o.j - POL + 0.5); tryb.duch.setMatrixAt(k, m); tryb.duch.setColorAt(k, o.ok ? kz : kc); });
+  tryb.duch.count = tryb.odcinki.length; tryb.duch.instanceMatrix.needsUpdate = true; if (tryb.duch.instanceColor) tryb.duch.instanceColor.needsUpdate = true;
+  const n = tryb.odcinki.filter(o => o.ok).length, koszt = n * BUDYNKI.mur.koszt.drewno;
+  tryb.ok = n > 0 && !podglad && S.zas[0].drewno >= BUDYNKI.mur.koszt.drewno;
+  $('st-tekst').textContent = podglad ? '🪵 Palisada: przeciągnij palcem od początku do końca muru'
+    : `🪵 Palisada: ${n} ${n === 1 ? 'odcinek' : n < 5 ? 'odcinki' : 'odcinków'}, ${koszt} drewna${n < tryb.odcinki.length ? ' (czerwone się nie zmieszczą)' : ''}`;
+  $('st-tak').disabled = !tryb.ok;
+}
 function zacznijStawianie(typ) {
   const br = brakBudynku(STRONA_GRACZA, typ); if (br) { toast(br); dzwiek('blad'); return; }
   if (!stac(STRONA_GRACZA, BUDYNKI[typ].koszt)) { toast('Za mało surowców'); dzwiek('blad'); return; }
+  if (BUDYNKI[typ].mur) { zacznijMur(); return; }
   const duch = new THREE.Mesh(MOD.budynek(typ, STRONA_GRACZA), new THREE.MeshLambertMaterial({ vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false }));
   const w = BUDYNKI[typ].w, plama = new THREE.Mesh(new THREE.PlaneGeometry(w, w).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#4cff7a', transparent: true, opacity: 0.35, depthWrite: false }));
   plama.renderOrder = 2; duch.renderOrder = 3;
@@ -1659,7 +1727,13 @@ function zacznijStawianie(typ) {
   przesunDucha(m ? m[0] - POL + w / 2 : g.x, m ? m[1] - POL + w / 2 : g.z);
   $('panel').hidden = true; $('stawianie').hidden = false;
 }
-function przesunDucha(x, z) {
+function przesunDucha(x, z, start) {
+  if (tryb.mur) {
+    // pierwszy dotyk wybiera początek muru, kolejne ruchy palca: koniec
+    if (start || tryb.podglad) { const s = start || { x, z }; ustawMur(s.x, s.z, x, z); }
+    else ustawMur(tryb.A[0] - POL + 0.5, tryb.A[1] - POL + 0.5, x, z);
+    return;
+  }
   const w = BUDYNKI[tryb.typ].w;
   tryb.i0 = Math.round(x + POL - w / 2); tryb.j0 = Math.round(z + POL - w / 2);
   const cx = tryb.i0 - POL + w / 2, cz = tryb.j0 - POL + w / 2;
@@ -1672,13 +1746,22 @@ function przesunDucha(x, z) {
 }
 function zakonczStawianie() {
   if (!tryb) return;
-  scena.remove(tryb.duch, tryb.plama); tryb.duch.material.dispose(); tryb.plama.geometry.dispose(); tryb.plama.material.dispose();
+  scena.remove(tryb.duch, tryb.plama); tryb.duch.material.dispose(); if (tryb.plama.geometry) { tryb.plama.geometry.dispose(); tryb.plama.material.dispose(); }
   tryb = null; $('stawianie').hidden = true; $('panel').hidden = false; odswiezPanel(true);
 }
 $('st-anuluj').onclick = () => { dzwiek('klik'); zakonczStawianie(); };
 $('st-tak').onclick = () => {
   if (!tryb || !tryb.ok) return;
   const typ = tryb.typ;
+  if (tryb.mur) {
+    const nowe = [];
+    for (const o of tryb.odcinki) if (o.ok && miejsceWolne('mur', o.i, o.j) && zaplac(STRONA_GRACZA, BUDYNKI.mur.koszt)) nowe.push(nowyBudynek(STRONA_GRACZA, 'mur', o.i, o.j));
+    if (!nowe.length) { toast('Za mało drewna'); dzwiek('blad'); return; }
+    if (nowe.length < tryb.odcinki.filter(o => o.ok).length) toast('Starczyło drewna na ' + nowe.length + ' odcinków');
+    const bud = wybrane.filter(u => u.typ === 'osadnik');
+    bud.forEach((u, k) => rozkazBuduj(u, [...nowe].sort((a, c) => dyst(a, u) - dyst(c, u))[Math.min(k, nowe.length - 1)]));
+    dzwiek('rozkaz'); zakonczStawianie(); return;
+  }
   if (!zaplac(STRONA_GRACZA, BUDYNKI[typ].koszt)) { toast('Za mało surowców'); dzwiek('blad'); return; }
   const b = nowyBudynek(STRONA_GRACZA, typ, tryb.i0, tryb.j0);
   for (const u of wybrane) if (u.typ === 'osadnik') rozkazBuduj(u, b);
@@ -1700,7 +1783,7 @@ function odswiezPanel(wymus = false) {
   panelKlucz = klucz;
   let h = '', a = '', zburzHTML = '';
   if (!sel.length) {
-    h = `<div class="p-nic">👆 Dotknij zbieracza albo budynku.<br><small>Przesuwaj palcem mapę, dwoma palcami przybliżaj.</small></div>`;
+    h = `<div class="p-nic">👆 Dotknij zbieracza albo budynku.<br><small>Przesuwaj palcem mapę, dwoma palcami przybliżaj i obracaj, przytrzymaj palec, żeby zaznaczyć ramką.</small></div>`;
   } else if (pierwszy.rodzaj) {
     h = `<div class="p-glowa"><span class="p-ik">${EMOJI_SUR[pierwszy.sur]}</span><div><b>${{ drzewo: 'Drzewo', krzak: 'Krzak z jagodami', kamien: 'Kamień', ruda: 'Ruda żelaza' }[pierwszy.rodzaj]}</b><small data-ile>Zostało: ${Math.ceil(pierwszy.ile)}</small></div></div>`;
   } else if (jestBudynkiem(pierwszy)) {
@@ -1848,7 +1931,7 @@ $('b-wojsko').onclick = () => {
   if (!l.length) { toast('Nie masz jeszcze wojska: zbuduj Strażnicę Krzaka'); return; }
   zaznacz(l); dzwiek('tak');
 };
-$('b-dom').onclick = () => { audio(); const r = BUD.find(b => b.strona === 0 && b.typ === 'ratusz'); if (r) { kam.x = r.x; kam.z = r.z; } dzwiek('klik'); };
+$('b-dom').onclick = () => { audio(); const r = BUD.find(b => b.strona === 0 && b.typ === 'ratusz'); if (r) { kam.x = r.x; kam.z = r.z; } kam.kat = Math.PI / 4; dzwiek('klik'); };
 $('b-obszar').onclick = () => { audio(); trybObszar = !trybObszar; $('b-obszar').classList.toggle('wl', trybObszar); if (trybObszar) toast('Przeciągnij palcem ramkę wokół swoich ludzi'); };
 
 // ================= okna =================

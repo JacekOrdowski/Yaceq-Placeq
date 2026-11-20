@@ -5,6 +5,19 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 8 (20.11.2026)
+
+**Dodane**
+- Mury: w menu budowania „Palisada”. Przeciągnij palcem od początku do końca muru: widać odcinki
+  (czerwone się nie zmieszczą) i koszt (5 drewna za odcinek). Zbieracze budują odcinki po kolei.
+- Brama: twoi ludzie przez nią przechodzą, wrogowie muszą ją zburzyć albo obejść mur.
+- Ulepszenia murów w Kamieniołomie (zmieniają wszystkie mury i bramy naraz):
+  🧱 Mur z cegieł (era 3) i ⛓️ Mur ze stalowymi sztabami (era 4).
+- Przytrzymanie palca na mapie przez 1 sekundę: od tego miejsca pojawia się ramka, która idzie za palcem;
+  po puszczeniu zaznacza wszystkich twoich ludzi w ramce.
+- Dwoma palcami można też obracać mapę (razem z przybliżaniem i przesuwaniem).
+  Przycisk 🏡 wraca do Dworku i ustawia zwykły obrót.
+
 ## Wersja 7 (20.11.2026)
 
 **Dodane**

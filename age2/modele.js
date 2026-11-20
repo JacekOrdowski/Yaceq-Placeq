@@ -460,6 +460,52 @@ const BUD = {
     c.push(...drzwi(0, 0.55, 0.79, 0.42, 0.7), cz(kula(0.09, 7), '#3a4bb0', -0.08, 1.45, 0.8), cz(kula(0.09, 7), '#3a4bb0', 0.08, 1.45, 0.8), cz(kula(0.09, 7), '#3a4bb0', 0, 1.58, 0.79));
     return c;
   },
+  // palisada: dwa rzędy zaostrzonych pali z wiązaniem i chorągiewką w kolorze gracza
+  mur(k, d) {
+    const c = [];
+    for (let i = 0; i < 4; i++) for (const [z, dx] of [[-0.18, 0], [0.18, 0.12]]) {
+      const x = -0.36 + i * 0.24 + dx; if (x > 0.45) continue;
+      const h = 0.95 + ((i * 7 + (dx ? 3 : 0)) % 3) * 0.06;
+      c.push(cz(cyl(0.1, 0.11, h, 6), (i + (dx ? 1 : 0)) % 2 ? BAL : BAL2, x, h / 2, z), cz(stozek(0.1, 0.2, 6), BAL2, x, h + 0.1, z));
+    }
+    c.push(cz(box(0.98, 0.07, 0.5), '#6b4527', 0, 0.55, 0), cz(box(0.98, 0.07, 0.5), '#6b4527', 0, 0.2, 0), cz(box(0.5, 0.06, 0.52), k, 0, 0.75, 0));
+    return c;
+  },
+  // mur z cegieł: blok z cegieł w pasy, kamienna podmurówka, blanki na rogach
+  mur2(k, d) {
+    const CEG = '#b5553a', CEG2 = '#9c4630', c = [cz(box(1.0, 0.22, 1.0), KAMIEN2, 0, 0.11, 0)];
+    for (let i = 0; i < 4; i++) c.push(cz(box(0.94, 0.22, 0.94), i % 2 ? CEG : CEG2, 0, 0.33 + i * 0.22, 0), cz(box(0.96, 0.02, 0.96), '#e0d2bd', 0, 0.22 + i * 0.22, 0));
+    c.push(cz(box(1.0, 0.08, 1.0), KAMIEN, 0, 1.15, 0));
+    for (const [x, z] of [[-0.33, -0.33], [0.33, -0.33], [-0.33, 0.33], [0.33, 0.33]]) c.push(cz(box(0.3, 0.24, 0.3), CEG, x, 1.31, z));
+    c.push(cz(box(0.36, 0.08, 0.98), k, 0, 1.2, 0), cz(box(0.98, 0.08, 0.36), k, 0, 1.2, 0));
+    return c;
+  },
+  // mur ze stalowymi sztabami: cegły okute stalowymi pasami z nitami
+  mur3(k, d) {
+    const c = BUD.mur2(k, d), STAL = '#4a4f57';
+    for (const y of [0.42, 0.86]) c.push(cz(box(1.0, 0.07, 1.0), STAL, 0, y, 0));
+    for (const [x, z] of [[-0.48, 0], [0.48, 0], [0, -0.48], [0, 0.48]]) c.push(cz(box(x ? 0.04 : 0.12, 1.0, z ? 0.04 : 0.12), STAL, x, 0.62, z));
+    for (const [x, z] of [[-0.49, -0.3], [-0.49, 0.3], [0.49, -0.3], [0.49, 0.3], [-0.3, 0.49], [0.3, 0.49], [-0.3, -0.49], [0.3, -0.49]]) c.push(cz(kula(0.03, 4), METAL, x, 0.86, z));
+    return c;
+  },
+  // brama drewniana: dwa słupy, wrota z pasem w kolorze gracza, daszek
+  brama(k, d) {
+    return [cz(cyl(0.1, 0.12, 1.4, 6), BAL, -0.4, 0.7, 0), cz(cyl(0.1, 0.12, 1.4, 6), BAL, 0.4, 0.7, 0),
+      cz(box(0.7, 0.95, 0.08), '#8a5530', 0, 0.5, 0), cz(box(0.04, 0.95, 0.09), '#5a3518', 0, 0.5, 0), cz(box(0.7, 0.1, 0.09), k, 0, 0.75, 0), cz(box(0.7, 0.06, 0.09), '#5a3518', 0, 0.3, 0),
+      ...dach(0, 0, 1.4, 1.0, 0.35, 0.3, GONT, k, 0, BAL, false)];
+  },
+  brama2(k, d) {
+    const CEG = '#b5553a';
+    return [cz(box(0.26, 1.5, 0.9), CEG, -0.37, 0.75, 0), cz(box(0.26, 1.5, 0.9), CEG, 0.37, 0.75, 0), cz(box(1.0, 0.3, 0.9), CEG, 0, 1.35, 0),
+      cz(box(0.48, 1.0, 0.07), '#8a5530', 0, 0.5, 0), cz(box(0.48, 0.1, 0.08), k, 0, 0.72, 0), cz(box(1.02, 0.08, 0.92), KAMIEN, 0, 1.54, 0),
+      cz(box(0.24, 0.2, 0.24), CEG, -0.37, 1.68, 0), cz(box(0.24, 0.2, 0.24), CEG, 0.37, 1.68, 0)];
+  },
+  brama3(k, d) {
+    const c = BUD.brama2(k, d), STAL = '#4a4f57';
+    c.push(cz(box(0.5, 0.06, 0.09), STAL, 0, 0.3, 0.01), cz(box(0.5, 0.06, 0.09), STAL, 0, 0.9, 0.01), cz(box(1.0, 0.06, 0.92), STAL, 0, 1.22, 0));
+    for (const x of [-0.15, 0, 0.15]) c.push(cz(kula(0.025, 4), METAL, x, 0.6, 0.05));
+    return c;
+  },
   // warsztat: otwarta wiata z ramą, wielkie koło, niedokończone ramię machiny, stół z narzędziami, zwój liny
   warsztat(k, d) {
     const c = [];

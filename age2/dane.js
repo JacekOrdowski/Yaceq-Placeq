@@ -66,6 +66,8 @@ export const BUDYNKI = {
   stajnia: { nazwa: 'Zagroda reniferów', emoji: '🦌', w: 3, hp: 600, koszt: { drewno: 175 }, czas: 30, era: 2, wymaga: 'koszary', opis: 'Szkoli jeźdźców na reniferach i łosiach' },
   kuznia: { nazwa: 'Kuźnia', emoji: '⚒️', w: 3, hp: 600, koszt: { drewno: 150 }, czas: 30, era: 2, opis: 'Ulepsza broń, zbroje i pociski' },
   wieza: { nazwa: 'Ambona', emoji: '🗼', w: 2, hp: 800, koszt: { drewno: 50, kamien: 125 }, czas: 40, era: 2, strzela: { atak: 5, zasieg: 7.5, odstep: 1.6 }, opis: 'Sama strzela do wrogów' },
+  mur: { nazwa: 'Palisada', emoji: '🪵', w: 1, hp: 250, koszt: { drewno: 5 }, czas: 4, era: 1, mur: true, opis: 'Ściana z pali: przeciągnij palcem linię muru' },
+  brama: { nazwa: 'Brama', emoji: '🚪', w: 1, hp: 400, koszt: { drewno: 30 }, czas: 12, era: 1, brama: true, opis: 'Twoi ludzie przechodzą, wrogowie nie' },
   warsztat: { nazwa: 'Warsztat', emoji: '🛠️', w: 3, hp: 600, koszt: { drewno: 200 }, czas: 35, era: 3, wymaga: 'kuznia', opis: 'Buduje tarany i katapulty' },
 };
 // rozbudowa ambony (w samej ambonie): każdy stopień ma więcej życia, strzela dalej, mocniej i częściej
@@ -74,7 +76,13 @@ export const WIEZA_POZIOMY = [null,
   { nazwa: 'Wieża z cegły', emoji: '🧱', hp: 1300, atak: 7, zasieg: 8.5, odstep: 1.4, era: 3, koszt: { kamien: 150, drewno: 50 }, czas: 40, opis: 'Grube ściany z cegły, strzela dalej i mocniej' },
   { nazwa: 'Twierdza Jagodowa', emoji: '🏰', hp: 2000, atak: 10, zasieg: 9.5, odstep: 1.2, era: 4, koszt: { kamien: 300, zelazo: 100 }, czas: 60, opis: 'Najmocniejsza wieża w całej dolinie' },
 ];
-export const KOLEJNOSC_BUDYNKOW = ['dom', 'spichlerz', 'tartak', 'szopa', 'kopalnia', 'pole', 'koszary', 'strzelnica', 'stajnia', 'kuznia', 'wieza', 'warsztat', 'ratusz'];
+export const KOLEJNOSC_BUDYNKOW = ['dom', 'spichlerz', 'tartak', 'szopa', 'kopalnia', 'pole', 'koszary', 'mur', 'brama', 'strzelnica', 'stajnia', 'kuznia', 'wieza', 'warsztat', 'ratusz'];
+// mury i bramy: palisada → mur z cegieł → mur ze stalowymi sztabami (ulepszenia w Kamieniołomie zmieniają wszystkie naraz)
+export const MUR_POZIOMY = [null,
+  { mur: 'Palisada', brama: 'Brama drewniana', hpMur: 250, hpBrama: 400 },
+  { mur: 'Mur z cegieł', brama: 'Brama ceglana', hpMur: 600, hpBrama: 800 },
+  { mur: 'Mur ze stalowymi sztabami', brama: 'Brama okuta stalą', hpMur: 1000, hpBrama: 1200 },
+];
 
 // przejście do nowej ery: w Dworku; potrzeba surowców i kilku budynków z poprzedniej ery
 export const NOWA_ERA = {
@@ -105,6 +113,8 @@ export const ULEPSZENIA = {
   pila: { nazwa: 'Piła ramowa', emoji: '🪚', z: 'tartak', era: 3, wymaga: 'siekiera_z', koszt: { jagody: 250, zelazo: 100 }, czas: 40, opis: 'Drewno: jeszcze o 20% szybciej' },
   // Kamieniołom
   kilof: { nazwa: 'Kilof', emoji: '⛏️', z: 'szopa', era: 1, koszt: { jagody: 100, drewno: 75 }, czas: 20, opis: 'Kamień zbiera się o 20% szybciej' },
+  mur_cegla: { nazwa: 'Mur z cegieł', emoji: '🧱', z: 'szopa', era: 3, koszt: { kamien: 200, drewno: 100 }, czas: 45, opis: 'Wszystkie palisady i bramy stają się murem z cegieł' },
+  mur_stal: { nazwa: 'Mur ze stalowymi sztabami', emoji: '⛓️', z: 'szopa', era: 4, wymaga: 'mur_cegla', koszt: { kamien: 300, zelazo: 150 }, czas: 60, opis: 'Mury i bramy wzmocnione stalą: najmocniejsze' },
   kilof_z: { nazwa: 'Żelazny kilof', emoji: '⛏️', z: 'szopa', era: 2, wymaga: 'kilof', koszt: { jagody: 150, zelazo: 50 }, czas: 30, opis: 'Kamień i ruda żelaza o 20% szybciej' },
   // Kuźnia: broń, zbroje, pociski (po 3 stopnie)
   bron1: { nazwa: 'Drewniana broń', emoji: '🪵', z: 'kuznia', era: 2, koszt: { jagody: 150 }, czas: 30, opis: 'Wojsko walczące wręcz: +1 do ataku' },
