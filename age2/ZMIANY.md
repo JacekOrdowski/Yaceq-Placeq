@@ -18,6 +18,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 - Ambony strzelają nie tylko do wrogich ludzi: gdy w zasięgu nie ma nikogo, strzelają w budynki wroga
   (także w place budowy postawione za blisko).
 
+Zapis w repozytorium: `81bf8ab`
+
 ## Wersja 6 (20.11.2026)
 
 **Dodane**
