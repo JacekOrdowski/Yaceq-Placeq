@@ -24,6 +24,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 - Gry komputer kontra komputer trwają teraz zwykle 45–55 minut, a czasem dłużej: pod koniec obie strony mają
   Twierdze Jagodowe, których najsłabsze wojsko nie umie zburzyć.
 
+Zapis w repozytorium: `1233575`
+
 ## Wersja 11 (20.11.2026)
 
 **Dodane**
