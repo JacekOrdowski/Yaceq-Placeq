@@ -23,3 +23,5 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 - Mała mapa (dotknięcie przenosi widok), przesuwanie mapy palcem, przybliżanie dwoma palcami.
 - Podpowiedzi u góry ekranu, co zrobić dalej; przycisk 🧑‍🌾 pokazuje wolnych osadników.
 - Gra zapisuje się sama; w menu „Graj dalej”, „Nowa gra” i „Inne gry”.
+
+Zapis w repozytorium: `494c596`
