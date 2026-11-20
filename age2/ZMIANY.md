@@ -18,6 +18,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 - Dwoma palcami można też obracać mapę (razem z przybliżaniem i przesuwaniem).
   Przycisk 🏡 wraca do Dworku i ustawia zwykły obrót.
 
+Zapis w repozytorium: `c60e889`
+
 ## Wersja 7 (20.11.2026)
 
 **Dodane**
