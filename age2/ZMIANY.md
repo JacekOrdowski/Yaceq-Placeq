@@ -13,6 +13,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 - Podpowiedź o sterowaniu (przesuwanie, przybliżanie, ramka) jest w pasku tylko przez pierwsze 3 minuty gry.
 - Mała mapka i przyciski z prawej zjeżdżają w dół razem ze zwiniętym okienkiem.
 
+Zapis w repozytorium: `bc6245d`
+
 ## Wersja 17 (20.11.2026)
 
 **Zmienione**
