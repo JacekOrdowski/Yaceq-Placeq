@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL } from './dane.js';
 
-const WERSJA = 14;
+const WERSJA = 15;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 14, opis: 'Mapa 2 razy większa w każdą stronę (192 × 192): więcej lasów, krzaków, kamienia, rudy i złota; komputer dokupuje żelazo. Do tego wszystko z wersji 13.' },
+  { nr: 15, opis: 'Większy krzyżyk do zamykania okienka na dole (łatwiej trafić palcem). Do tego wszystko z wersji 14.' },
+  { nr: 14, opis: 'Mapa 2 razy większa w każdą stronę (192 × 192): więcej lasów, krzaków, kamienia, rudy i złota; komputer dokupuje żelazo. Do tego wszystko z wersji 13.', adres: 'wersje/14/' },
   { nr: 13, opis: 'Nowa muzyka na prawdziwych instrumentach (8 utworów CC0): spokojne utwory na zmianę, w czasie walki bitwa, płynne przejścia. Do tego wszystko z wersji 12. Mała mapa.', adres: 'wersje/13/' },
   { nr: 12, opis: 'Prawdziwe dźwięki: miecz o miecz, tarcze, siekiera, kilof, kowadło, monety, walące się budynki; głośność i strona zależne od kamery. Do tego wszystko z wersji 11.', adres: 'wersje/12/' },
   { nr: 11, opis: 'Grafika na maksa: faktury, chodzenie nogami, wiatr, dym, ogień, iskry, wióry, góry i wulkany za mapą, jezioro, chmury, ptaki. Do tego wszystko z wersji 10.', adres: 'wersje/11/' },

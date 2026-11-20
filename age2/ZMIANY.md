@@ -5,6 +5,12 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 15 (20.11.2026)
+
+**Zmienione**
+- Krzyżyk do zamykania okienka na dole (przy budynku, osadniku albo wojsku) jest ponad 2 razy większy
+  i ciemniejszy, więc łatwiej trafić w niego palcem.
+
 ## Wersja 14 (20.11.2026)
 
 **Zmienione**
