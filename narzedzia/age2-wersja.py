@@ -41,7 +41,9 @@ def main():
         if p in ('gra.js', 'modele.js'):
             t = zamien(t, "'../survival/three.module.min.js'", "'../../../survival/three.module.min.js'", p)
         if p == 'gra.js':
-            t = zamien(t, "'../muzyka/", "'../../../muzyka/", p)
+            t = t.replace("'../muzyka/", "'../../../muzyka/")
+            # muzyka (od wersji 13) jest tylko w głównym folderze gry
+            t = t.replace("'muzyka/' +", "'../../muzyka/' +")
             # dźwięki (od wersji 12) są tylko w głównym folderze gry
             t = t.replace("fetch('dzwieki/", "fetch('../../dzwieki/")
             t = zamien(t, "register('../sw.js', { scope: '../' })", "register('../../../sw.js', { scope: '../../../' })", p) if "register('../sw.js'" in t else t

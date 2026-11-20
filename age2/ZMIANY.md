@@ -5,6 +5,27 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 13 (20.11.2026)
+
+**Dodane**
+- Nowa muzyka grana na prawdziwych instrumentach (w stylu muzyki średniowiecznej i celtyckiej), zamiast piszczącej muzyki
+  z innych naszych gier. 8 utworów na licencji CC0 (spis autorów w `muzyka/ZRODLA.md`), razem około 38 MB;
+  telefon wczytuje tylko utwór, który właśnie gra.
+- Spokojne utwory grają na zmianę i nie powtarzają się po sobie. W kolejnych erach dochodzą nowe:
+  targ (od 2. ery), żniwa (od 3.), uczta (od 4.).
+- W czasie walki gra muzyka bitwy, a 15 sekund po walce wraca spokojny utwór (od miejsca, w którym przerwał).
+- Przejścia między utworami są płynne (jeden cichnie, drugi narasta, 2,5 sekundy).
+
+**Zmienione**
+- Utwory nagrane różnie głośno gra wyrównuje, żeby żaden nie był za głośny ani za cichy.
+- Głośność muzyki działa teraz także na iPhonie (wcześniej telefon mógł grać ją na cały regulator).
+
+**Usunięte**
+- Stara muzyka (wesoła, piszcząca) w tej grze. W innych naszych grach zostaje.
+
+**Do sprawdzenia**
+- Posłuchać na telefonie, czy muzyka nie męczy i czy nie zagłusza dźwięków walki.
+
 ## Wersja 12 (20.11.2026)
 
 **Dodane**

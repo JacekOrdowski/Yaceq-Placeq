@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL } from './dane.js';
 
-const WERSJA = 12;
+const WERSJA = 13;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 12, opis: 'Prawdziwe dźwięki: miecz o miecz, tarcze, siekiera, kilof, kowadło, monety, walące się budynki; głośność i strona zależne od kamery. Do tego wszystko z wersji 11.' },
+  { nr: 13, opis: 'Nowa muzyka na prawdziwych instrumentach (8 utworów CC0): spokojne utwory na zmianę, w czasie walki bitwa, płynne przejścia. Do tego wszystko z wersji 12.' },
+  { nr: 12, opis: 'Prawdziwe dźwięki: miecz o miecz, tarcze, siekiera, kilof, kowadło, monety, walące się budynki; głośność i strona zależne od kamery. Do tego wszystko z wersji 11.', adres: 'wersje/12/' },
   { nr: 11, opis: 'Grafika na maksa: faktury, chodzenie nogami, wiatr, dym, ogień, iskry, wióry, góry i wulkany za mapą, jezioro, chmury, ptaki. Do tego wszystko z wersji 10.', adres: 'wersje/11/' },
   { nr: 10, opis: 'Tryby żołnierzy (Obrona, Agresja, Szał), ruiny po zburzonych budynkach, żołnierze nie utykają już przy rogach budynków. Do tego wszystko z wersji 9.', adres: 'wersje/10/' },
   { nr: 9, opis: 'Dużo więcej kamienia, złoto, Jarmark z handlem i wozy kupieckie z reniferami (im dalej, tym więcej złota). Do tego wszystko z wersji 8.', adres: 'wersje/9/' },
@@ -323,14 +324,69 @@ function dzwiek(n) {
     case 'przegrana': [392, 330, 262, 196].forEach((f, i) => ton(f, f, 0.35, 'triangle', 0.12, i * 0.2)); break;
   }
 }
-const UTWORY = { spokoj: '../muzyka/wesola-bieg.mp3', walka: '../muzyka/wesola-walka.mp3' };
-let muzyka = null, utwor = '', walkaT = -99;
-function grajMuzyke() {
-  if (!zapis.muzyka || !S || pauza || S.wynik) { if (muzyka) muzyka.pause(); return; }
-  const nazwa = S.czas - walkaT < 15 ? UTWORY.walka : UTWORY.spokoj;
-  if (utwor !== nazwa) { if (muzyka) muzyka.pause(); muzyka = new Audio(nazwa); muzyka.loop = true; muzyka.volume = 0.25; utwor = nazwa; }
-  if (muzyka.paused) muzyka.play().catch(() => {});
+// ================= muzyka (CC0, autorzy w muzyka/ZRODLA.md) =================
+// g: wyrównanie głośności (utwory są nagrane różnie głośno), od: od której ery gra, cisza: sekundy ciszy na końcu do pominięcia
+const UTWORY = {
+  spokoj: [
+    { plik: 'ognisko', g: 2.2, od: 1 }, { plik: 'celtycka', g: 1, od: 1, cisza: 1.8 }, { plik: 'laki', g: 0.8, od: 1 },
+    { plik: 'wedrowka', g: 2.2, od: 1, cisza: 4.4 }, { plik: 'targ', g: 0.5, od: 2 }, { plik: 'zniwa', g: 0.65, od: 3, cisza: 2 },
+    { plik: 'uczta', g: 0.9, od: 4 },
+  ],
+  walka: [{ plik: 'bitwa', g: 0.9, cisza: 7 }],
+};
+const MUZ_GLOSNOSC = 0.24, MUZ_PRZEJSCIE = 2.5;
+// krótka cisza: odtworzona po dotknięciu „odblokowuje” odtwarzacz w telefonie (iPhone pozwala potem zmieniać mu utwory)
+const CISZA = (() => { const n = 441, b = new Uint8Array(44 + n * 2), v = new DataView(b.buffer), t = (o, s) => { for (let i = 0; i < 4; i++) b[o + i] = s.charCodeAt(i); };
+  t(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); t(8, 'WAVE'); t(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 22050, true); v.setUint32(28, 44100, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); t(36, 'data'); v.setUint32(40, n * 2, true);
+  let s = ''; for (const x of b) s += String.fromCharCode(x); return 'data:audio/wav;base64,' + btoa(s); })();
+const ODTWARZACZE = [];
+const muz = { spokoj: null, walka: null, wygasa: [], ostatnie: [] };
+let walkaT = -99;
+function odtwarzacze() {
+  if (!ODTWARZACZE.length) for (let i = 0; i < 3; i++) { const a = new Audio(); a.preload = 'auto'; ODTWARZACZE.push({ a, g: null, ok: false }); }
+  // głośność przez WebAudio (na iPhonie zwykła głośność odtwarzacza nie działa)
+  if (AC) for (const e of ODTWARZACZE) if (!e.g && !e.bezAC) { try { const g = AC.createGain(); AC.createMediaElementSource(e.a).connect(g); g.connect(AC.destination); e.g = g; } catch (er) { e.bezAC = true; } }
+  return ODTWARZACZE;
 }
+function odblokujMuzyke() {
+  for (const e of odtwarzacze()) if (!e.ok && !e.a.src) { e.ok = true; e.a.src = CISZA; e.a.play().then(() => { if (e.a.src === CISZA) e.a.pause(); }).catch(() => { e.ok = false; }); }
+}
+function nowyUtwor(tryb) {
+  const lista = UTWORY[tryb], era = S ? S.era[STRONA_GRACZA] : 1;
+  let mozna = lista.filter(u => (u.od || 1) <= era);
+  const swieze = mozna.filter(u => !muz.ostatnie.includes(u.plik)); if (swieze.length) mozna = swieze;
+  const u = mozna[Math.floor(Math.random() * mozna.length)];
+  if (tryb === 'spokoj') { muz.ostatnie.push(u.plik); if (muz.ostatnie.length > 3) muz.ostatnie.shift(); }
+  const zajete = [muz.spokoj, muz.walka, ...muz.wygasa].filter(Boolean).map(p => p.e);
+  let e = odtwarzacze().find(x => !zajete.includes(x));
+  if (!e) { const p = muz.wygasa.shift(); p.e.a.pause(); e = p.e; }
+  e.a.src = 'muzyka/' + u.plik + '.mp3';
+  const p = { e, a: e.a, u, f: 0 }; glosnoscMuzyki(p); return p;
+}
+function glosnoscMuzyki(p) { const v = Math.min(1, MUZ_GLOSNOSC * p.u.g * p.f); if (p.e.g) { p.e.g.gain.value = v; p.a.volume = 1; } else p.a.volume = v; }
+// co klatkę: spokojne utwory na zmianę (bez powtórek), w czasie walki bitwa; przejścia płynne
+let muzOst = 0;
+function muzykaKrok() {
+  // przejścia liczone w prawdziwym czasie (nie w czasie gry), żeby były płynne także przy wolnym telefonie
+  const teraz = performance.now(), dt = Math.min(0.5, (teraz - muzOst) / 1000); muzOst = teraz;
+  if (!zapis.muzyka || !S || pauza || S.wynik) return ciszaMuzyki();
+  const tryb = S.czas - walkaT < 15 ? 'walka' : 'spokoj', k = dt / MUZ_PRZEJSCIE;
+  for (const t of ['spokoj', 'walka']) {
+    const chce = t === tryb;
+    let p = muz[t];
+    if (!p) { if (!chce) continue; p = muz[t] = nowyUtwor(t); }
+    if (!p.a.paused && p.a.duration && p.a.currentTime > p.a.duration - (p.u.cisza || 0) - MUZ_PRZEJSCIE) { muz.wygasa.push(p); p = muz[t] = nowyUtwor(t); }
+    p.f = Math.max(0, Math.min(1, p.f + (chce ? k : -k)));
+    glosnoscMuzyki(p);
+    if (chce && p.a.paused) p.a.play().catch(() => {});
+    else if (!chce && p.f === 0 && !p.a.paused) p.a.pause();
+  }
+  for (const p of muz.wygasa) { p.f = Math.max(0, p.f - k); glosnoscMuzyki(p); }
+  muz.wygasa = muz.wygasa.filter(p => { if (p.f > 0 && !p.a.paused) return true; p.a.pause(); return false; });
+}
+function ciszaMuzyki() { for (const p of [muz.spokoj, muz.walka, ...muz.wygasa]) if (p && !p.a.paused) p.a.pause(); }
+function grajMuzyke() { odblokujMuzyke(); muzOst = performance.now(); muzykaKrok(); }
 
 // ================= tworzenie mapy =================
 function wyczyscSwiat() {
@@ -2426,7 +2482,7 @@ function pokazOkno(id) { for (const o of OKNA) $(o).hidden = o !== id; $('gra-ui
 function ukryjOkna() { pokazOkno(null); }
 function ustawPrzelaczniki() { for (const [id, k] of [['m-muz', 'muzyka'], ['m-dzw', 'dzwieki'], ['p-muz', 'muzyka'], ['p-dzw', 'dzwieki']]) { $(id).textContent = zapis[k] ? 'wł.' : 'wył.'; $(id).classList.toggle('wl', zapis[k]); } }
 function pokazMenu() {
-  pauza = true; if (muzyka) muzyka.pause();
+  pauza = true; ciszaMuzyki();
   const jest = zapis.gra && !zapis.gra.wynik;
   $('m-dalej').hidden = !jest;
   if (jest) $('m-dalej').textContent = `Graj dalej (${TRUDNOSC[zapis.gra.trudnosc].nazwa.toLowerCase()}, ${Math.floor(zapis.gra.czas / 60)} min)`;
@@ -2456,10 +2512,10 @@ for (const b of document.querySelectorAll('[data-trudnosc]')) b.onclick = () => 
 };
 $('n-wroc').onclick = () => { dzwiek('klik'); pokazMenu(); };
 $('m-wersje').onclick = () => { dzwiek('klik'); pokazWersje(); };
-for (const id of ['m-muz', 'p-muz']) $(id).onclick = () => { audio(); zapis.muzyka = !zapis.muzyka; zapiszDysk(); ustawPrzelaczniki(); if (!zapis.muzyka && muzyka) muzyka.pause(); };
+for (const id of ['m-muz', 'p-muz']) $(id).onclick = () => { audio(); zapis.muzyka = !zapis.muzyka; zapiszDysk(); ustawPrzelaczniki(); if (zapis.muzyka) odblokujMuzyke(); else ciszaMuzyki(); };
 for (const id of ['m-dzw', 'p-dzw']) $(id).onclick = () => { audio(); zapis.dzwieki = !zapis.dzwieki; zapiszDysk(); ustawPrzelaczniki(); dzwiek('klik'); };
 $('b-pauza').onclick = () => {
-  if (!S) return; audio(); dzwiek('klik'); pauza = true; zapiszGre(); if (muzyka) muzyka.pause();
+  if (!S) return; audio(); dzwiek('klik'); pauza = true; zapiszGre(); ciszaMuzyki();
   $('pa-info').textContent = `${TRUDNOSC[S.trudnosc].nazwa} · ${Math.floor(S.czas / 60)} min · era ${S.era[0]} · ludzie: ${ludnosc(0)}`;
   ustawPrzelaczniki(); pokazOkno('o-pauza');
 };
@@ -2472,7 +2528,7 @@ function koniecGry() {
   if (wygral && !S.aiGracz) { zapis.wygrane[S.trudnosc] = (zapis.wygrane[S.trudnosc] || 0) + 1; }
   zapis.gra = null; zapiszDysk();
   setTimeout(() => {
-    pauza = true; if (muzyka) muzyka.pause();
+    pauza = true; ciszaMuzyki();
     dzwiek(wygral ? 'wygrana' : 'przegrana');
     $('k-tytul').textContent = wygral ? '🏆 Wygrana!' : 'Tym razem przegrana';
     $('k-tekst').textContent = wygral ? 'Dworek komputera upadł. Twoja osada rządzi doliną!' : 'Komputer zburzył twój Dworek. Spróbuj jeszcze raz!';
@@ -2503,7 +2559,7 @@ function rysujLogo() {
 }
 
 // ================= pętla =================
-let ost = performance.now(), hudT = 0, miniT = 0, zapisT = 0, muzT = 0;
+let ost = performance.now(), hudT = 0, miniT = 0, zapisT = 0;
 function klatka(t) {
   requestAnimationFrame(klatka);
   const dt = Math.min(0.1, (t - ost) / 1000); ost = t;
@@ -2512,7 +2568,7 @@ function klatka(t) {
     krokGry(dt);
     if ((hudT -= dt) <= 0) { hudT = 0.25; odswiezHud(); odswiezPanel(); }
     if ((zapisT -= dt) <= 0) { zapisT = 10; zapiszGre(); }
-    if ((muzT -= dt) <= 0) { muzT = 1; grajMuzyke(); }
+    muzykaKrok();
   }
   if ((miniT -= dt) <= 0) { miniT = 0.3; rysujMini(); }
   rysuj(dt);
@@ -2530,7 +2586,7 @@ rozmiar(); rysujLogo();
 
 // test bez klikania (w konsoli przeglądarki): window.__haskap
 window.__haskap = {
-  get S() { return S; }, get JED() { return JED; }, get BUD() { return BUD; }, get ZAS() { return ZAS; }, kam,
+  get S() { return S; }, get JED() { return JED; }, get BUD() { return BUD; }, get ZAS() { return ZAS; }, kam, muz, muzykaKrok, walka(ile = 0) { walkaT = S.czas - ile; },
   nowaGra, krokGry, zapiszGre, wczytajGre, stanDoZapisu, ai, dodajDoKolejki, nowyBudynek, nowaJednostka, miejsceWolne, zaznacz, klik, wskaz, rozkaz,
   // komputer gra też za gracza: sprawdzenie, czy gra się kończy i nic się nie psuje
   komputerKontraKomputer(trudnoscGracza = 'sredni') { S.aiGracz = true; S.trudnoscGracza = trudnoscGracza; },

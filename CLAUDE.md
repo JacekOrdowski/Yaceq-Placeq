@@ -118,6 +118,8 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
 - Dźwięki: krótkie pliki WAV w `age2/dzwieki/` (CC0, źródła w `age2/dzwieki/ZRODLA.md`), lista grup w `ODGLOSY` w `age2/gra.js`,
   funkcja `odglos(nazwa, x, z)` gra dźwięk z głośnością i stroną zależną od kamery. Na tym komputerze nie ma ffmpeg:
   OGG zamienia się na WAV w przeglądarce (dekodowanie, mono 22050 Hz, przycięcie ciszy).
+- Muzyka: utwory MP3 (CC0, autorzy w `age2/muzyka/ZRODLA.md`), lista `UTWORY` w `age2/gra.js` (`g` wyrównuje głośność,
+  `od` to era, od której utwór gra); spokojne grają na zmianę, w walce `bitwa`, przejścia płynne (`muzykaKrok`).
 - Grafika: faktury i ruch (nogi, koła, wiatr) liczy karta graficzna (`MAT.onBeforeCompile` w `age2/gra.js`, atrybuty `wzor` i `staw`
   z `polacz` w `age2/modele.js`); efekty (dym, ogień, iskry) to `EF` i `emitujEfekty`, okolica za mapą to `zbudujOkolice`.
 - Nowa wersja: podnieś `WERSJA` w `age2/gra.js`, dopisz sekcję w `age2/ZMIANY.md` (te same zasady co wyżej).
