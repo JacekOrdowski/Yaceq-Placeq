@@ -15,6 +15,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
   - kamień i ruda żelaza: kilof idzie w ruch nad głową.
 - Wojsko przy uderzeniu robi krótki wypad do przodu zamiast kiwania.
 
+Zapis w repozytorium: `9fb36e2`
+
 ## Wersja 2 (20.11.2026)
 
 Pierwszy kawałek naszej własnej mapy ulepszeń, inspirowanej jagodą kamczacką.
