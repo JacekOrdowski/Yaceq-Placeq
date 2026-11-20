@@ -4,12 +4,13 @@
 import * as THREE from '../survival/three.module.min.js';
 import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
-  ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC } from './dane.js';
+  ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY } from './dane.js';
 
-const WERSJA = 6;
+const WERSJA = 7;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 6, opis: 'Bogatszy krajobraz: 5 gatunków drzew, trawa, kwiaty, paprocie, grzyby, kłody, ścieżki, cienie pod ludzikami. Do tego wszystko z wersji 5.' },
+  { nr: 7, opis: 'Rozbudowa ambon: Wieża z cegły i Twierdza Jagodowa; ambony strzelają też w budynki wroga. Do tego wszystko z wersji 6.' },
+  { nr: 6, opis: 'Bogatszy krajobraz: 5 gatunków drzew, trawa, kwiaty, paprocie, grzyby, kłody, ścieżki, cienie pod ludzikami. Do tego wszystko z wersji 5.', adres: 'wersje/6/' },
   { nr: 5, opis: 'Słowiańskie budynki z bali pod strzechą i gontem, stosiki na plecach, ulepszenia plecaka. Do tego wszystko z wersji 4.', adres: 'wersje/5/' },
   { nr: 4, opis: 'Nowe, zaokrąglone postacie z buziami, drzewa przewracają się przy ścinaniu, burzenie własnych budynków. Do tego wszystko z wersji 3.', adres: 'wersje/4/' },
   { nr: 3, opis: 'Zbieracze pracują rękami: zrywają jagody do koszyka, budują młotkiem, rąbią siekierą, kopią kilofem (bez kiwania). Do tego wszystko z wersji 2.', adres: 'wersje/3/' },
@@ -548,7 +549,22 @@ function atakJ(u) {
 }
 function zasiegJ(u) { return u.d.zasieg ? u.d.zasieg + (strzelec(u.d) ? zasiegPociskow(u.strona) : 0) : 0; }
 function pancerzJ(u) { const ul = S.ul[u.strona]; return u.d.pancerz + (u.d.wojsko ? (ul.zbroja1 ? 1 : 0) + (ul.zbroja2 ? 1 : 0) + (ul.zbroja3 ? 2 : 0) : 0); }
-function maxHpBud(strona, typ) { return BUDYNKI[typ].hp; }
+function maxHpBud(strona, typ, poziom = 1) { return typ === 'wieza' ? WIEZA_POZIOMY[poziom].hp : BUDYNKI[typ].hp; }
+const nazwaBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].nazwa : b.d.nazwa;
+const emojiBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].emoji : b.d.emoji;
+const modelBud = (typ, poziom) => typ === 'wieza' && poziom > 1 ? 'wieza' + poziom : typ;
+// strzelanie budynku: ambona zależy od poziomu i ulepszeń pocisków
+function strzalBud(b) {
+  if (b.typ === 'wieza') { const p = WIEZA_POZIOMY[b.poziom || 1]; return { atak: p.atak + poziomPociskow(b.strona), zasieg: p.zasieg + zasiegPociskow(b.strona), odstep: p.odstep }; }
+  return { atak: b.d.strzela.atak + (S.ul[b.strona].pociski1 ? 1 : 0), zasieg: b.d.strzela.zasieg, odstep: b.d.strzela.odstep };
+}
+function brakRozbudowy(b) {
+  const nast = WIEZA_POZIOMY[(b.poziom || 1) + 1];
+  if (!nast) return 'max';
+  if (b.kolejka.some(q => q.rodzaj === 'rozb')) return 'w trakcie';
+  if (nast.era > S.era[b.strona]) return '🔒 Era ' + nast.era;
+  return null;
+}
 // linie wojska: w budynku szkoli się najwyższy stopień, na który jest awans
 function typyBudynku(strona, budTyp) {
   const linie = {};
@@ -648,7 +664,8 @@ function obrazenia(atakujacy, cel, atak) {
   if (jestBudynkiem(cel)) {
     if (atakujacy.d && atakujacy.d.tylkoBudynki) return atak;
     if (atakujacy.d && atakujacy.d.oblezenie) return atak * 2;
-    return Math.max(1, atak * (atakujacy.d && atakujacy.d.zasieg ? 0.15 : atakujacy.d && atakujacy.d.w ? 0.2 : 0.45));
+    // ambona strzela do budynków mocniej niż zwykli strzelcy
+    return Math.max(1, atak * (atakujacy.d && atakujacy.d.zasieg ? 0.15 : atakujacy.d && atakujacy.typ === 'wieza' ? 0.6 : atakujacy.d && atakujacy.d.w ? 0.2 : 0.45));
   }
   const bonus = (atakujacy.d && atakujacy.d.przeciw && cel.d.linia && atakujacy.d.przeciw[cel.d.linia]) || 1;
   const dystans = !atakujacy.d || atakujacy.d.zasieg || atakujacy.d.w;
@@ -673,7 +690,7 @@ function uderz(u, c) {
 }
 const KAMYK = MOD.kamyk();
 function rzut(od, cel, atak) {
-  const h = jestBudynkiem(od) ? (od.typ === 'wieza' ? 3.2 : 2.6) : 1.1;
+  const h = jestBudynkiem(od) ? (od.typ === 'wieza' ? [0, 3.2, 3.3, 4.0][od.poziom || 1] : 2.6) : 1.1;
   const mesh = new THREE.Mesh(KAMYK, MAT); scena.add(mesh);
   const d = Math.hypot(cel.x - od.x, cel.z - od.z);
   POC.push({ mesh, x0: od.x, z0: od.z, y0: h, cel, od, atak, ox: cel.x, oz: cel.z, t: 0, T: Math.max(0.25, d / 13) });
@@ -843,7 +860,7 @@ function atakuj(u, dt) {
 }
 
 // ================= budynki =================
-function wysokoscBud(b) { return { ratusz: 4.6, wieza: 4.2, dom: 1.8, pole: 0.6 }[b.typ] || 2.0; }
+function wysokoscBud(b) { return b.typ === 'wieza' ? [0, 4.2, 4.6, 5.4][b.poziom || 1] : { ratusz: 4.6, dom: 1.8, pole: 0.6 }[b.typ] || 2.0; }
 function miejsceWolne(typ, i0, j0, margines = 0) {
   const w = BUDYNKI[typ].w;
   for (let j = j0 - margines; j < j0 + w + margines; j++) for (let i = i0 - margines; i < i0 + w + margines; i++) {
@@ -853,11 +870,11 @@ function miejsceWolne(typ, i0, j0, margines = 0) {
   return true;
 }
 const GEO_PLAC = {};
-function nowyBudynek(strona, typ, i0, j0, gotowy = false, id) {
-  const d = BUDYNKI[typ], w = d.w, max = maxHpBud(strona, typ);
-  const b = { id: id || S.nextId++, strona, typ, d, i0, j0, w, x: i0 - POL + w / 2, z: j0 - POL + w / 2, max, hp: gotowy ? max : Math.max(1, max * 0.05), postep: gotowy ? 1 : 0, gotowy, kolejka: [], cd: 0, zbiorka: null, rolnik: 0 };
+function nowyBudynek(strona, typ, i0, j0, gotowy = false, id, poziom = 1) {
+  const d = BUDYNKI[typ], w = d.w, max = maxHpBud(strona, typ, poziom);
+  const b = { id: id || S.nextId++, strona, typ, d, i0, j0, w, poziom, x: i0 - POL + w / 2, z: j0 - POL + w / 2, max, hp: gotowy ? max : Math.max(1, max * 0.05), postep: gotowy ? 1 : 0, gotowy, kolejka: [], cd: 0, zbiorka: null, rolnik: 0 };
   for (let j = j0; j < j0 + w; j++) for (let i = i0; i < i0 + w; i++) { const c = kom2(i, j); blok[c] = d.pole ? 4 : 2; naKom[c] = b.id; }
-  b.mesh = new THREE.Mesh(MOD.budynek(typ, strona), MAT);
+  b.mesh = new THREE.Mesh(MOD.budynek(modelBud(typ, poziom), strona), MAT);
   b.mesh.castShadow = true; b.mesh.receiveShadow = true;
   b.mesh.position.set(b.x, 0, b.z);
   ukryjOzdoby(i0, j0, w);
@@ -917,6 +934,7 @@ function dodajDoKolejki(b, rodzaj, typ) {
   let koszt, czas;
   if (rodzaj === 'j') { typ = najwyzszy(b.strona, typ); if (brakJednostki(b.strona, typ)) return brakJednostki(b.strona, typ); koszt = JEDNOSTKI[typ].koszt; czas = JEDNOSTKI[typ].czas; }
   else if (rodzaj === 'u') { const br = brakUlepszenia(b.strona, typ); if (br) return br; koszt = ULEPSZENIA[typ].koszt; czas = ULEPSZENIA[typ].czas; }
+  else if (rodzaj === 'rozb') { const br = brakRozbudowy(b); if (br) return br; const nast = WIEZA_POZIOMY[(b.poziom || 1) + 1]; koszt = nast.koszt; czas = nast.czas; typ = 'wieza'; }
   else { const br = brakEry(b.strona); if (br) return br; koszt = NOWA_ERA[S.era[b.strona] + 1].koszt; czas = NOWA_ERA[S.era[b.strona] + 1].czas; }
   if (!zaplac(b.strona, koszt)) return 'Za mało surowców';
   b.kolejka.push({ rodzaj, typ, t: 0, czas, koszt });
@@ -960,9 +978,12 @@ function aktualizujBudynek(b, dt) {
   if (b.d.strzela) {
     b.cd -= dt;
     if (b.cd <= 0) {
-      let naj = null, nd = b.d.strzela.zasieg + b.w / 2 + (b.typ === 'wieza' ? zasiegPociskow(b.strona) : 0);
+      const st = strzalBud(b);
+      let naj = null, nd = st.zasieg + b.w / 2;
       for (const e of JED) { if (e.strona === b.strona) continue; const d = Math.hypot(e.x - b.x, e.z - b.z); if (d < nd) { nd = d; naj = e; } }
-      if (naj) { rzut(b, naj, b.d.strzela.atak + (b.typ === 'wieza' ? poziomPociskow(b.strona) : S.ul[b.strona].pociski1 ? 1 : 0)); b.cd = b.d.strzela.odstep; } else b.cd = 0.4;
+      // ambona: gdy w zasięgu nie ma ludzi, strzela w budynki wroga (także w place budowy)
+      if (!naj && b.typ === 'wieza') { let nb = st.zasieg; for (const o of BUD) { if (o.strona === b.strona) continue; const d = dystDoProst(b.x, b.z, o); if (d < nb) { nb = d; naj = o; } } }
+      if (naj) { rzut(b, naj, st.atak); b.cd = st.odstep; } else b.cd = 0.4;
     }
   }
   const q = b.kolejka[0]; if (!q) return;
@@ -985,6 +1006,12 @@ function aktualizujBudynek(b, dt) {
       if (ULEPSZENIA[q.typ].awans) awansuj(b.strona, ULEPSZENIA[q.typ].awans);
       if (q.typ === 'rekawice') for (const u of JED) if (u.strona === b.strona && u.typ === 'osadnik') { u.max = maxHpJ(u.strona, 'osadnik'); u.hp += 15; }
       if (b.strona === STRONA_GRACZA && !S.aiGracz) { toast(ULEPSZENIA[q.typ].emoji + ' Ulepszone: ' + ULEPSZENIA[q.typ].nazwa); dzwiek('buduj'); }
+    } else if (q.rodzaj === 'rozb') {
+      // rozbudowa ambony: nowy wygląd, więcej życia (rany zostają), mocniejsze strzały
+      const ubyl = b.max - b.hp; b.poziom = (b.poziom || 1) + 1; b.max = maxHpBud(b.strona, b.typ, b.poziom); b.hp = Math.max(1, b.max - ubyl);
+      b.mesh.geometry = MOD.budynek(modelBud(b.typ, b.poziom), b.strona);
+      if (b.pierscien) { scena.remove(b.pierscien); b.pierscien = null; }
+      if (b.strona === STRONA_GRACZA && !S.aiGracz) { toast(emojiBud(b) + ' Rozbudowane: ' + nazwaBud(b)); dzwiek('buduj'); }
     } else if (q.rodzaj === 'era') {
       S.era[b.strona]++;
       if (!S.aiGracz || b.strona === KOMPUTER) {
@@ -1129,6 +1156,8 @@ function ai(strona, dt) {
   const wieze = moje.filter(b => b.typ === 'wieza').length;
   if (era >= 2 && wieze < T.wieze && osadnicy.length >= celOs - 4 && stacR(BUDYNKI.wieza.koszt) && !budowane.some(b => b.typ === 'wieza'))
     aiPostaw(strona, 'wieza', aiMiejsce('wieza', ratusz.x + kier[0] * (8 + wieze * 2) - kier[1] * (wieze - 1) * 5, ratusz.z + kier[1] * (8 + wieze * 2) + kier[0] * (wieze - 1) * 5, 0, 5, 1), osadnicy);
+  // 7b. rozbudowa ambon
+  for (const w of moje) if (w.typ === 'wieza' && w.gotowy && !w.kolejka.length && !brakRozbudowy(w) && stacR(WIEZA_POZIOMY[(w.poziom || 1) + 1].koszt)) { dodajDoKolejki(w, 'rozb'); break; }
   // 8. nowa era
   if (oszczedza && !ratusz.kolejka.length && !brakEry(strona) && stac(strona, nastEra.koszt)) dodajDoKolejki(ratusz, 'era');
   // 9. ulepszenia
@@ -1237,7 +1266,7 @@ function zadDoZapisu(z) {
 function stanDoZapisu() {
   const o = { ...S };
   o.zasoby = []; for (const z0 of ZAS.values()) if (z0.ile !== z0.start) o.zasoby.push([z0.id, Math.round(z0.ile * 10) / 10]);
-  o.bud = BUD.map(b => [b.id, b.strona, b.typ, b.i0, b.j0, Math.round(b.hp), Math.round(b.postep * 1000) / 1000, b.kolejka.map(q => [q.rodzaj, q.typ, Math.round(q.t * 10) / 10, q.czas, q.koszt]), b.zbiorka, b.rolnik || 0]);
+  o.bud = BUD.map(b => [b.id, b.strona, b.typ, b.i0, b.j0, Math.round(b.hp), Math.round(b.postep * 1000) / 1000, b.kolejka.map(q => [q.rodzaj, q.typ, Math.round(q.t * 10) / 10, q.czas, q.koszt]), b.zbiorka, b.rolnik || 0, b.poziom || 1]);
   o.jed = JED.map(u => [u.id, u.strona, u.typ, Math.round(u.x * 100) / 100, Math.round(u.z * 100) / 100, Math.round(u.hp * 10) / 10, u.niesie.sur, Math.round(u.niesie.ile * 10) / 10, zadDoZapisu(u.zad)]);
   o.kamera = [kam.x, kam.z, kam.d];
   return o;
@@ -1266,8 +1295,8 @@ function wczytajGre(o) {
   S.usuniete = [...o.usuniete];
   for (const [id, ile] of o.zasoby) { const z0 = ZAS.get(id); if (z0) { z0.ile = ile; if (ile < z0.start) zetnij(z0, z0.x, z0.z, true); } }
   sprzatnijListy();
-  for (const [id, strona, typ, i0, j0, hp, postep, kolejka, zbiorka, rolnik] of o.bud) {
-    const b = nowyBudynek(strona, typ, i0, j0, postep >= 1, id);
+  for (const [id, strona, typ, i0, j0, hp, postep, kolejka, zbiorka, rolnik, poziom] of o.bud) {
+    const b = nowyBudynek(strona, typ, i0, j0, postep >= 1, id, poziom || 1);
     b.hp = hp; b.postep = postep; b.zbiorka = zbiorka; b.rolnik = rolnik;
     b.kolejka = kolejka.map(([rodzaj, t, czasT, czas, koszt]) => ({ rodzaj, typ: t, t: czasT, czas, koszt }));
     if (!b.gotowy) b.mesh.scale.y = 0.12 + 0.88 * postep;
@@ -1666,7 +1695,7 @@ function odswiezPanel(wymus = false) {
   wybrane = wybrane.filter(e => E.get(e.id) === e);
   const p = $('p-akcje'), info = $('p-info');
   const sel = wybrane, pierwszy = sel[0];
-  const klucz = sel.map(e => e.id).join(',') + '|' + S.era[0] + '|' + (pierwszy && jestBudynkiem(pierwszy) ? pierwszy.gotowy + ':' + pierwszy.kolejka.map(q => q.typ).join('.') + ':' + Object.keys(S.ul[0]).join('.') : '');
+  const klucz = sel.map(e => e.id).join(',') + '|' + S.era[0] + '|' + (pierwszy && jestBudynkiem(pierwszy) ? pierwszy.gotowy + ':' + (pierwszy.poziom || 1) + ':' + pierwszy.kolejka.map(q => q.typ).join('.') + ':' + Object.keys(S.ul[0]).join('.') : '');
   if (!wymus && klucz === panelKlucz) { aktualizujPanel(); return; }
   panelKlucz = klucz;
   let h = '', a = '', zburzHTML = '';
@@ -1676,7 +1705,7 @@ function odswiezPanel(wymus = false) {
     h = `<div class="p-glowa"><span class="p-ik">${EMOJI_SUR[pierwszy.sur]}</span><div><b>${{ drzewo: 'Drzewo', krzak: 'Krzak z jagodami', kamien: 'Kamień', ruda: 'Ruda żelaza' }[pierwszy.rodzaj]}</b><small data-ile>Zostało: ${Math.ceil(pierwszy.ile)}</small></div></div>`;
   } else if (jestBudynkiem(pierwszy)) {
     const b = pierwszy, moj = b.strona === STRONA_GRACZA;
-    h = `<div class="p-glowa"><span class="p-ik">${b.d.emoji}</span><div><b>${b.d.nazwa}${moj ? '' : ' (komputer)'}</b><small data-hp>❤️ ${Math.ceil(b.hp)} / ${b.max}</small><div class="p-hp"><i data-hpb style="width:${b.hp / b.max * 100}%"></i></div></div><button class="p-x" data-a="odznacz">✖</button></div>`;
+    h = `<div class="p-glowa"><span class="p-ik">${emojiBud(b)}</span><div><b>${nazwaBud(b)}${moj ? '' : ' (komputer)'}</b><small data-hp>❤️ ${Math.ceil(b.hp)} / ${b.max}</small><div class="p-hp"><i data-hpb style="width:${b.hp / b.max * 100}%"></i></div></div><button class="p-x" data-a="odznacz">✖</button></div>`;
     zburzHTML = moj && !(b.typ === 'ratusz' && BUD.filter(o => o.strona === 0 && o.typ === 'ratusz').length < 2)
       ? `<button class="akcja maly zburz" data-a="zburz"><span class="ak-ik">💥</span><b>Zburz</b><small>${!b.gotowy && b.postep < 0.02 ? 'wraca całość' : 'wraca połowa'}</small></button>` : '';
     if (moj && !b.gotowy) h += `<div class="p-opis">Plac budowy: zaznacz zbieraczy i dotknij go, żeby budowali.</div>`;
@@ -1692,12 +1721,16 @@ function odswiezPanel(wymus = false) {
         const ne = NOWA_ERA[S.era[0] + 1], br = brakEry(0);
         a += `<button class="akcja era${br ? ' zablok' : ''}" data-a="era" data-koszt='${JSON.stringify(ne.koszt)}'><span class="ak-ik">${EMOJI_ERY[S.era[0] + 1]}</span><b>Era ${S.era[0] + 1}: ${ERY[S.era[0] + 1]}</b><small>${br || 'Nowe budynki, wojsko i ulepszenia'}</small><span class="ak-koszt">${kosztHTML(ne.koszt)}</span></button>`;
       }
+      if (b.typ === 'wieza' && WIEZA_POZIOMY[(b.poziom || 1) + 1]) {
+        const nast = WIEZA_POZIOMY[(b.poziom || 1) + 1], br = brakRozbudowy(b);
+        if (br !== 'w trakcie') a += `<button class="akcja era${br ? ' zablok' : ''}" data-a="rozb" data-koszt='${JSON.stringify(nast.koszt)}'><span class="ak-ik">${nast.emoji}</span><b>Rozbuduj: ${nast.nazwa}</b><small>${br || nast.opis}</small><span class="ak-koszt">${kosztHTML(nast.koszt)}</span></button>`;
+      }
       for (const [id, d] of Object.entries(ULEPSZENIA)) if (d.z === b.typ) {
         const br = brakUlepszenia(0, id); if (br === 'gotowe' || br === 'w trakcie') continue;
         a += `<button class="akcja${br ? ' zablok' : ''}" data-a="ul:${id}" data-koszt='${JSON.stringify(d.koszt)}'><span class="ak-ik">${d.emoji}</span><b>${d.nazwa}</b><small>${br || d.opis}</small><span class="ak-koszt">${kosztHTML(d.koszt)}</span></button>`;
       }
       if (b.kolejka.length) {
-        h += `<div class="p-kolejka">` + b.kolejka.map((q, i) => `<button class="kol" data-a="anuluj:${i}" title="Anuluj"><span>${q.rodzaj === 'j' ? JEDNOSTKI[q.typ].emoji : q.rodzaj === 'u' ? ULEPSZENIA[q.typ].emoji : EMOJI_ERY[S.era[0] + 1]}</span><i data-kol="${i}" style="width:${q.t / q.czas * 100}%"></i></button>`).join('') + `<small data-czeka></small></div>`;
+        h += `<div class="p-kolejka">` + b.kolejka.map((q, i) => `<button class="kol" data-a="anuluj:${i}" title="Anuluj"><span>${q.rodzaj === 'j' ? JEDNOSTKI[q.typ].emoji : q.rodzaj === 'u' ? ULEPSZENIA[q.typ].emoji : q.rodzaj === 'rozb' ? WIEZA_POZIOMY[(b.poziom || 1) + 1].emoji : EMOJI_ERY[S.era[0] + 1]}</span><i data-kol="${i}" style="width:${q.t / q.czas * 100}%"></i></button>`).join('') + `<small data-czeka></small></div>`;
       }
     }
   } else {
@@ -1765,6 +1798,7 @@ $('panel').addEventListener('click', e => {
   if (akcja === 'szkol') blad = dodajDoKolejki(cel, 'j', arg);
   else if (akcja === 'ul') blad = dodajDoKolejki(cel, 'u', arg);
   else if (akcja === 'era') blad = dodajDoKolejki(cel, 'era');
+  else if (akcja === 'rozb') blad = dodajDoKolejki(cel, 'rozb');
   else if (akcja === 'anuluj') { anulujZKolejki(cel, +arg); dzwiek('klik'); odswiezPanel(true); return; }
   if (blad) { toast(blad); dzwiek('blad'); } else dzwiek('tak');
   odswiezPanel(true);

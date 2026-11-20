@@ -5,6 +5,19 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 7 (20.11.2026)
+
+**Dodane**
+- Rozbudowa ambon: dotknij ambony i wybierz „Rozbuduj”. Każda ambona rozbudowuje się osobno:
+  - 🧱 Wieża z cegły (era 3, 150 kamienia i 50 drewna): 1300 życia, strzela mocniej, dalej i częściej,
+  - 🏰 Twierdza Jagodowa (era 4, 300 kamienia i 100 żelaza): 2000 życia, najmocniejsza w dolinie.
+  Każdy stopień ma swój wygląd: drewniana ambona, ceglana wieża z blankami, okrągła kamienna twierdza.
+- Komputer też rozbudowuje swoje ambony.
+
+**Zmienione**
+- Ambony strzelają nie tylko do wrogich ludzi: gdy w zasięgu nie ma nikogo, strzelają w budynki wroga
+  (także w place budowy postawione za blisko).
+
 ## Wersja 6 (20.11.2026)
 
 **Dodane**

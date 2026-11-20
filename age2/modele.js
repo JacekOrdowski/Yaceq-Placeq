@@ -436,6 +436,30 @@ const BUD = {
     for (let i = 0; i < 8; i++) c.push(cz(box(0.32, 0.03, 0.04), BAL, 0, 0.2 + i * 0.3, 0.86 - i * 0.036));
     return c;
   },
+  // Wieża z cegły: kwadratowa, z cegły z jaśniejszymi pasami, blanki, drewniany daszek, okienka strzelnicze
+  wieza2(k, d) {
+    const CEG = '#b5553a', CEG2 = '#9c4630', c = [cz(box(1.5, 0.3, 1.5), KAMIEN2, 0, 0.15, 0)];
+    for (let i = 0; i < 9; i++) c.push(cz(box(1.25 - i * 0.012, 0.3, 1.25 - i * 0.012), i % 2 ? CEG : CEG2, 0, 0.45 + i * 0.3, 0), cz(box(1.27 - i * 0.012, 0.025, 1.27 - i * 0.012), '#e0d2bd', 0, 0.3 + i * 0.3, 0));
+    c.push(cz(box(1.55, 0.18, 1.55), KAMIEN, 0, 3.05, 0));
+    for (let i = 0; i < 4; i++) for (const t of [-0.5, 0, 0.5]) { const a = i * Math.PI / 2; c.push(cz(box(0.24, 0.26, 0.16), CEG, Math.sin(a) * 0.68 + Math.cos(a) * t, 3.27, Math.cos(a) * 0.68 - Math.sin(a) * t, 0, a, 0)); }
+    for (const [x, z, ry] of [[0, 0.64, 0], [0.64, 0, Math.PI / 2], [0, -0.64, 0], [-0.64, 0, Math.PI / 2]]) c.push(cz(box(0.1, 0.36, 0.05), CIEMNE_D, x, 2.3, z, 0, ry, 0), cz(box(0.1, 0.36, 0.05), CIEMNE_D, x, 1.4, z, 0, ry, 0));
+    for (const [x, z] of [[-0.55, -0.55], [0.55, -0.55], [-0.55, 0.55], [0.55, 0.55]]) c.push(cz(cyl(0.04, 0.04, 0.7, 5), BAL, x, 3.5, z));
+    c.push(cz(dach4(1.15, 0.7), GONT, 0, 4.2, 0, 0, Math.PI / 4), cz(box(0.14, 0.14, 0.14), k, 0, 4.58, 0), ...flaga(k, 0, 4.58, 0, 0.7), ...drzwi(0, 0.3, 0.64, 0.36, 0.6),
+      cz(box(1.0, 0.1, 0.06), k, 0, 2.8, 0.64), cz(box(0.06, 0.1, 1.0), k, 0.64, 2.8, 0));
+    return c;
+  },
+  // Twierdza Jagodowa: kamienna podstawa, okrągła wieża z blankami, stożkowy dach, chorągwie, jagody nad bramą
+  wieza3(k, d) {
+    const c = [cz(box(1.85, 0.5, 1.85), KAMIEN2, 0, 0.25, 0), cz(box(1.9, 0.08, 1.9), KAMIEN, 0, 0.52, 0)];
+    for (let i = 0; i < 7; i++) c.push(cz(cyl(0.78 - i * 0.01, 0.8 - i * 0.01, 0.42, 14), i % 2 ? KAMIEN : '#a3a9b1', 0, 0.77 + i * 0.42, 0));
+    c.push(cz(cyl(0.95, 0.85, 0.2, 14), KAMIEN2, 0, 3.75, 0));
+    for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5; c.push(cz(box(0.24, 0.3, 0.16), KAMIEN, Math.sin(a) * 0.88, 4.0, Math.cos(a) * 0.88, 0, a, 0)); }
+    c.push(cz(stozek(0.95, 1.2, 14), GONT, 0, 4.75, 0), cz(cyl(0.98, 0.98, 0.08, 14), k, 0, 4.18, 0), cz(kula(0.08, 6), '#f2c94c', 0, 5.4, 0), ...flaga(k, 0, 5.38, 0, 0.8));
+    for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3 + 0.3; c.push(cz(box(0.1, 0.4, 0.05), CIEMNE_D, Math.sin(a) * 0.79, 2.4 + (i % 2) * 0.8, Math.cos(a) * 0.79, 0, a, 0)); }
+    for (const sx of [-1, 1]) c.push(cz(box(0.04, 1.0, 0.32), k, sx * 0.82, 2.7, 0.15, 0, 0, 0), cz(box(0.36, 0.06, 0.06), BAL2, sx * 0.82, 3.2, 0.15, 0, Math.PI / 2, 0));
+    c.push(...drzwi(0, 0.55, 0.79, 0.42, 0.7), cz(kula(0.09, 7), '#3a4bb0', -0.08, 1.45, 0.8), cz(kula(0.09, 7), '#3a4bb0', 0.08, 1.45, 0.8), cz(kula(0.09, 7), '#3a4bb0', 0, 1.58, 0.79));
+    return c;
+  },
   // warsztat: otwarta wiata z ramą, wielkie koło, niedokończone ramię machiny, stół z narzędziami, zwój liny
   warsztat(k, d) {
     const c = [];

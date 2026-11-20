@@ -68,6 +68,12 @@ export const BUDYNKI = {
   wieza: { nazwa: 'Ambona', emoji: '🗼', w: 2, hp: 800, koszt: { drewno: 50, kamien: 125 }, czas: 40, era: 2, strzela: { atak: 5, zasieg: 7.5, odstep: 1.6 }, opis: 'Sama strzela do wrogów' },
   warsztat: { nazwa: 'Warsztat', emoji: '🛠️', w: 3, hp: 600, koszt: { drewno: 200 }, czas: 35, era: 3, wymaga: 'kuznia', opis: 'Buduje tarany i katapulty' },
 };
+// rozbudowa ambony (w samej ambonie): każdy stopień ma więcej życia, strzela dalej, mocniej i częściej
+export const WIEZA_POZIOMY = [null,
+  { nazwa: 'Ambona', emoji: '🗼', hp: 800, atak: 5, zasieg: 7.5, odstep: 1.6 },
+  { nazwa: 'Wieża z cegły', emoji: '🧱', hp: 1300, atak: 7, zasieg: 8.5, odstep: 1.4, era: 3, koszt: { kamien: 150, drewno: 50 }, czas: 40, opis: 'Grube ściany z cegły, strzela dalej i mocniej' },
+  { nazwa: 'Twierdza Jagodowa', emoji: '🏰', hp: 2000, atak: 10, zasieg: 9.5, odstep: 1.2, era: 4, koszt: { kamien: 300, zelazo: 100 }, czas: 60, opis: 'Najmocniejsza wieża w całej dolinie' },
+];
 export const KOLEJNOSC_BUDYNKOW = ['dom', 'spichlerz', 'tartak', 'szopa', 'kopalnia', 'pole', 'koszary', 'strzelnica', 'stajnia', 'kuznia', 'wieza', 'warsztat', 'ratusz'];
 
 // przejście do nowej ery: w Dworku; potrzeba surowców i kilku budynków z poprzedniej ery
