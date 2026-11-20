@@ -20,6 +20,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
   ciemne runo pod lasami, żwir przy skałach, wydeptana kręta ścieżka od każdego Dworku do środka mapy.
 - Niebo i mgła w oddali w jaśniejszych, cieplejszych kolorach.
 
+Zapis w repozytorium: `ce59a25`
+
 ## Wersja 5 (20.11.2026)
 
 **Dodane**
