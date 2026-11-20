@@ -5,6 +5,21 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 6 (20.11.2026)
+
+**Dodane**
+- 5 gatunków drzew: świerk, sosna, brzoza, dąb i modrzew. Każdy las ma swój główny gatunek
+  (przy brzegach mapy głównie świerki), więc lasy są różne. Ścięte drzewo przewraca się w swoim kształcie.
+- Ozdoby krajobrazu: kępy trawy, kwiaty (białe, żółte, fioletowe), paprocie, muchomory i borowiki,
+  kamyki, zwalone kłody z mchem, krzaczki i borówki. Nie zasłaniają drogi i znikają spod stawianych budynków.
+- Cienie pod ludzikami i zwierzętami.
+- Klepisko z wydeptanej ziemi pod każdym budynkiem.
+
+**Zmienione**
+- Ziemia z większą ilością szczegółów: jaśniejsze polany, ciemniejsze niziny, wyschnięta trawa,
+  ciemne runo pod lasami, żwir przy skałach, wydeptana kręta ścieżka od każdego Dworku do środka mapy.
+- Niebo i mgła w oddali w jaśniejszych, cieplejszych kolorach.
+
 ## Wersja 5 (20.11.2026)
 
 **Dodane**

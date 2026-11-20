@@ -465,7 +465,67 @@ export const stos = cache((sur, n) => {
 });
 
 // ---------- przyroda ----------
-export const drzewo = cache(() => polacz([cz(cyl(0.12, 0.16, 0.7, 6), '#6b4527', 0, 0.35, 0), cz(stozek(0.7, 1.2, 7), '#2f7d3a', 0, 1.1, 0), cz(stozek(0.55, 1.0, 7), '#3b9446', 0, 1.6, 0), cz(stozek(0.36, 0.7, 7), '#47a653', 0, 2.05, 0)]));
+// drzewa: kilka gatunków (świerk, sosna, brzoza, dąb, modrzew); wszystkie mają pień przy y = 0
+export const GATUNKI = ['swierk', 'sosna', 'brzoza', 'dab', 'modrzew'];
+export const drzewo = cache((gat = 'swierk') => {
+  const c = [];
+  if (gat === 'swierk') {
+    c.push(cz(cyl(0.11, 0.15, 0.7, 6), '#5e3d22', 0, 0.35, 0));
+    for (const [r, h, y, k] of [[0.72, 0.9, 0.85, '#245f37'], [0.6, 0.85, 1.3, '#2b6d3f'], [0.46, 0.75, 1.72, '#327a46'], [0.3, 0.6, 2.1, '#3a8650']]) c.push(cz(stozek(r, h, 8), k, 0, y, 0));
+  } else if (gat === 'sosna') {
+    c.push(cz(cyl(0.08, 0.13, 1.7, 6), '#8a4f2a', 0, 0.85, 0), cz(cyl(0.05, 0.08, 0.5, 5), '#a0603a', 0.12, 1.55, 0, 0, 0, -0.5));
+    for (const [x, y, z, r] of [[0, 2.0, 0, 0.5], [0.32, 1.85, 0.12, 0.36], [-0.28, 1.9, -0.1, 0.38], [0.05, 2.25, -0.2, 0.32], [0.2, 1.75, -0.3, 0.3]]) c.push(cz(kula(r, 7), y > 2 ? '#3f7d3c' : '#356f35', x, y, z, 0, 0, 0, 1, 0.55, 1));
+  } else if (gat === 'brzoza') {
+    c.push(cz(cyl(0.07, 0.1, 1.5, 7), '#ece8dc', 0, 0.75, 0));
+    for (const [y, a] of [[0.3, 0], [0.55, 2], [0.85, 4], [1.15, 1], [1.35, 3]]) c.push(cz(box(0.07, 0.03, 0.02), '#2c2a28', Math.cos(a) * 0.08, y, Math.sin(a) * 0.08, 0, -a, 0));
+    for (const [x, y, z, r] of [[0, 1.75, 0, 0.42], [0.28, 1.55, 0.1, 0.3], [-0.25, 1.6, -0.12, 0.32], [0.08, 2.05, -0.1, 0.3], [-0.1, 1.4, 0.25, 0.25]]) c.push(cz(kula(r, 7), y > 1.7 ? '#8cc65a' : '#79b84d', x, y, z));
+  } else if (gat === 'dab') {
+    c.push(cz(cyl(0.16, 0.24, 1.0, 7), '#5a3d26', 0, 0.5, 0), cz(cyl(0.07, 0.1, 0.6, 5), '#5a3d26', 0.22, 1.05, 0, 0, 0, -0.7), cz(cyl(0.07, 0.1, 0.6, 5), '#5a3d26', -0.2, 1.05, 0.05, 0, 0, 0.7));
+    for (const [x, y, z, r] of [[0, 1.6, 0, 0.62], [0.45, 1.4, 0.1, 0.45], [-0.45, 1.45, -0.05, 0.47], [0.1, 1.45, 0.45, 0.42], [-0.05, 1.5, -0.45, 0.44], [0.05, 1.95, 0.05, 0.42]]) c.push(cz(kula(r, 7), y > 1.7 ? '#58963f' : '#4a8636', x, y, z));
+  } else { // modrzew: smukły, jasnozielony
+    c.push(cz(cyl(0.07, 0.11, 0.6, 6), '#6e4a2c', 0, 0.3, 0));
+    for (const [r, h, y, k] of [[0.5, 1.0, 0.85, '#7fae4c'], [0.4, 0.9, 1.35, '#8bba55'], [0.28, 0.8, 1.85, '#98c45f'], [0.16, 0.5, 2.25, '#a3cc68']]) c.push(cz(stozek(r, h, 7), k, 0, y, 0));
+  }
+  return polacz(c);
+});
+// ozdoby krajobrazu (nie zasłaniają drogi, są tylko do patrzenia)
+export const OZDOBY = ['trawa', 'trawa2', 'kwiatyB', 'kwiatyZ', 'kwiatyF', 'paproc', 'muchomor', 'borowik', 'kamyki', 'kloda', 'krzaczek', 'jagodnik'];
+export const ozdoba = cache(rodzaj => {
+  const c = [];
+  if (rodzaj === 'trawa' || rodzaj === 'trawa2') {
+    const k = rodzaj === 'trawa' ? ['#5aa646', '#6db552', '#4c9a3e'] : ['#86b84e', '#9bc45a', '#77ad48'];
+    for (let i = 0; i < 6; i++) { const a = i * 1.05; c.push(cz(stozek(0.025, 0.22 + (i % 3) * 0.06, 3), k[i % 3], Math.cos(a) * 0.05, 0.12, Math.sin(a) * 0.05, Math.sin(a) * 0.35, 0, Math.cos(a) * 0.35)); }
+  } else if (rodzaj.startsWith('kwiaty')) {
+    const kol = { kwiatyB: '#ffffff', kwiatyZ: '#ffd84a', kwiatyF: '#b48cff' }[rodzaj];
+    for (const [x, z, h] of [[0, 0, 0.2], [0.08, 0.05, 0.16], [-0.06, 0.07, 0.18], [0.03, -0.08, 0.14]]) {
+      c.push(cz(cyl(0.008, 0.008, h, 3), '#4c9a3e', x, h / 2, z));
+      for (let p = 0; p < 5; p++) { const a = p * 1.256; c.push(cz(kula(0.022, 4), kol, x + Math.cos(a) * 0.025, h, z + Math.sin(a) * 0.025, 0, 0, 0, 1, 0.5, 1)); }
+      c.push(cz(kula(0.016, 4), '#f2a51c', x, h + 0.008, z));
+    }
+  } else if (rodzaj === 'paproc') {
+    for (let i = 0; i < 7; i++) { const a = i * 0.9; c.push(cz(kula(0.13, 5), i % 2 ? '#3f8a3a' : '#4d9a45', Math.cos(a) * 0.14, 0.1, Math.sin(a) * 0.14, 0, -a, 0.5, 1.8, 0.18, 0.55)); }
+  } else if (rodzaj === 'muchomor') {
+    c.push(cz(cyl(0.025, 0.03, 0.14, 6), '#f4efe2', 0, 0.07, 0), cz(new THREE.SphereGeometry(0.08, 8, 5, 0, Math.PI * 2, 0, 1.4), '#d8382f', 0, 0.12, 0));
+    for (const [x, z] of [[0.03, 0.02], [-0.03, 0.03], [0.0, -0.04], [0.05, -0.02]]) c.push(cz(kula(0.012, 4), '#ffffff', x, 0.19, z));
+    c.push(cz(cyl(0.018, 0.02, 0.08, 5), '#f4efe2', 0.12, 0.04, 0.06), cz(new THREE.SphereGeometry(0.05, 7, 4, 0, Math.PI * 2, 0, 1.4), '#d8382f', 0.12, 0.07, 0.06));
+  } else if (rodzaj === 'borowik') {
+    c.push(cz(cyl(0.035, 0.045, 0.12, 6), '#e8dcc0', 0, 0.06, 0), cz(new THREE.SphereGeometry(0.085, 8, 5, 0, Math.PI * 2, 0, 1.35), '#7a4a26', 0, 0.1, 0),
+      cz(cyl(0.025, 0.03, 0.08, 6), '#e8dcc0', -0.1, 0.04, 0.05), cz(new THREE.SphereGeometry(0.055, 7, 4, 0, Math.PI * 2, 0, 1.35), '#8a5a30', -0.1, 0.065, 0.05));
+  } else if (rodzaj === 'kamyki') {
+    for (const [x, z, s] of [[0, 0, 0.11], [0.15, 0.06, 0.07], [-0.1, 0.1, 0.06], [0.05, -0.13, 0.05]]) c.push(cz(new THREE.DodecahedronGeometry(s), s > 0.08 ? '#9aa0a8' : '#7d838c', x, s * 0.5, z, x * 9, z * 7, 0, 1, 0.65, 1));
+  } else if (rodzaj === 'kloda') {
+    c.push(cz(cyl(0.12, 0.13, 1.1, 7), '#6b4527', 0, 0.11, 0, 0, 0, Math.PI / 2), cz(cyl(0.1, 0.1, 0.01, 7), '#c9a26a', 0.555, 0.11, 0, 0, 0, Math.PI / 2),
+      cz(kula(0.1, 5), '#4f9a3a', -0.2, 0.2, 0.02, 0, 0, 0, 1.6, 0.4, 1), cz(kula(0.08, 5), '#5aa646', 0.25, 0.19, -0.03, 0, 0, 0, 1.4, 0.4, 1),
+      cz(cyl(0.03, 0.04, 0.25, 4), '#6b4527', -0.3, 0.2, 0.1, 0.9, 0, 0.3));
+  } else if (rodzaj === 'krzaczek') {
+    c.push(cz(kula(0.22, 6), '#3e7f38', 0, 0.16, 0, 0, 0, 0, 1, 0.75, 1), cz(kula(0.15, 6), '#4a8f40', 0.14, 0.22, 0.06), cz(kula(0.13, 6), '#356f33', -0.12, 0.2, -0.08));
+  } else if (rodzaj === 'jagodnik') {
+    // niskie krzaczki borówek z czerwonymi kropkami (to nie haskap, nie da się ich zbierać)
+    c.push(cz(kula(0.14, 6), '#4c8f3e', 0, 0.08, 0, 0, 0, 0, 1.3, 0.55, 1.1));
+    for (const [x, z] of [[0.08, 0.06], [-0.07, 0.05], [0.02, -0.08]]) c.push(cz(kula(0.025, 4), '#c2263a', x, 0.13, z));
+  }
+  return polacz(c);
+});
 export const krzak = cache(() => {
   const c = [cz(kula(0.45, 7), '#2f7d3a', 0, 0.35, 0, 0, 0, 0, 1, 0.8, 1), cz(kula(0.3, 6), '#3b9446', 0.25, 0.5, 0.1)];
   const r = [[0.3, 0.45, 0.25], [-0.25, 0.5, 0.2], [0.05, 0.62, -0.25], [-0.3, 0.32, -0.2], [0.35, 0.3, -0.15], [0.0, 0.7, 0.1]];

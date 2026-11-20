@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC } from './dane.js';
 
-const WERSJA = 5;
+const WERSJA = 6;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 5, opis: 'Słowiańskie budynki z bali pod strzechą i gontem, stosiki na plecach, ulepszenia plecaka. Do tego wszystko z wersji 4.' },
+  { nr: 6, opis: 'Bogatszy krajobraz: 5 gatunków drzew, trawa, kwiaty, paprocie, grzyby, kłody, ścieżki, cienie pod ludzikami. Do tego wszystko z wersji 5.' },
+  { nr: 5, opis: 'Słowiańskie budynki z bali pod strzechą i gontem, stosiki na plecach, ulepszenia plecaka. Do tego wszystko z wersji 4.', adres: 'wersje/5/' },
   { nr: 4, opis: 'Nowe, zaokrąglone postacie z buziami, drzewa przewracają się przy ścinaniu, burzenie własnych budynków. Do tego wszystko z wersji 3.', adres: 'wersje/4/' },
   { nr: 3, opis: 'Zbieracze pracują rękami: zrywają jagody do koszyka, budują młotkiem, rąbią siekierą, kopią kilofem (bez kiwania). Do tego wszystko z wersji 2.', adres: 'wersje/3/' },
   { nr: 2, opis: 'Nasza mapa ulepszeń: 4 ery (Sadzonka, Kwitnienie, Owocowanie, Wielkie Zbiory), żelazo, renifery i łosie, awanse wojska, kuźnia.', adres: 'wersje/2/' },
@@ -43,6 +44,14 @@ function rng(seed) {
   return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
 
+// gładki szum 0..1 (do rozkładu gatunków drzew, ozdób i kolorów ziemi)
+function szumMapy(x, z, ziarno = 0) {
+  const h = (i, j) => { let n = (Math.imul(i, 374761393) + Math.imul(j, 668265263) + Math.imul(ziarno, 982451653)) | 0; n = Math.imul(n ^ (n >>> 13), 1274126177); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; };
+  const i = Math.floor(x), j = Math.floor(z), fx = x - i, fz = z - j, ux = fx * fx * (3 - 2 * fx), uz = fz * fz * (3 - 2 * fz);
+  return (h(i, j) * (1 - ux) + h(i + 1, j) * ux) * (1 - uz) + (h(i, j + 1) * (1 - ux) + h(i + 1, j + 1) * ux) * uz;
+}
+const szum2 = (x, z, ziarno) => szumMapy(x, z, ziarno) * 0.65 + szumMapy(x * 2.7, z * 2.7, ziarno + 7) * 0.35;
+
 // ================= stan gry =================
 let S = null;                 // stan zapisywany
 const E = new Map();          // wszystko, co ma id: zasoby, budynki, jednostki
@@ -66,8 +75,7 @@ const zyje = e => e && E.get(e.id) === e && e.hp > 0;
 
 // ================= grafika =================
 const scena = new THREE.Scene();
-scena.background = new THREE.Color('#9fd3f0');
-scena.fog = new THREE.Fog('#9fd3f0', 70, 140);
+scena.fog = new THREE.Fog('#d4ebf5', 75, 150);
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -75,7 +83,14 @@ $('scena').appendChild(renderer.domElement);
 const plotno = renderer.domElement;
 const kamera = new THREE.PerspectiveCamera(40, 1, 0.5, 300);
 const kam = { x: 30, z: 30, d: 30 };
-scena.add(new THREE.HemisphereLight('#ffffff', '#6b8f4e', 1.1));
+scena.add(new THREE.HemisphereLight('#f4f8ff', '#6b8f4e', 1.05));
+// niebo: od jasnego przy ziemi do błękitu u góry
+scena.background = (() => {
+  const cv = document.createElement('canvas'); cv.width = 4; cv.height = 256; const c = cv.getContext('2d');
+  const g = c.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, '#6fb6ea'); g.addColorStop(0.6, '#a9d6f2'); g.addColorStop(1, '#e3f1f7');
+  c.fillStyle = g; c.fillRect(0, 0, 4, 256); const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+scena.fog.color.set('#d4ebf5');
 const slonce = new THREE.DirectionalLight('#fff4dc', 1.7);
 slonce.castShadow = true; slonce.shadow.mapSize.set(2048, 2048); slonce.shadow.bias = -0.0005;
 scena.add(slonce, slonce.target);
@@ -85,25 +100,71 @@ const MAT_PLAC = new THREE.MeshLambertMaterial({ color: '#b0814f' });
 const MAT_ZNACZNIK = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.9, depthWrite: false });
 
 function malujZiemie(seed) {
-  const R = 1024, sk = R / N, cv = document.createElement('canvas'); cv.width = cv.height = R;
-  const c = cv.getContext('2d'), r = rng(seed * 13 + 7);
-  c.fillStyle = '#7cc35e'; c.fillRect(0, 0, R, R);
-  for (let i = 0; i < 160; i++) {
-    const x = r() * R, y = r() * R, rad = 20 + r() * 70, g = c.createRadialGradient(x, y, 0, x, y, rad);
-    const jasna = r() < 0.5; g.addColorStop(0, jasna ? 'rgba(170,220,120,0.35)' : 'rgba(70,140,60,0.3)'); g.addColorStop(1, 'rgba(0,0,0,0)');
-    c.fillStyle = g; c.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+  const R = 2048, sk = R / N, cv = document.createElement('canvas'); cv.width = cv.height = R;
+  const c = cv.getContext('2d'), r = rng(seed * 13 + 7), zi = seed % 997;
+  // 1. podstawa: łąki jaśniejsze, niziny ciemniejsze, gdzieniegdzie wyschnięta trawa (mała mapa rozciągnięta z wygładzeniem)
+  const M = 256, mc = document.createElement('canvas'); mc.width = mc.height = M;
+  const mx = mc.getContext('2d'), im = mx.createImageData(M, M);
+  const KOL = [[86, 150, 64], [112, 182, 84], [146, 200, 100], [176, 192, 104]];
+  for (let py = 0; py < M; py++) for (let px = 0; px < M; px++) {
+    const x = px / M * N - POL, z = py / M * N - POL;
+    const n = szum2(x * 0.06, z * 0.06, zi), d = szumMapy(x * 0.18, z * 0.18, zi + 3);
+    let t = Math.min(2.999, Math.max(0, n * 3.2 - 0.4)), a = Math.floor(t), f = t - a;
+    let col = KOL[a].map((v, k) => v + (KOL[Math.min(3, a + 1)][k] - v) * f);
+    if (d > 0.72) col = col.map((v, k) => v + ([168, 170, 96][k] - v) * (d - 0.72) * 2.2);
+    const o = (py * M + px) * 4; im.data[o] = col[0]; im.data[o + 1] = col[1]; im.data[o + 2] = col[2]; im.data[o + 3] = 255;
   }
-  for (let i = 0; i < 5000; i++) { c.fillStyle = r() < 0.5 ? 'rgba(40,110,40,0.25)' : 'rgba(210,240,160,0.3)'; c.fillRect(r() * R, r() * R, 2, 3 + r() * 3); }
-  for (let i = 0; i < 260; i++) { c.fillStyle = ['#ffffff', '#ffe066', '#ff9ec7', '#b6a6ff'][Math.floor(r() * 4)]; c.beginPath(); c.arc(r() * R, r() * R, 2.2, 0, 7); c.fill(); }
-  // plac przy ratuszach
-  for (const [x, z] of [[30, 30], [-30, -30]]) {
-    const g = c.createRadialGradient((x + POL) * sk, (z + POL) * sk, 0, (x + POL) * sk, (z + POL) * sk, 7 * sk);
-    g.addColorStop(0, 'rgba(196,160,110,0.75)'); g.addColorStop(0.7, 'rgba(196,160,110,0.45)'); g.addColorStop(1, 'rgba(196,160,110,0)');
-    c.fillStyle = g; c.fillRect(0, 0, R, R);
+  mx.putImageData(im, 0, 0);
+  c.imageSmoothingEnabled = true; c.drawImage(mc, 0, 0, R, R);
+  const plama = (x, z, rad, kol) => { const g = c.createRadialGradient(x, z, 0, x, z, rad); g.addColorStop(0, kol); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(x - rad, z - rad, rad * 2, rad * 2); };
+  const P = v => (v + POL) * sk;
+  // 2. runo pod lasem (ciemniej, igły i liście), żwir przy skałach, ciemniejsza trawa przy krzakach
+  for (const z0 of ZAS.values()) {
+    const x = P(z0.x), z = P(z0.z);
+    if (z0.rodzaj === 'drzewo') plama(x, z, 1.5 * sk, 'rgba(48,78,34,0.42)');
+    else if (z0.rodzaj === 'krzak') plama(x, z, 1.1 * sk, 'rgba(60,110,50,0.35)');
+    else plama(x, z, 1.25 * sk, 'rgba(150,138,118,0.55)');
   }
+  for (const z0 of ZAS.values()) {
+    const x = P(z0.x), z = P(z0.z);
+    if (z0.rodzaj === 'drzewo') for (let i = 0; i < 6; i++) { c.fillStyle = r() < 0.5 ? 'rgba(120,80,40,0.5)' : 'rgba(70,100,40,0.5)'; c.fillRect(x + (r() - 0.5) * 2.4 * sk, z + (r() - 0.5) * 2.4 * sk, 3, 1.5); }
+    else if (z0.rodzaj !== 'krzak') for (let i = 0; i < 10; i++) { c.fillStyle = r() < 0.5 ? '#8f8b84' : '#b3ada3'; c.beginPath(); c.arc(x + (r() - 0.5) * 2 * sk, z + (r() - 0.5) * 2 * sk, 1.5 + r() * 2, 0, 7); c.fill(); }
+  }
+  // 3. wydeptane ścieżki od Dworków do środka mapy (lekko kręte)
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  for (const zn of [1, -1]) {
+    const pkt = [];
+    for (let t = 0; t <= 1.0001; t += 0.05) { const b = 30 * (1 - t), w = Math.sin(t * 7 + zn) * 2.2 * Math.sin(t * Math.PI); pkt.push([zn * (b + w), zn * (b - w)]); }
+    for (const [szer, kol] of [[1.9, 'rgba(160,128,84,0.35)'], [1.2, 'rgba(178,146,100,0.5)'], [0.5, 'rgba(196,166,120,0.45)']]) {
+      c.strokeStyle = kol; c.lineWidth = szer * sk; c.beginPath(); pkt.forEach(([x, z], i) => i ? c.lineTo(P(x), P(z)) : c.moveTo(P(x), P(z))); c.stroke();
+    }
+  }
+  // 4. place przy Dworkach
+  for (const [x, z] of [[30, 30], [-30, -30]]) { plama(P(x), P(z), 7.5 * sk, 'rgba(190,156,108,0.65)'); plama(P(x), P(z), 4.5 * sk, 'rgba(196,164,116,0.5)'); }
+  // 5. drobne szczegóły: źdźbła trawy, kwiatki, kamyczki
+  for (let i = 0; i < 36000; i++) {
+    const x = r() * R, z = r() * R, q = r();
+    c.fillStyle = q < 0.35 ? 'rgba(40,100,35,0.35)' : q < 0.7 ? 'rgba(150,210,110,0.35)' : q < 0.85 ? 'rgba(90,150,60,0.4)' : 'rgba(200,220,140,0.3)';
+    c.fillRect(x, z, 1.5, 3 + r() * 4);
+  }
+  for (let i = 0; i < 900; i++) { c.fillStyle = ['#ffffff', '#ffe066', '#ff9ec7', '#b6a6ff', '#ffb347'][Math.floor(r() * 5)]; c.beginPath(); c.arc(r() * R, r() * R, 2 + r() * 1.5, 0, 7); c.fill(); }
+  for (let i = 0; i < 900; i++) { c.fillStyle = r() < 0.5 ? 'rgba(120,115,105,0.6)' : 'rgba(170,165,150,0.6)'; c.beginPath(); c.arc(r() * R, r() * R, 1 + r() * 2, 0, 7); c.fill(); }
   const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
   return t;
 }
+// klepisko pod budynkiem (miękkie brzegi)
+const MAT_KLEP = (() => {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128; const c = cv.getContext('2d');
+  const g = c.createRadialGradient(64, 64, 20, 64, 64, 64); g.addColorStop(0, 'rgba(184,150,104,0.95)'); g.addColorStop(0.7, 'rgba(184,150,104,0.75)'); g.addColorStop(1, 'rgba(184,150,104,0)');
+  c.fillStyle = g; c.fillRect(0, 0, 128, 128);
+  for (let i = 0; i < 160; i++) { c.fillStyle = Math.random() < 0.5 ? 'rgba(120,95,60,0.35)' : 'rgba(220,200,160,0.35)'; c.fillRect(20 + Math.random() * 88, 20 + Math.random() * 88, 2, 2); }
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+  return new THREE.MeshLambertMaterial({ map: t, transparent: true, depthWrite: false });
+})();
+const GEO_KLEP = {};
+// cienie pod ludzikami: jedna warstwa kółek dla wszystkich
+const CIENIE = new THREE.InstancedMesh(new THREE.CircleGeometry(1, 16).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: 0.22, depthWrite: false }), 400);
+CIENIE.count = 0; CIENIE.frustumCulled = false; CIENIE.renderOrder = 1;
 let ziemia = null, dalej = null;
 const INST = {}; // instancje drzew, krzaków i skał
 
@@ -246,21 +307,32 @@ function generujMape(seed) {
     lista[rodzaj].push(z0); ZAS.set(z0.id, z0); E.set(z0.id, z0); ZAS_TYP[z0.sur].push(z0);
     blok[c] = 1; naKom[c] = z0.id;
   }
-  // instancje (jedna bryła na rodzaj)
+  // gatunki drzew: każdy las ma swój główny gatunek, przy brzegach mapy głównie świerki
+  const zi = seed % 997, grupy = { krzak: lista.krzak, kamien: lista.kamien, ruda: lista.ruda };
+  lista.drzewo.forEach((z0, k) => {
+    const rr = rng(z0.id * 17 + 3), brzeg = Math.min(z0.x + POL, z0.z + POL, POL - z0.x, POL - z0.z);
+    const n = szumMapy(z0.x * 0.07, z0.z * 0.07, zi + 11);
+    let g = brzeg < 4 ? (rr() < 0.7 ? 'swierk' : 'modrzew') : n < 0.32 ? 'swierk' : n < 0.47 ? 'sosna' : n < 0.62 ? 'brzoza' : n < 0.8 ? 'dab' : 'modrzew';
+    if (rr() < 0.28) g = MOD.GATUNKI[Math.floor(rr() * MOD.GATUNKI.length)];
+    z0.gat = g; z0.pn = k;
+    const kl = 'drzewo_' + g; (grupy[kl] || (grupy[kl] = [])).push(z0); z0.inst = grupy[kl].length - 1;
+  });
+  // instancje (jedna bryła na rodzaj albo gatunek)
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
-  for (const rodzaj in lista) {
-    const L = lista[rodzaj]; if (!L.length) continue;
-    const geo = rodzaj === 'drzewo' ? MOD.drzewo() : rodzaj === 'krzak' ? MOD.krzak() : MOD.skala(rodzaj);
+  for (const klucz in grupy) {
+    const L = grupy[klucz]; if (!L.length) continue;
+    const drz = klucz.startsWith('drzewo_');
+    const geo = drz ? MOD.drzewo(klucz.slice(7)) : klucz === 'krzak' ? MOD.krzak() : MOD.skala(klucz);
     const im = new THREE.InstancedMesh(geo, MAT, L.length);
-    im.castShadow = rodzaj === 'drzewo'; im.receiveShadow = false;
+    im.castShadow = drz; im.receiveShadow = false;
     for (const z0 of L) {
-      const rr = rng(z0.id * 31 + 5), s = rodzaj === 'drzewo' ? 0.85 + rr() * 0.45 : 0.85 + rr() * 0.3;
-      q.setFromAxisAngle(up, rr() * 6.283); sc.set(s, s * (rodzaj === 'drzewo' ? 0.9 + rr() * 0.3 : 1), s);
+      const rr = rng(z0.id * 31 + 5), s = drz ? 0.82 + rr() * 0.5 : 0.85 + rr() * 0.3;
+      q.setFromAxisAngle(up, rr() * 6.283); sc.set(s, s * (drz ? 0.9 + rr() * 0.3 : 1), s);
       p.set(z0.x + (rr() - 0.5) * 0.25, 0, z0.z + (rr() - 0.5) * 0.25);
       im.setMatrixAt(z0.inst, m4.compose(p, q, sc));
     }
     im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere();
-    INST[rodzaj] = im; scena.add(im);
+    INST[klucz] = im; scena.add(im);
   }
   // pieńki po ściętych drzewach (na początku niewidoczne)
   if (lista.drzewo.length) {
@@ -271,27 +343,64 @@ function generujMape(seed) {
   return id;
 }
 const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
+// ozdoby: trawa, kwiaty, paprocie, grzyby, kamyki, kłody, krzaczki; tylko do patrzenia, znikają spod budynków
+const OZD = new Map();
+function rozmiescOzdoby(seed) {
+  OZD.clear();
+  const r = rng(seed * 7 + 11), lista = {};
+  for (const k of MOD.OZDOBY) lista[k] = [];
+  const odBazy = (x, z) => Math.min(Math.hypot(x - 30, z - 30), Math.hypot(x + 30, z + 30));
+  const przyLesie = c => { const i = c % N, j = (c / N) | 0; for (let k = 0; k < 8; k++) { const n = kom2(i + DI[k], j + DJ[k]); if (n >= 0 && blok[n] === 1) { const z0 = ZAS.get(naKom[n]); if (z0 && z0.rodzaj === 'drzewo') return true; } } return false; };
+  for (let k = 0; k < 5200; k++) {
+    const x = -46.5 + r() * 93, z = -46.5 + r() * 93, c = kom(x, z);
+    if (c < 0 || blok[c] !== 0 || odBazy(x, z) < 6.5) continue;
+    const q = r(), las = przyLesie(c), kw = szumMapy(x * 0.12, z * 0.12, 77);
+    let typ;
+    if (las) typ = q < 0.28 ? 'paproc' : q < 0.38 ? 'muchomor' : q < 0.48 ? 'borowik' : q < 0.6 ? 'jagodnik' : q < 0.66 ? 'kloda' : q < 0.76 ? 'krzaczek' : 'trawa';
+    else if (kw > 0.6 && q < 0.5) typ = ['kwiatyB', 'kwiatyZ', 'kwiatyF'][Math.floor(r() * 3)];
+    else typ = q < 0.5 ? 'trawa' : q < 0.78 ? 'trawa2' : q < 0.85 ? 'kamyki' : q < 0.9 ? 'krzaczek' : q < 0.95 ? 'kwiatyZ' : 'trawa';
+    lista[typ].push([x, z, r() * 6.283, 0.75 + r() * 0.55, c]);
+  }
+  const m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), sc = new THREE.Vector3(), p = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+  for (const typ in lista) {
+    const L = lista[typ]; if (!L.length) continue;
+    const im = new THREE.InstancedMesh(MOD.ozdoba(typ), MAT, L.length);
+    L.forEach(([x, z, a, s, c], i) => {
+      qq.setFromAxisAngle(up, a); sc.set(s, s, s); p.set(x, 0, z); im.setMatrixAt(i, m4.compose(p, qq, sc));
+      (OZD.get(c) || OZD.set(c, []).get(c)).push([im, i]);
+    });
+    im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere();
+    INST['oz_' + typ] = im; scena.add(im);
+  }
+}
+function ukryjOzdoby(i0, j0, w) {
+  for (let j = j0 - 1; j < j0 + w + 1; j++) for (let i = i0 - 1; i < i0 + w + 1; i++) {
+    const c = kom2(i, j), l = OZD.get(c); if (!l) continue;
+    for (const [im, idx] of l) { im.setMatrixAt(idx, ZERO); im.instanceMatrix.needsUpdate = true; }
+    OZD.delete(c);
+  }
+}
 // ścięte drzewa: przy pierwszym uderzeniu siekierą drzewo się przewraca, potem pień maleje, a na końcu zostaje pieniek
 const SCIETE = new Map();
 function zetnij(z0, odX, odZ, odrazu = false) {
   if (z0.rodzaj !== 'drzewo' || SCIETE.has(z0.id) || !ZAS.has(z0.id)) return;
-  const im = INST.drzewo; if (im) { im.setMatrixAt(z0.inst, ZERO); im.instanceMatrix.needsUpdate = true; }
+  const im = INST['drzewo_' + z0.gat]; if (im) { im.setMatrixAt(z0.inst, ZERO); im.instanceMatrix.needsUpdate = true; }
   const g = new THREE.Group(); g.position.set(z0.x, 0, z0.z);
   g.rotation.y = odX === z0.x && odZ === z0.z ? (z0.id * 2.39) % 6.283 : Math.atan2(z0.x - odX, z0.z - odZ);
   g.add(new THREE.Mesh(MOD.pieniek(), MAT));
-  const drz = new THREE.Mesh(MOD.drzewo(), MAT); drz.castShadow = true; drz.position.y = 0.18; g.add(drz);
+  const drz = new THREE.Mesh(MOD.drzewo(z0.gat), MAT); drz.castShadow = true; drz.position.y = 0.18; g.add(drz);
   scena.add(g);
   SCIETE.set(z0.id, { g, drz, z0, t: odrazu ? 1 : 0 });
 }
 function pieniekZostaje(z0) {
   const im = INST.pieniek; if (!im) return;
-  im.setMatrixAt(z0.inst, new THREE.Matrix4().makeTranslation(z0.x, 0, z0.z)); im.instanceMatrix.needsUpdate = true;
+  im.setMatrixAt(z0.pn, new THREE.Matrix4().makeTranslation(z0.x, 0, z0.z)); im.instanceMatrix.needsUpdate = true;
 }
 function usunZasob(z0) {
   if (!ZAS.has(z0.id)) return;
   ZAS.delete(z0.id); E.delete(z0.id); z0.ile = 0;
   if (blok[z0.c] === 1) { blok[z0.c] = 0; naKom[z0.c] = 0; }
-  const im = INST[z0.rodzaj]; if (im) { im.setMatrixAt(z0.inst, ZERO); im.instanceMatrix.needsUpdate = true; }
+  const im = INST[z0.rodzaj === 'drzewo' ? 'drzewo_' + z0.gat : z0.rodzaj]; if (im) { im.setMatrixAt(z0.inst, ZERO); im.instanceMatrix.needsUpdate = true; }
   if (z0.rodzaj === 'drzewo') { const sc = SCIETE.get(z0.id); if (sc) { scena.remove(sc.g); SCIETE.delete(z0.id); } pieniekZostaje(z0); }
   S.usuniete.push(z0.id); miniBrud = true;
   wybrane = wybrane.filter(e => e !== z0);
@@ -751,6 +860,8 @@ function nowyBudynek(strona, typ, i0, j0, gotowy = false, id) {
   b.mesh = new THREE.Mesh(MOD.budynek(typ, strona), MAT);
   b.mesh.castShadow = true; b.mesh.receiveShadow = true;
   b.mesh.position.set(b.x, 0, b.z);
+  ukryjOzdoby(i0, j0, w);
+  if (!d.pole) { const k = new THREE.Mesh(GEO_KLEP[w] || (GEO_KLEP[w] = new THREE.PlaneGeometry(w + 1.1, w + 1.1).rotateX(-Math.PI / 2)), MAT_KLEP); k.position.y = 0.012; k.renderOrder = 1; k.receiveShadow = true; b.mesh.add(k); }
   if (strona === KOMPUTER) b.mesh.rotation.y = Math.PI; // drzwi w stronę środka mapy
   if (!gotowy) {
     b.mesh.scale.y = 0.12;
@@ -1099,6 +1210,7 @@ function nowaGra(trudnosc) {
   S = { v: 1, seed, trudnosc, trudnoscGracza: 'sredni', czas: 0, nextId: 1, zas: [{ ...START }, { ...START }], era: [1, 1], ul: [{}, {}], wynik: null,
     stat: [0, 1].map(() => ({ zebrane: 0, wyszkoleni: 0, pokonani: 0, zburzone: 0, budynki: 0 })), ai: [nowyAI(), nowyAI()], usuniete: [], pomoc: {}, aiGracz: false };
   S.nextId = generujMape(seed);
+  rozmiescOzdoby(seed);
   zbudujZiemie();
   for (const s of [STRONA_GRACZA, KOMPUTER]) {
     const cx = s === STRONA_GRACZA ? 30 : -30, cz = cx;
@@ -1148,6 +1260,7 @@ function wczytajGre(o) {
   wyczyscSwiat();
   S = { ...o }; delete S.zasoby; delete S.bud; delete S.jed; delete S.kamera;
   generujMape(S.seed);
+  rozmiescOzdoby(S.seed);
   zbudujZiemie();
   for (const id of o.usuniete) { const z0 = ZAS.get(id); if (z0) usunZasob(z0); }
   S.usuniete = [...o.usuniete];
@@ -1236,9 +1349,14 @@ function ruszReka(u, dt) {
   const k = Math.min(1, dt * 25);
   u.ramie.rotation.x += (rx - u.ramie.rotation.x) * k; u.ramie.rotation.z += (rz - u.ramie.rotation.z) * k;
 }
+const M_CIEN = new THREE.Matrix4();
 function rysuj(dt) {
   czasRys += dt;
   ustawKamere();
+  if (!CIENIE.parent) scena.add(CIENIE);
+  let nc = 0;
+  for (const u of JED) { if (nc >= 400) break; const r = u.d.r * 1.35; M_CIEN.makeScale(r, 1, r); M_CIEN.setPosition(u.x, 0.02, u.z); CIENIE.setMatrixAt(nc++, M_CIEN); }
+  CIENIE.count = nc; CIENIE.instanceMatrix.needsUpdate = true;
   for (const u of JED) {
     u.t += dt;
     const m = u.mesh;
