@@ -2,12 +2,12 @@
 // Nasza własna mapa ulepszeń, inspirowana jagodą kamczacką (haskap): ery rosną jak krzak, wojsko jeździ na reniferach i łosiach.
 // Nazwy wewnętrzne (np. 'ratusz', 'koszary', 'szopa') zostają takie same jak w wersji 1, żeby zapisane gry dało się wczytać.
 
-export const SUROWCE = ['jagody', 'drewno', 'kamien', 'zelazo'];
-export const NAZWY_SUR = { jagody: 'jagody', drewno: 'drewno', kamien: 'kamień', zelazo: 'żelazo' };
-export const EMOJI_SUR = { jagody: '🫐', drewno: '🪵', kamien: '🪨', zelazo: '⛓️' };
+export const SUROWCE = ['jagody', 'drewno', 'kamien', 'zelazo', 'zloto'];
+export const NAZWY_SUR = { jagody: 'jagody', drewno: 'drewno', kamien: 'kamień', zelazo: 'żelazo', zloto: 'złoto' };
+export const EMOJI_SUR = { jagody: '🫐', drewno: '🪵', kamien: '🪨', zelazo: '⛓️', zloto: '🪙' };
 export const ERY = ['', 'Sadzonka', 'Kwitnienie', 'Owocowanie', 'Wielkie Zbiory'];
 export const EMOJI_ERY = ['', '🌱', '🌸', '🫐', '🧺'];
-export const START = { jagody: 200, drewno: 200, kamien: 150, zelazo: 50 };
+export const START = { jagody: 200, drewno: 200, kamien: 150, zelazo: 50, zloto: 50 };
 export const MAKS_LUDNOSC = 100;
 
 // atak: obrażenia jednego uderzenia; odstep: sekundy między uderzeniami; zasieg 0 = walczy wręcz
@@ -42,12 +42,15 @@ export const JEDNOSTKI = {
   jezdziec: { nazwa: 'Jeździec na reniferze', emoji: '🦌', linia: 'renifer', st: 2, hp: 100, atak: 8, pancerz: 2, zasieg: 0, odstep: 1.6, szybkosc: 3.5, r: 0.48, wzrok: 6, wojsko: true,
     koszt: { jagody: 70, zelazo: 50 }, czas: 18, era: 3, z: 'stajnia', awans: 'aw_jezdziec', opis: 'Szybki i silny' },
   rycerz: { nazwa: 'Rycerz na łosiu', emoji: '🫎', linia: 'renifer', st: 3, hp: 140, atak: 11, pancerz: 3, zasieg: 0, odstep: 1.6, szybkosc: 3.3, r: 0.55, wzrok: 6, wojsko: true,
-    koszt: { jagody: 80, zelazo: 70 }, czas: 20, era: 4, z: 'stajnia', awans: 'aw_rycerz', opis: 'Najsilniejszy w całej dolinie' },
+    koszt: { jagody: 80, zelazo: 50, zloto: 30 }, czas: 20, era: 4, z: 'stajnia', awans: 'aw_rycerz', opis: 'Najsilniejszy w całej dolinie' },
   // warsztat
   taran: { nazwa: 'Taran', emoji: '🪵', linia: 'taran', st: 1, hp: 180, atak: 30, pancerz: 3, pancerzDystans: 12, zasieg: 0, odstep: 3, szybkosc: 1.2, r: 0.7, wzrok: 6, wojsko: true, tylkoBudynki: true,
     koszt: { drewno: 160, zelazo: 75 }, czas: 25, era: 3, z: 'warsztat', opis: 'Burzy budynki, nie walczy z ludźmi' },
   katapulta: { nazwa: 'Katapulta', emoji: '❄️', linia: 'katapulta', st: 1, hp: 90, atak: 16, pancerz: 0, pancerzDystans: 6, zasieg: 8.5, odstep: 4.5, szybkosc: 1.0, r: 0.7, wzrok: 9, wojsko: true, oblezenie: true,
-    koszt: { drewno: 200, zelazo: 120 }, czas: 30, era: 4, z: 'warsztat', opis: 'Rzuca zamrożonymi kulami z jagód, burzy budynki z daleka' },
+    koszt: { drewno: 200, zelazo: 100, zloto: 60 }, czas: 30, era: 4, z: 'warsztat', opis: 'Rzuca zamrożonymi kulami z jagód, burzy budynki z daleka' },
+  // Jarmark: wóz kupiecki z reniferem jeździ sam między Jarmarkiem a twoim spichlerzem (albo Dworkiem) i przywozi złoto
+  woz: { nazwa: 'Wóz kupiecki', emoji: '🛒', hp: 70, atak: 0, pancerz: 0, zasieg: 0, odstep: 99, szybkosc: 2.6, r: 0.55, wzrok: 4, kupiec: true,
+    koszt: { drewno: 100, jagody: 50 }, czas: 20, era: 2, z: 'jarmark', opis: 'Wozi towar do spichlerza i z powrotem: im dalej, tym więcej złota' },
 };
 
 // w: rozmiar w kratkach (budynek zajmuje w × w); ludnosc: o ile więcej mieszkańców; skup: jakie surowce przyjmuje
@@ -58,8 +61,9 @@ export const BUDYNKI = {
   dom: { nazwa: 'Dom', emoji: '🏠', w: 2, hp: 250, koszt: { drewno: 30 }, czas: 12, era: 1, ludnosc: 5, opis: 'Miejsce dla 5 mieszkańców' },
   spichlerz: { nazwa: 'Spichlerz', emoji: '🧺', w: 3, hp: 400, koszt: { drewno: 100 }, czas: 20, era: 1, skup: ['jagody'], opis: 'Tu zbieracze odnoszą jagody, tu ulepszasz plantacje' },
   tartak: { nazwa: 'Tartak', emoji: '🪚', w: 3, hp: 400, koszt: { drewno: 100 }, czas: 20, era: 1, skup: ['drewno'], opis: 'Tu zbieracze odnoszą drewno' },
-  szopa: { nazwa: 'Kamieniołom', emoji: '🪨', w: 3, hp: 400, koszt: { drewno: 100 }, czas: 20, era: 1, skup: ['kamien'], opis: 'Tu zbieracze odnoszą kamień' },
-  kopalnia: { nazwa: 'Kopalnia rudy żelaza', emoji: '⛏️', w: 3, hp: 450, koszt: { drewno: 125, kamien: 25 }, czas: 25, era: 2, skup: ['zelazo'], opis: 'Tu zbieracze odnoszą rudę żelaza' },
+  szopa: { nazwa: 'Kamieniołom', emoji: '🪨', w: 3, hp: 400, koszt: { drewno: 100 }, czas: 20, era: 1, skup: ['kamien', 'zloto'], opis: 'Tu zbieracze odnoszą kamień i złoto' },
+  kopalnia: { nazwa: 'Kopalnia rudy żelaza', emoji: '⛏️', w: 3, hp: 450, koszt: { drewno: 125, kamien: 25 }, czas: 25, era: 2, skup: ['zelazo', 'zloto'], opis: 'Tu zbieracze odnoszą rudę żelaza i złoto' },
+  jarmark: { nazwa: 'Jarmark Jagodowy', emoji: '🎪', w: 3, hp: 700, koszt: { drewno: 175 }, czas: 35, era: 2, opis: 'Kupuj i sprzedawaj za złoto, szkol wozy kupieckie' },
   pole: { nazwa: 'Plantacja haskapu', emoji: '🌱', w: 3, hp: 150, koszt: { drewno: 60 }, czas: 10, era: 1, pole: true, wymaga: 'spichlerz', opis: 'Jagody bez końca, pracuje 1 zbieracz' },
   koszary: { nazwa: 'Strażnica Krzaka', emoji: '🛡️', w: 3, hp: 700, koszt: { drewno: 150 }, czas: 30, era: 1, opis: 'Szkoli kijarzy i włóczników' },
   strzelnica: { nazwa: 'Strzelnica', emoji: '🎯', w: 3, hp: 600, koszt: { drewno: 175 }, czas: 30, era: 2, wymaga: 'koszary', opis: 'Proca i kusza: szkoli strzelców' },
@@ -74,9 +78,13 @@ export const BUDYNKI = {
 export const WIEZA_POZIOMY = [null,
   { nazwa: 'Ambona', emoji: '🗼', hp: 800, atak: 5, zasieg: 7.5, odstep: 1.6 },
   { nazwa: 'Wieża z cegły', emoji: '🧱', hp: 1300, atak: 7, zasieg: 8.5, odstep: 1.4, era: 3, koszt: { kamien: 150, drewno: 50 }, czas: 40, opis: 'Grube ściany z cegły, strzela dalej i mocniej' },
-  { nazwa: 'Twierdza Jagodowa', emoji: '🏰', hp: 2000, atak: 10, zasieg: 9.5, odstep: 1.2, era: 4, koszt: { kamien: 300, zelazo: 100 }, czas: 60, opis: 'Najmocniejsza wieża w całej dolinie' },
+  { nazwa: 'Twierdza Jagodowa', emoji: '🏰', hp: 2000, atak: 10, zasieg: 9.5, odstep: 1.2, era: 4, koszt: { kamien: 300, zelazo: 100, zloto: 100 }, czas: 60, opis: 'Najmocniejsza wieża w całej dolinie' },
 ];
-export const KOLEJNOSC_BUDYNKOW = ['dom', 'spichlerz', 'tartak', 'szopa', 'kopalnia', 'pole', 'koszary', 'mur', 'brama', 'strzelnica', 'stajnia', 'kuznia', 'wieza', 'warsztat', 'ratusz'];
+export const KOLEJNOSC_BUDYNKOW = ['dom', 'spichlerz', 'tartak', 'szopa', 'kopalnia', 'pole', 'koszary', 'mur', 'brama', 'strzelnica', 'stajnia', 'kuznia', 'jarmark', 'wieza', 'warsztat', 'ratusz'];
+// handel na Jarmarku: kupno i sprzedaż po 100 sztuk; ceny w złocie zmieniają się po każdej transakcji i powoli wracają
+export const HANDEL = { ilosc: 100, ceny: { jagody: 100, drewno: 100, kamien: 120, zelazo: 150 }, sprzedaz: 0.6, zmiana: 0.06,
+  // zysk z kursu wozu rośnie szybciej niż odległość, więc daleki Jarmark daje więcej złota na minutę
+  zyskWozu: d => 0.2 * d + 0.02 * d * d };
 // mury i bramy: palisada → mur z cegieł → mur ze stalowymi sztabami (ulepszenia w Kamieniołomie zmieniają wszystkie naraz)
 export const MUR_POZIOMY = [null,
   { mur: 'Palisada', brama: 'Brama drewniana', hpMur: 250, hpBrama: 400 },
@@ -88,10 +96,10 @@ export const MUR_POZIOMY = [null,
 export const NOWA_ERA = {
   2: { koszt: { jagody: 500 }, czas: 60, budynki: 2 },
   3: { koszt: { jagody: 800, zelazo: 200 }, czas: 90, budynki: 2 },
-  4: { koszt: { jagody: 1000, zelazo: 600 }, czas: 120, budynki: 2 },
+  4: { koszt: { jagody: 1000, zelazo: 400, zloto: 200 }, czas: 120, budynki: 2 },
 };
 // budynki, które liczą się do przejścia do nowej ery (domy i plantacje się nie liczą)
-export const LICZA_DO_ERY = ['spichlerz', 'tartak', 'szopa', 'kopalnia', 'koszary', 'strzelnica', 'stajnia', 'kuznia', 'wieza', 'warsztat'];
+export const LICZA_DO_ERY = ['spichlerz', 'tartak', 'szopa', 'kopalnia', 'koszary', 'strzelnica', 'stajnia', 'kuznia', 'jarmark', 'wieza', 'warsztat'];
 
 // ulepszenia; wymaga: najpierw inne ulepszenie; awans: po ulepszeniu cała linia wojska awansuje na tę jednostkę
 export const ULEPSZENIA = {
@@ -115,17 +123,17 @@ export const ULEPSZENIA = {
   kilof: { nazwa: 'Kilof', emoji: '⛏️', z: 'szopa', era: 1, koszt: { jagody: 100, drewno: 75 }, czas: 20, opis: 'Kamień zbiera się o 20% szybciej' },
   mur_cegla: { nazwa: 'Mur z cegieł', emoji: '🧱', z: 'szopa', era: 3, koszt: { kamien: 200, drewno: 100 }, czas: 45, opis: 'Wszystkie palisady i bramy stają się murem z cegieł' },
   mur_stal: { nazwa: 'Mur ze stalowymi sztabami', emoji: '⛓️', z: 'szopa', era: 4, wymaga: 'mur_cegla', koszt: { kamien: 300, zelazo: 150 }, czas: 60, opis: 'Mury i bramy wzmocnione stalą: najmocniejsze' },
-  kilof_z: { nazwa: 'Żelazny kilof', emoji: '⛏️', z: 'szopa', era: 2, wymaga: 'kilof', koszt: { jagody: 150, zelazo: 50 }, czas: 30, opis: 'Kamień i ruda żelaza o 20% szybciej' },
+  kilof_z: { nazwa: 'Żelazny kilof', emoji: '⛏️', z: 'szopa', era: 2, wymaga: 'kilof', koszt: { jagody: 150, zelazo: 50 }, czas: 30, opis: 'Kamień, ruda żelaza i złoto o 20% szybciej' },
   // Kuźnia: broń, zbroje, pociski (po 3 stopnie)
   bron1: { nazwa: 'Drewniana broń', emoji: '🪵', z: 'kuznia', era: 2, koszt: { jagody: 150 }, czas: 30, opis: 'Wojsko walczące wręcz: +1 do ataku' },
   bron2: { nazwa: 'Żelazna broń', emoji: '🗡️', z: 'kuznia', era: 3, wymaga: 'bron1', koszt: { jagody: 200, zelazo: 100 }, czas: 40, opis: 'Wręcz: jeszcze +1 do ataku' },
-  bron3: { nazwa: 'Stalowa broń', emoji: '⚔️', z: 'kuznia', era: 4, wymaga: 'bron2', koszt: { jagody: 300, zelazo: 200 }, czas: 50, opis: 'Wręcz: jeszcze +2 do ataku' },
+  bron3: { nazwa: 'Stalowa broń', emoji: '⚔️', z: 'kuznia', era: 4, wymaga: 'bron2', koszt: { jagody: 300, zelazo: 150, zloto: 100 }, czas: 50, opis: 'Wręcz: jeszcze +2 do ataku' },
   zbroja1: { nazwa: 'Wiklinowa zbroja', emoji: '🧺', z: 'kuznia', era: 2, koszt: { jagody: 100, drewno: 50 }, czas: 30, opis: 'Całe wojsko: +1 do pancerza' },
   zbroja2: { nazwa: 'Skórzana zbroja', emoji: '🦺', z: 'kuznia', era: 3, wymaga: 'zbroja1', koszt: { jagody: 200, zelazo: 75 }, czas: 40, opis: 'Całe wojsko: jeszcze +1 do pancerza' },
-  zbroja3: { nazwa: 'Kolczuga', emoji: '🛡️', z: 'kuznia', era: 4, wymaga: 'zbroja2', koszt: { jagody: 300, zelazo: 175 }, czas: 50, opis: 'Całe wojsko: jeszcze +2 do pancerza' },
+  zbroja3: { nazwa: 'Kolczuga', emoji: '🛡️', z: 'kuznia', era: 4, wymaga: 'zbroja2', koszt: { jagody: 300, zelazo: 125, zloto: 100 }, czas: 50, opis: 'Całe wojsko: jeszcze +2 do pancerza' },
   pociski1: { nazwa: 'Gładkie kamyki', emoji: '🪨', z: 'kuznia', era: 2, koszt: { jagody: 100, drewno: 50 }, czas: 30, opis: 'Strzelcy, Ambony i Dworek: +1 do ataku' },
   pociski2: { nazwa: 'Żelazne kulki', emoji: '⚫', z: 'kuznia', era: 3, wymaga: 'pociski1', koszt: { jagody: 150, zelazo: 75 }, czas: 40, opis: 'Strzelcy i Ambony: +1 do ataku i dalej' },
-  pociski3: { nazwa: 'Stalowe groty', emoji: '🏹', z: 'kuznia', era: 4, wymaga: 'pociski2', koszt: { jagody: 250, zelazo: 150 }, czas: 50, opis: 'Strzelcy i Ambony: +1 do ataku i jeszcze dalej' },
+  pociski3: { nazwa: 'Stalowe groty', emoji: '🏹', z: 'kuznia', era: 4, wymaga: 'pociski2', koszt: { jagody: 250, zelazo: 100, zloto: 100 }, czas: 50, opis: 'Strzelcy i Ambony: +1 do ataku i jeszcze dalej' },
   // awanse wojska
   aw_tarczownik: { nazwa: 'Awans: Tarczownik', emoji: '🛡️', z: 'koszary', era: 2, koszt: { jagody: 150, zelazo: 50 }, czas: 30, awans: 'tarczownik', opis: 'Wszyscy kijarze dostają tarcze' },
   aw_obronca: { nazwa: 'Awans: Obrońca Sadu', emoji: '⚔️', z: 'koszary', era: 3, wymaga: 'aw_tarczownik', koszt: { jagody: 250, zelazo: 150 }, czas: 40, awans: 'obronca', opis: 'Tarczownicy stają się Obrońcami Sadu' },
@@ -133,14 +141,14 @@ export const ULEPSZENIA = {
   aw_procarz2: { nazwa: 'Awans: żelazne kulki do proc', emoji: '🎯', z: 'strzelnica', era: 2, koszt: { jagody: 125, zelazo: 50 }, czas: 30, awans: 'procarz2', opis: 'Procarze rzucają żelaznymi kulkami' },
   aw_kusznik: { nazwa: 'Awans: Kusznik', emoji: '🏹', z: 'strzelnica', era: 3, wymaga: 'aw_procarz2', koszt: { jagody: 250, zelazo: 125 }, czas: 40, awans: 'kusznik', opis: 'Procarze dostają kusze' },
   aw_jezdziec: { nazwa: 'Awans: Jeździec na reniferze', emoji: '🦌', z: 'stajnia', era: 3, koszt: { jagody: 250, zelazo: 150 }, czas: 40, awans: 'jezdziec', opis: 'Zwiadowcy stają się jeźdźcami w zbrojach' },
-  aw_rycerz: { nazwa: 'Awans: Rycerz na łosiu', emoji: '🫎', z: 'stajnia', era: 4, wymaga: 'aw_jezdziec', koszt: { jagody: 400, zelazo: 250 }, czas: 50, awans: 'rycerz', opis: 'Jeźdźcy przesiadają się na łosie' },
+  aw_rycerz: { nazwa: 'Awans: Rycerz na łosiu', emoji: '🫎', z: 'stajnia', era: 4, wymaga: 'aw_jezdziec', koszt: { jagody: 400, zelazo: 200, zloto: 150 }, czas: 50, awans: 'rycerz', opis: 'Jeźdźcy przesiadają się na łosie' },
 };
 
 // tempo zbierania (na sekundę) i ile zbieracz niesie naraz
-export const ZBIERANIE = { jagody: 0.8, drewno: 0.65, kamien: 0.5, zelazo: 0.5, pole: 0.5 };
+export const ZBIERANIE = { jagody: 0.8, drewno: 0.65, kamien: 0.55, zelazo: 0.5, zloto: 0.45, pole: 0.5 };
 export const UDZWIG = 10;
 // ile jest w jednym drzewie, krzaku, skale
-export const ZAPAS = { drzewo: 100, krzak: 125, kamien: 250, ruda: 450 };
+export const ZAPAS = { drzewo: 100, krzak: 125, kamien: 700, ruda: 450, zloto: 400 };
 
 // poziomy trudności (komputer): tempo zbierania, kiedy pierwszy atak (sekundy), ile wojska w kolejnych atakach,
 // ilu zbieraczy w kolejnych erach, ile ambon

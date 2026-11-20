@@ -5,6 +5,25 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 9 (20.11.2026)
+
+**Dodane**
+- Złoto 🪙: piąty surowiec. Złote skały (po 400 złota) przy bazie i na środku mapy, ograniczona ilość.
+  Złoto odnosi się do Kamieniołomu, Kopalni rudy albo Dworku. Potrzebne do ery 4, Rycerza na łosiu,
+  Katapulty, Twierdzy Jagodowej i najlepszych ulepszeń w Kuźni.
+- 🎪 Jarmark Jagodowy (era 2):
+  - kupno i sprzedaż po 100 sztuk jagód, drewna, kamienia i żelaza za złoto; ceny zmieniają się po każdej
+    transakcji (im więcej sprzedajesz, tym taniej skupują) i powoli wracają,
+  - wozy kupieckie z reniferami: jeżdżą same między Jarmarkiem a twoim najdalszym spichlerzem albo Dworkiem
+    i za każdy kurs przywożą złoto (nad Jarmarkiem widać „+12 🪙”). Im dalej Jarmark, tym więcej złota
+    na minutę (w teście: 10 kroków od Dworku 43 złota na minutę, 45 kroków 82).
+- Komputer też zbiera złoto, buduje Jarmark z wozami i sprzedaje nadmiar surowców.
+
+**Zmienione**
+- Dużo więcej kamienia: każda skała ma 700 kamienia zamiast 250, a na mapie są nowe kamieniołomy
+  (kilka przy każdej bazie i bliżej środka). Razem prawie 7 razy więcej kamienia niż wcześniej.
+- Zapisane gry wczytują się dalej (nowe złoża, które wypadłyby pod budynkiem, znikają).
+
 ## Wersja 8 (20.11.2026)
 
 **Dodane**

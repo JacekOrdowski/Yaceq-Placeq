@@ -178,7 +178,27 @@ export const taran = cache(strona => {
   for (const sx of [-0.4, 0.4]) for (const sz of [-0.7, 0.7]) c.push(cz(box(0.08, 0.7, 0.08), BRAZ, sx, 0.7, sz));
   return polacz(c);
 });
-export const JEDNOSTKI3D = { osadnik, wojownik, tarczownik, obronca, wlocznik, pikinier, procarz, procarz2, kusznik, zwiadowca, jezdziec, rycerz, taran, katapulta };
+// wóz kupiecki: renifer ciągnie wóz z plandeką w kolorze gracza i koszami jagód
+export const woz = cache(strona => {
+  const k = KOLORY_STRON[strona], DRZ = '#a87443', DRZ2 = '#8a5c32';
+  const c = [cz(box(0.72, 0.1, 0.95), DRZ2, 0, 0.42, -0.35),
+    cz(box(0.72, 0.22, 0.05), DRZ, 0, 0.58, 0.1), cz(box(0.72, 0.22, 0.05), DRZ, 0, 0.58, -0.8), cz(box(0.05, 0.22, 0.95), DRZ, 0.36, 0.58, -0.35), cz(box(0.05, 0.22, 0.95), DRZ, -0.36, 0.58, -0.35),
+    cz(new THREE.CylinderGeometry(0.37, 0.37, 0.7, 12, 1, false, Math.PI / 2, Math.PI), k, 0, 0.68, -0.45, Math.PI / 2, 0, 0),
+    cz(new THREE.CylinderGeometry(0.375, 0.375, 0.05, 12, 1, false, Math.PI / 2, Math.PI), '#f3efe6', 0, 0.68, -0.08, Math.PI / 2, 0, 0),
+    cz(cyl(0.12, 0.1, 0.12, 8), SLOMA, -0.15, 0.53, 0.0), cz(kula(0.09, 6), '#3a4bb0', -0.15, 0.59, 0.0, 0, 0, 0, 1, 0.5, 1), cz(cyl(0.12, 0.1, 0.12, 8), SLOMA, 0.15, 0.53, 0.0), cz(kula(0.09, 6), '#3a4bb0', 0.15, 0.59, 0.0, 0, 0, 0, 1, 0.5, 1),
+    cz(box(0.04, 0.04, 0.75), DRZ2, -0.22, 0.45, 0.45), cz(box(0.04, 0.04, 0.75), DRZ2, 0.22, 0.45, 0.45)];
+  for (const sx of [-0.42, 0.42]) c.push(cz(cyl(0.21, 0.21, 0.06, 12), '#5a3518', sx, 0.21, -0.38, 0, 0, Math.PI / 2), cz(cyl(0.06, 0.06, 0.08, 8), METAL, sx, 0.21, -0.38, 0, 0, Math.PI / 2));
+  // renifer
+  const R = '#8d7a64', RJ = '#efe7da', z0 = 0.62;
+  c.push(cz(kaps(0.15, 0.32, 10), R, 0, 0.55, z0, Math.PI / 2, 0, 0), cz(kaps(0.07, 0.2, 8), RJ, 0, 0.72, z0 + 0.25, -0.6, 0, 0),
+    cz(kulaG(0.1, 10, 8), R, 0, 0.85, z0 + 0.38, 0, 0, 0, 0.85, 0.9, 1.3), cz(kulaG(0.045, 6, 4), '#2a2a2a', 0, 0.82, z0 + 0.52),
+    cz(kulaG(0.018, 6, 4), OCZY, -0.06, 0.89, z0 + 0.44), cz(kulaG(0.018, 6, 4), OCZY, 0.06, 0.89, z0 + 0.44));
+  for (const sx of [-1, 1]) c.push(cz(cyl(0.015, 0.015, 0.3, 4), '#d9c7a3', sx * 0.08, 1.02, z0 + 0.33, -0.3, 0, sx * 0.5), cz(cyl(0.012, 0.012, 0.15, 4), '#d9c7a3', sx * 0.15, 1.12, z0 + 0.4, 0.6, 0, sx * 0.3));
+  for (const sx of [-0.08, 0.08]) for (const sz of [-0.2, 0.2]) c.push(cz(cyl(0.03, 0.026, 0.42, 6), '#6b5a48', sx, 0.21, z0 + sz));
+  c.push(cz(box(0.3, 0.05, 0.08), k, 0, 0.7, z0 + 0.08));
+  return polacz(c);
+});
+export const JEDNOSTKI3D = { osadnik, wojownik, tarczownik, obronca, wlocznik, pikinier, procarz, procarz2, kusznik, zwiadowca, jezdziec, rycerz, taran, katapulta, woz };
 
 // ---------- budynki w stylu słowiańskim (nasze projekty; środek modelu = środek budynku, podłoga na y = 0) ----------
 // kolor gracza widać na kalenicach, okiennicach i chorągiewkach; dachy są ze strzechy albo z gontu
@@ -506,6 +526,30 @@ const BUD = {
     for (const x of [-0.15, 0, 0.15]) c.push(cz(kula(0.025, 4), METAL, x, 0.6, 0.05));
     return c;
   },
+  // Jarmark Jagodowy: trzy kramy z pasiastymi daszkami, kosze z jagodami, słoje z dżemem, beczki, waga, sznur z chorągiewkami
+  jarmark(k, d) {
+    const c = [cz(box(2.8, 0.06, 2.8), '#c9a77a', 0, 0.03, 0)];
+    const kram = (x, z, ry, kol) => {
+      const p = [];
+      for (const [a, b] of [[-0.5, -0.3], [0.5, -0.3], [-0.5, 0.3], [0.5, 0.3]]) p.push(cz(cyl(0.035, 0.04, 1.1, 5), BAL, x + a, 0.55, z + b));
+      p.push(cz(box(1.1, 0.45, 0.4), BAL2, x, 0.25, z + 0.18), cz(box(1.14, 0.05, 0.44), BAL, x, 0.48, z + 0.18));
+      for (let i = 0; i < 6; i++) p.push(cz(box(0.19, 0.04, 0.8), i % 2 ? '#f3efe6' : kol, x - 0.475 + i * 0.19, 1.15, z, 0.22, 0, 0));
+      return obroc(p, ry, x, z);
+    };
+    c.push(...kram(-0.65, -0.75, 0, k), ...kram(0.75, -0.55, -0.5, '#e8b923'), ...kram(-0.55, 0.75, Math.PI, k));
+    // towary
+    c.push(...koszyk(-0.95, -0.55, 0.8), ...koszyk(-0.65, -0.55, 0.8), ...koszyk(-0.35, -0.55, 0.8));
+    for (const [x, z] of [[0.6, -0.3], [0.78, -0.25], [0.95, -0.2]]) c.push(cz(cyl(0.07, 0.07, 0.14, 8), '#8a2f9e', x, 0.57, z), cz(cyl(0.075, 0.075, 0.03, 8), '#f3efe6', x, 0.655, z));
+    c.push(cz(cyl(0.18, 0.16, 0.4, 10), '#8a5530', 1.0, 0.2, 0.7), cz(cyl(0.185, 0.185, 0.03, 10), METAL, 1.0, 0.3, 0.7), cz(cyl(0.18, 0.16, 0.4, 10), '#8a5530', 0.65, 0.2, 0.95),
+      cz(cyl(0.02, 0.02, 0.35, 4), BRAZ, -0.55, 0.68, 0.6), cz(box(0.4, 0.02, 0.02), BRAZ, -0.55, 0.86, 0.6), cz(cyl(0.08, 0.06, 0.03, 8), '#c9a227', -0.73, 0.78, 0.6), cz(cyl(0.08, 0.06, 0.03, 8), '#c9a227', -0.37, 0.78, 0.6),
+      ...worek(0.2, 0.45), ...worek(0.35, 0.25, 0.7));
+    // słup z flagą i sznur z chorągiewkami
+    c.push(...flaga(k, 0.2, 0, 0.1, 1.9));
+    for (const [x1, z1] of [[-1.15, -1.05], [1.2, -0.9], [-1.1, 1.1]]) {
+      for (let i = 1; i < 6; i++) { const t = i / 6, x = 0.2 + (x1 - 0.2) * t, z = 0.1 + (z1 - 0.1) * t, y = 1.75 - Math.sin(t * Math.PI) * 0.25 - t * 0.5; c.push(cz(stozek(0.05, 0.12, 3), i % 2 ? k : '#ffd84a', x, y, z, Math.PI, 0, 0)); }
+    }
+    return c;
+  },
   // warsztat: otwarta wiata z ramą, wielkie koło, niedokończone ramię machiny, stół z narzędziami, zwój liny
   warsztat(k, d) {
     const c = [];
@@ -603,8 +647,9 @@ export const krzak = cache(() => {
   return polacz(c);
 });
 export const skala = cache(rodzaj => {
-  const k1 = rodzaj === 'ruda' ? '#7b5a4a' : KAMIEN, k2 = rodzaj === 'ruda' ? '#4d4a4f' : KAMIEN2;
+  const k1 = rodzaj === 'ruda' ? '#7b5a4a' : rodzaj === 'zloto' ? '#e8b923' : KAMIEN, k2 = rodzaj === 'ruda' ? '#4d4a4f' : rodzaj === 'zloto' ? '#8f8a80' : KAMIEN2;
   const c = [cz(new THREE.DodecahedronGeometry(0.45), k2, 0, 0.25, 0, 0, 0, 0, 1, 0.7, 1), cz(new THREE.DodecahedronGeometry(0.3), k1, 0.2, 0.45, 0.1, 0.4, 0.3, 0), cz(new THREE.DodecahedronGeometry(0.22), k1, -0.25, 0.2, 0.2)];
+  if (rodzaj === 'zloto') c.push(cz(new THREE.OctahedronGeometry(0.11), '#ffe066', -0.05, 0.55, 0.25), cz(new THREE.OctahedronGeometry(0.09), '#fff3a8', 0.3, 0.32, -0.22), cz(new THREE.OctahedronGeometry(0.08), '#f2c94c', -0.3, 0.4, -0.1));
   if (rodzaj === 'ruda') c.push(cz(new THREE.OctahedronGeometry(0.11), '#c4622d', -0.05, 0.55, 0.25), cz(new THREE.OctahedronGeometry(0.09), '#d9773a', 0.3, 0.3, -0.25), cz(new THREE.OctahedronGeometry(0.07), '#c4622d', -0.3, 0.42, -0.1));
   return polacz(c);
 });
