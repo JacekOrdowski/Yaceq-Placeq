@@ -8,6 +8,8 @@ W folderze `survival` jest trzecia gra, **Yaceq Survival** (zbieranie jagód kam
 opisana w `survival/ZMIANY.md`: https://jacekordowski.github.io/Yaceq-Placeq/survival/
 W folderze `age` jest czwarta gra, **Age of Yaceq** (budowanie miasta gdzie chcesz i kolejne ery w ratuszu),
 opisana w `age/ZMIANY.md`: https://jacekordowski.github.io/Yaceq-Placeq/age/
+W folderze `age2` jest piąta gra, **Age of Haskap II** (gra strategiczna: dowodzisz osadnikami i walczysz z osadą komputera),
+opisana w `age2/ZMIANY.md`: https://jacekordowski.github.io/Yaceq-Placeq/age2/
 W menu każdej gry jest przycisk „Inne gry” (wspólny plik `gry.js`).
 
 Armia biegnie przez różne światy. Przed każdą bramką pojawia się działanie, a na bramkach dwie odpowiedzi.

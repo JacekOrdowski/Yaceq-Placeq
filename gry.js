@@ -6,6 +6,7 @@
     { folder: '', nazwa: 'Śmierdzipacha', opis: 'Matematyka od 1. do 8. klasy: armia biegnie przez bramki z wynikami.', ikona: '🧮' },
     { folder: 'survival/', nazwa: 'Yaceq Survival', opis: 'Jagody kamczackie, zimowy obóz, pomocnicy i zwierzęta (3D).', ikona: '🫐' },
     { folder: 'age/', nazwa: 'Age of Yaceq', opis: 'Budujesz miasto gdzie chcesz i przechodzisz przez kolejne ery w ratuszu (3D).', ikona: '🏰' },
+    { folder: 'age2/', nazwa: 'Age of Haskap II', opis: 'Dowodzisz osadnikami, budujesz osadę i walczysz z osadą komputera (3D).', ikona: '👑' },
     { folder: 'wersja-robocza/', nazwa: 'Obrona bazy (wersja robocza)', opis: 'Meteory lecą na bazę, a Strażnik strzela do nich z wieżyczkami.', ikona: '☄️' },
   ];
   const skrypt = document.currentScript;

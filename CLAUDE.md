@@ -99,6 +99,19 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   (robot stawia to w wolnym miejscu). Robot przechodzi grę w około 80 minut.
 - Przybliżanie: uszczypnięcie dwoma palcami albo kółko myszy (`zoom` w `age/gra.js`, od 0,6 do 2, zapamiętane w `zapis.zoom`).
 
+## Age of Haskap II (osobna gra w folderze `age2/`)
+
+- Gra strategiczna (gatunek jak znane gry o erach, ale nazwy, budynki, wygląd i liczby są nasze; nie kopiujemy cudzej gry).
+  Gracz dowodzi osadnikami (dotknij osadnika, potem krzaka, drzewa, skały, budynku albo wroga); obok rośnie osada komputera.
+  Przegrywa ten, kto straci wszystkie ratusze. Biblioteka 3D z `survival/three.module.min.js`, zapis `age-of-haskap-2`.
+- Liczby do strojenia są w `age2/dane.js`: jednostki, budynki, ery, ulepszenia, tempo zbierania i poziomy trudności (`TRUDNOSC`).
+  Modele 3D (sklejone bryły z kolorami) w `age2/modele.js`, reszta w `age2/gra.js` (przeciwnik komputerowy: funkcja `ai`).
+- Mapa ma 96 × 96 kratek i jest taka sama dla obu stron (połowa gracza odbita na drugą stronę, `generujMape`).
+- Test bez klikania: `window.__haskap` (`krok(sekundy)`, `komputerKontraKomputer(trudnosc)` = komputer gra też za gracza).
+  Po zmianach w liczbach albo w `ai` puść kilka gier komputer kontra komputer: gra ma się kończyć (zwykle 25–45 minut) bez błędów,
+  a gracz, który nic nie robi, na łatwym poziomie przegrywa dopiero po około 25 minutach.
+- Nowa wersja: podnieś `WERSJA` w `age2/gra.js`, dopisz sekcję w `age2/ZMIANY.md` (te same zasady co wyżej).
+
 ## Lista naszych gier
 
 - Każda gra ma w menu przycisk „Inne gry” (`data-inne-gry`) i wczytuje wspólny `gry.js` z głównego folderu.
