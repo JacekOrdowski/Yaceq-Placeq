@@ -14,6 +14,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
   Z widoku całej mapy do Dworku wystarczają około 3 ruchy dwoma palcami.
 - Przy największym oddaleniu kamera patrzy trochę bardziej z ukosa niż w wersji 16–18 (cała mapa dalej się mieści).
 
+Zapis w repozytorium: `6e4c877`
+
 ## Wersja 18 (20.11.2026)
 
 **Zmienione**
