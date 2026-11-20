@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL } from './dane.js';
 
-const WERSJA = 9;
+const WERSJA = 10;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 9, opis: 'Dużo więcej kamienia, złoto, Jarmark z handlem i wozy kupieckie z reniferami (im dalej, tym więcej złota). Do tego wszystko z wersji 8.' },
+  { nr: 10, opis: 'Tryby żołnierzy (Obrona, Agresja, Szał), ruiny po zburzonych budynkach, żołnierze nie utykają już przy rogach budynków. Do tego wszystko z wersji 9.' },
+  { nr: 9, opis: 'Dużo więcej kamienia, złoto, Jarmark z handlem i wozy kupieckie z reniferami (im dalej, tym więcej złota). Do tego wszystko z wersji 8.', adres: 'wersje/9/' },
   { nr: 8, opis: 'Mury i bramy (palisada → cegła → stal), zaznaczanie ramką po przytrzymaniu palca, obracanie mapy dwoma palcami. Do tego wszystko z wersji 7.', adres: 'wersje/8/' },
   { nr: 7, opis: 'Rozbudowa ambon: Wieża z cegły i Twierdza Jagodowa; ambony strzelają też w budynki wroga. Do tego wszystko z wersji 6.', adres: 'wersje/7/' },
   { nr: 6, opis: 'Bogatszy krajobraz: 5 gatunków drzew, trawa, kwiaty, paprocie, grzyby, kłody, ścieżki, cienie pod ludzikami. Do tego wszystko z wersji 5.', adres: 'wersje/6/' },
@@ -232,6 +233,7 @@ function wyczyscSwiat() {
   for (const u of UMIERA) scena.remove(u.mesh);
   for (const k in INST) { scena.remove(INST[k]); delete INST[k]; }
   for (const sc of SCIETE.values()) scena.remove(sc.g);
+  for (const g of GRUZY) scena.remove(g.mesh); GRUZY.length = 0;
   SCIETE.clear();
   if (ziemia) { scena.remove(ziemia); ziemia.material.map.dispose(); ziemia = null; }
   if (dalej) { scena.remove(dalej); dalej = null; }
@@ -728,6 +730,27 @@ function handel(u, dt) {
 }
 function rozkazNaprzod(u, x, z) { u.zad = { typ: 'naprzod', x, z }; u.sciezka = null; }
 
+// tryby żołnierzy: obrona (nie atakują pierwsi), agresja (żołnierze i strzelające budynki), szał (wszystko w okolicy)
+const POSTAWY = {
+  obrona: { emoji: '🛡️', nazwa: 'Obrona', opis: 'Nie atakują pierwsi, oddają, gdy ktoś ich uderzy' },
+  agresja: { emoji: '⚔️', nazwa: 'Agresja', opis: 'Atakują żołnierzy i budynki, które strzelają' },
+  szal: { emoji: '🔥', nazwa: 'Szał', opis: 'Rozwalają wszystko w okolicy' },
+};
+function celPostawy(u) {
+  const p = u.postawa || 'agresja';
+  if (p === 'obrona') return null;
+  const szal = p === 'szal', r = u.d.wzrok + (szal ? 2 : 0);
+  let naj = null, nd = r * r;
+  if (!u.d.tylkoBudynki) for (const e of JED) {
+    if (e.strona === u.strona || e.hp <= 0 || !szal && !e.d.wojsko) continue;
+    let d = (e.x - u.x) ** 2 + (e.z - u.z) ** 2; if (!e.d.wojsko) d *= 1.6;
+    if (d < nd) { nd = d; naj = e; }
+  }
+  if (naj) return naj;
+  let nb = r;
+  for (const b of BUD) { if (b.strona === u.strona || !szal && !b.d.strzela) continue; const d = dystDoProst(u.x, u.z, b); if (d < nb) { nb = d; naj = b; } }
+  return naj;
+}
 // cel do walki w pobliżu (najpierw ludzie, potem budynki)
 function celWalki(u, r, budynkiTez) {
   let naj = null, nd = r * r;
@@ -764,7 +787,11 @@ function zadaj(cel, ile, od) {
     if (cel.strona === STRONA_GRACZA && S.czas - alarmT > 25 && !S.aiGracz) { alarmT = S.czas; toast('⚠️ Atak na twoją osadę!'); dzwiek('alarm'); ping = { x: cel.x, z: cel.z, t: 3 }; }
   }
   // wojsko oddaje
-  if (!jestBudynkiem(cel) && cel.d.wojsko && od && !jestBudynkiem(od) && zyje(od) && (!cel.zad || cel.zad.typ === 'idz' && cel.strona === KOMPUTER)) rozkazAtak(cel, od);
+  // (w obronie też oddają, ale potem wracają na swoje miejsce; w agresji i szale oddają też strzelającym budynkom)
+  if (!jestBudynkiem(cel) && cel.d.wojsko && od && zyje(od) && (!jestBudynkiem(od) || (cel.postawa || 'agresja') !== 'obrona' && !cel.d.zasieg)
+    && (!cel.zad || cel.zad.typ === 'idz' && cel.strona === KOMPUTER)) {
+    rozkazAtak(cel, od, { typ: 'idz', x: cel.x, z: cel.z, wraca: true }); if (cel.zad) { cel.zad.sx = cel.x; cel.zad.sz = cel.z; cel.zad.pogon = cel.postawa === 'obrona' ? 7 : 12; }
+  }
   if (cel.hp <= 0) jestBudynkiem(cel) ? zniszczBudynek(cel) : zabij(cel);
 }
 function uderz(u, c) {
@@ -784,6 +811,10 @@ function zabij(u) {
   UMIERA.push({ mesh: u.mesh, t: 0, j: true, ry: u.ry });
   S.stat[wrog(u.strona)].pokonani++;
 }
+const GRUZY = [];
+function usunGruzy(i0, j0, w) {
+  for (let k = GRUZY.length - 1; k >= 0; k--) { const g = GRUZY[k]; if (g.i0 < i0 + w && g.i0 + g.w > i0 && g.j0 < j0 + w && g.j0 + g.w > j0) { scena.remove(g.mesh); GRUZY.splice(k, 1); } }
+}
 function zniszczBudynek(b, wlasnaReka = false) {
   E.delete(b.id); BUD.splice(BUD.indexOf(b), 1);
   wybrane = wybrane.filter(e => e !== b);
@@ -791,7 +822,12 @@ function zniszczBudynek(b, wlasnaReka = false) {
   if (b.plac) b.mesh.remove(b.plac);
   UMIERA.push({ mesh: b.mesh, t: 0, j: false });
   if (naEkranie(b)) dzwiek('zniszcz');
-  if (!wlasnaReka) S.stat[wrog(b.strona)].zburzone++;
+  if (!wlasnaReka) {
+    S.stat[wrog(b.strona)].zburzone++;
+    // zostają ruiny (bez placu budowy); komputer odczeka, zanim postawi taki budynek znowu
+    { const g = new THREE.Mesh(MOD.gruz(b.w), MAT); g.position.set(b.x, 0, b.z); g.receiveShadow = true; scena.add(g); GRUZY.push({ mesh: g, i0: b.i0, j0: b.j0, w: b.w, t: 0 }); }
+    const A = S.ai[b.strona]; if (A) (A.stracone || (A.stracone = {}))[b.typ] = S.czas;
+  }
   miniBrud = true;
   if (!wlasnaReka && b.strona === STRONA_GRACZA && b.typ === 'ratusz' && !S.aiGracz) toast('💥 Twój Dworek upadł!');
 }
@@ -807,8 +843,8 @@ function aktualizujJednostke(u, dt) {
     if (u.sciezka) ruch(u, dt);
     if (u.d.wojsko && (u.skan -= dt) <= 0) {
       u.skan = 0.5;
-      const w = celWalki(u, u.d.wzrok, u.d.tylkoBudynki);
-      if (w) { rozkazAtak(u, w, { typ: 'idz', x: u.x, z: u.z, wraca: true }); u.zad.sx = u.x; u.zad.sz = u.z; }
+      const w = u.strona === STRONA_GRACZA && !S.aiGracz ? celPostawy(u) : celWalki(u, u.d.wzrok, u.d.tylkoBudynki);
+      if (w) { rozkazAtak(u, w, { typ: 'idz', x: u.x, z: u.z, wraca: true }); u.zad.sx = u.x; u.zad.sz = u.z; u.zad.pogon = u.postawa === 'szal' ? 20 : 12; }
     }
     return;
   }
@@ -927,10 +963,11 @@ function atakuj(u, dt) {
     return;
   }
   // za daleko od miejsca, którego pilnował: wraca
-  if (z.sx != null && Math.hypot(u.x - z.sx, u.z - z.sz) > 12) { u.zad = { typ: 'idz', x: z.sx, z: z.sz }; ustawDroge(u, celePunkt(z.sx, z.sz), z.sx, z.sz, true); return; }
+  if (z.sx != null && Math.hypot(u.x - z.sx, u.z - z.sz) > (z.pogon || 12)) { u.zad = { typ: 'idz', x: z.sx, z: z.sz }; ustawDroge(u, celePunkt(z.sx, z.sz), z.sx, z.sz, true); return; }
   const bud = jestBudynkiem(c);
   const odl = bud ? dystDoProst(u.x, u.z, c) : Math.hypot(c.x - u.x, c.z - u.z) - c.d.r;
-  const zas = (u.d.zasieg ? zasiegJ(u) : 0.3) + u.d.r;
+  // przy budynku trochę więcej, bo z rogu (po skosie) jest dalej do ściany
+  const zas = (u.d.zasieg ? zasiegJ(u) : 0.3) + u.d.r + (bud ? 0.3 : 0);
   if (odl <= zas) {
     u.sciezka = null; u.ry = Math.atan2(c.x - u.x, c.z - u.z); u.pracuje = true;
     if (u.cd <= 0) { uderz(u, c); u.cd = u.d.odstep; }
@@ -964,7 +1001,7 @@ function nowyBudynek(strona, typ, i0, j0, gotowy = false, id, poziom = 1) {
   b.mesh = new THREE.Mesh(MOD.budynek(modelBud(typ, poziom, strona), strona), MAT);
   b.mesh.castShadow = true; b.mesh.receiveShadow = true;
   b.mesh.position.set(b.x, 0, b.z);
-  ukryjOzdoby(i0, j0, w);
+  ukryjOzdoby(i0, j0, w); usunGruzy(i0, j0, w);
   if (!d.pole && !d.mur && !d.brama) { const k = new THREE.Mesh(GEO_KLEP[w] || (GEO_KLEP[w] = new THREE.PlaneGeometry(w + 1.1, w + 1.1).rotateX(-Math.PI / 2)), MAT_KLEP); k.position.y = 0.012; k.renderOrder = 1; k.receiveShadow = true; b.mesh.add(k); }
   if (strona === KOMPUTER) b.mesh.rotation.y = Math.PI; // drzwi w stronę środka mapy
   if (!gotowy) {
@@ -1147,7 +1184,13 @@ function aiMiejsce(typ, cx, cz, rMin, rMax, margines = 1, unikaj = null) {
   return null;
 }
 function aiPostaw(strona, typ, miejsce, osadnicy) {
-  if (!miejsce || !zaplac(strona, BUDYNKI[typ].koszt)) return null;
+  if (!miejsce) return null;
+  // po stracie budynku komputer czeka (dom 30 s, reszta 75 s) i nie stawia nic tam, gdzie stoi wrogie wojsko
+  const A = S.ai[strona], kiedy = A.stracone && A.stracone[typ];
+  if (kiedy != null && S.czas - kiedy < (typ === 'dom' ? 30 : 75)) return null;
+  const mx = miejsce[0] - POL + BUDYNKI[typ].w / 2, mz = miejsce[1] - POL + BUDYNKI[typ].w / 2;
+  if (JED.some(e => e.strona !== strona && e.d.wojsko && Math.hypot(e.x - mx, e.z - mz) < 12)) return null;
+  if (!zaplac(strona, BUDYNKI[typ].koszt)) return null;
   const b = nowyBudynek(strona, typ, miejsce[0], miejsce[1]);
   const wolni = osadnicy.filter(o => !o.zad || o.zad.typ === 'zbieraj' && o.zad.sur !== 'zelazo').sort((a, c) => dyst(a, b) - dyst(c, b));
   for (const o of wolni.slice(0, b.w >= 3 ? 2 : 1)) rozkazBuduj(o, b);
@@ -1376,7 +1419,7 @@ function zbudujZiemie() {
 function zadDoZapisu(z) {
   if (!z) return null;
   const o = {};
-  for (const k of ['typ', 'zid', 'sur', 'bid', 'cid', 'x', 'z', 'faza', 'ox', 'oz', 'sx', 'sz', 'wraca', 'skup']) if (z[k] !== undefined) o[k] = typeof z[k] === 'number' ? Math.round(z[k] * 100) / 100 : z[k];
+  for (const k of ['typ', 'zid', 'sur', 'bid', 'cid', 'x', 'z', 'faza', 'ox', 'oz', 'sx', 'sz', 'wraca', 'skup', 'pogon', 'jid', 'dom']) if (z[k] !== undefined) o[k] = typeof z[k] === 'number' ? Math.round(z[k] * 100) / 100 : z[k];
   if (o.faza === 'dochodzi' || o.faza === 'zbiera') o.faza = 'idz';
   if (z.potem) o.potem = zadDoZapisu(z.potem);
   return o;
@@ -1385,7 +1428,7 @@ function stanDoZapisu() {
   const o = { ...S };
   o.zasoby = []; for (const z0 of ZAS.values()) if (z0.ile !== z0.start) o.zasoby.push([z0.id, Math.round(z0.ile * 10) / 10]);
   o.bud = BUD.map(b => [b.id, b.strona, b.typ, b.i0, b.j0, Math.round(b.hp), Math.round(b.postep * 1000) / 1000, b.kolejka.map(q => [q.rodzaj, q.typ, Math.round(q.t * 10) / 10, q.czas, q.koszt]), b.zbiorka, b.rolnik || 0, b.poziom || 1]);
-  o.jed = JED.map(u => [u.id, u.strona, u.typ, Math.round(u.x * 100) / 100, Math.round(u.z * 100) / 100, Math.round(u.hp * 10) / 10, u.niesie.sur, Math.round(u.niesie.ile * 10) / 10, zadDoZapisu(u.zad)]);
+  o.jed = JED.map(u => [u.id, u.strona, u.typ, Math.round(u.x * 100) / 100, Math.round(u.z * 100) / 100, Math.round(u.hp * 10) / 10, u.niesie.sur, Math.round(u.niesie.ile * 10) / 10, zadDoZapisu(u.zad), u.postawa || 'agresja']);
   o.kamera = [kam.x, kam.z, kam.d, kam.kat];
   return o;
 }
@@ -1425,9 +1468,9 @@ function wczytajGre(o) {
   // stary zapis: nowe złoża, które wypadły pod budynkami, znikają
   for (const z0 of [...ZAS.values()]) if (z0.dodatkowe && naKom[z0.c] !== z0.id) { ZAS.delete(z0.id); E.delete(z0.id); z0.ile = 0; const im = INST[z0.klucz]; if (im) { im.setMatrixAt(z0.inst, ZERO); im.instanceMatrix.needsUpdate = true; } }
   sprzatnijListy();
-  for (const [id, strona, typ, x, z, hp, sur, ile, zad] of o.jed) {
+  for (const [id, strona, typ, x, z, hp, sur, ile, zad, postawa] of o.jed) {
     const u = nowaJednostka(strona, typ, x, z, id);
-    u.hp = hp; u.niesie = { sur, ile }; u.zad = zad;
+    u.hp = hp; u.niesie = { sur, ile }; u.zad = zad; u.postawa = postawa || 'agresja';
     if (!wolneXZ(u.x, u.z)) { const c = najblizszaWolna(kom(u.x, u.z), 6); if (c >= 0) [u.x, u.z] = srodekKom(c); }
   }
   if (o.kamera) { [kam.x, kam.z, kam.d] = o.kamera; kam.kat = o.kamera[3] ?? Math.PI / 4; }
@@ -1538,6 +1581,7 @@ function rysuj(dt) {
     if (b.pierscien) { b.pierscien.position.set(b.x, 0.05, b.z); b.pierscien.visible = wybrane.includes(b); }
   }
   for (const e of wybrane) { const p = pierscien(e); if (!jestBudynkiem(e) && e.strona == null) p.position.set(e.x, 0.05, e.z); p.visible = true; }
+  for (let k = GRUZY.length - 1; k >= 0; k--) { const g = GRUZY[k]; g.t += dt; if (g.t > 240) { g.mesh.position.y -= dt * 0.05; if (g.t > 246) { scena.remove(g.mesh); GRUZY.splice(k, 1); } } }
   for (const sc of SCIETE.values()) {
     if (sc.t < 1) sc.t = Math.min(1, sc.t + dt / 0.9);
     sc.drz.rotation.x = 1.5 * sc.t * sc.t;
@@ -1576,7 +1620,9 @@ function rysujNakladke() {
     c.fillStyle = 'rgba(0,0,0,0.55)'; c.fillRect(x - w / 2 - 1, y - 1, w + 2, 6);
     c.fillStyle = e.strona === KOMPUTER ? '#ff5a4a' : '#4cff7a'; c.fillRect(x - w / 2, y, w * p, 4);
   };
-  for (const u of JED) if (wybrane.includes(u) || u.hp < u.max && S.czas - (u.trafiony || -99) < 4) pasek(u, u.d.linia === 'renifer' ? 2.2 : 1.6, 26);
+  // przy dużej zaznaczonej grupie paski tylko u rannych, żeby nie zlewały się w plamę
+  const malaGrupa = wybrane.length <= 6;
+  for (const u of JED) if (wybrane.includes(u) && (malaGrupa || u.hp < u.max) || u.hp < u.max && S.czas - (u.trafiony || -99) < 4) pasek(u, u.d.linia === 'renifer' ? 2.2 : 1.6, 26);
   for (const b of BUD) if (wybrane.includes(b) || b.hp < b.max && (b.gotowy || S.czas - (b.trafiony || -99) < 4)) pasek(b, wysokoscBud(b) + 0.4, 18 + b.w * 9);
   // postęp budowy
   for (const b of BUD) if (!b.gotowy) {
@@ -1956,7 +2002,12 @@ function odswiezPanel(wymus = false) {
           const d = BUDYNKI[t], br = brakBudynku(0, t);
           a += `<button class="akcja${br ? ' zablok' : ''}" data-a="bud:${t}" data-koszt='${JSON.stringify(d.koszt)}'><span class="ak-ik">${d.emoji}</span><b>${d.nazwa}</b><small>${br || d.opis}</small><span class="ak-koszt">${kosztHTML(d.koszt)}</span></button>`;
         }
-      } else h += `<div class="p-opis">Dotknij wroga, żeby atakować, albo ziemi, żeby iść.</div>`;
+      } else h += `<div class="p-opis">Dotknij wroga, żeby atakować, albo ziemi, żeby iść. Tryb walki:</div>`;
+      const woj = moje.filter(u => u.d.wojsko);
+      if (woj.length) for (const [k, p] of Object.entries(POSTAWY)) {
+        const wszyscy = woj.every(u => (u.postawa || 'agresja') === k);
+        a += `<button class="akcja postawa${wszyscy ? ' wybrana' : ''}" data-a="postawa:${k}"><span class="ak-ik">${p.emoji}</span><b>${p.nazwa}${wszyscy ? ' ✓' : ''}</b><small>${p.opis}</small></button>`;
+      }
       a = `<button class="akcja maly" data-a="stop"><span class="ak-ik">✋</span><b>Stój</b></button>` + a;
     }
   }
@@ -1987,6 +2038,10 @@ $('panel').addEventListener('click', e => {
   audio();
   const [akcja, arg] = b.dataset.a.split(':'), cel = wybrane[0];
   if (akcja === 'odznacz') { zaznacz([]); dzwiek('klik'); return; }
+  if (akcja === 'postawa') {
+    for (const u of wybrane) if (u.strona === STRONA_GRACZA && !jestBudynkiem(u) && u.d.wojsko) { u.postawa = arg; if (arg === 'obrona' && u.zad && u.zad.typ === 'atakuj' && u.zad.potem && u.zad.potem.wraca) stop(u); }
+    toast(POSTAWY[arg].emoji + ' Tryb: ' + POSTAWY[arg].nazwa); dzwiek('tak'); odswiezPanel(true); return;
+  }
   if (akcja === 'stop') { for (const u of wybrane) if (u.strona === STRONA_GRACZA && !jestBudynkiem(u)) stop(u); dzwiek('klik'); return; }
   if (akcja === 'bud') { dzwiek('klik'); zacznijStawianie(arg); return; }
   if (!cel || !jestBudynkiem(cel)) return;

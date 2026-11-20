@@ -5,6 +5,24 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 10 (20.11.2026)
+
+**Dodane**
+- Tryby walki dla zaznaczonego wojska (przyciski w panelu, wybrany ma ✓):
+  - 🛡️ Obrona: nie atakują pierwsi; gdy ktoś ich uderzy, oddają i wracają na swoje miejsce,
+  - ⚔️ Agresja (na start): atakują wrogich żołnierzy i budynki, które strzelają (ambony, Dworek),
+  - 🔥 Szał: rozwalają wszystko w okolicy (ludzi, wozy, każdy budynek) i gonią dalej.
+- Ruiny: zburzony budynek zostawia popiół, osmalone belki i kamienie (bez placu budowy i bez odbudowy).
+  W tym miejscu można postawić nowy budynek od zera; ruiny same znikają po 4 minutach.
+
+**Zmienione**
+- Komputer po stracie budynku czeka (dom 30 sekund, reszta 75 sekund), zanim postawi go od nowa,
+  i nie stawia nic tam, gdzie stoi twoje wojsko (wcześniej od razu pojawiał się plac budowy z 0%).
+- Przy dużej zaznaczonej grupie paski życia pokazują się tylko u rannych (nie zlewają się w zieloną plamę).
+
+**Naprawione**
+- Żołnierz, który stanął dokładnie na rogu budynku, nie mógł go uderzyć i stał w miejscu. Teraz uderza.
+
 ## Wersja 9 (20.11.2026)
 
 **Dodane**

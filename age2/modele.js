@@ -654,5 +654,17 @@ export const skala = cache(rodzaj => {
   return polacz(c);
 });
 export const kamyk = cache(() => polacz([cz(kula(0.09, 5), KAMIEN2)]));
+// ruiny po zburzonym budynku: popiół, osmalone belki i kamienie
+export const gruz = cache(w => {
+  const c = [cz(cyl(w * 0.5, w * 0.52, 0.03, 16), '#3b332c', 0, 0.015, 0), cz(cyl(w * 0.32, w * 0.34, 0.035, 14), '#2a2420', 0.1, 0.02, -0.05)];
+  const n = 4 + w * 3;
+  for (let i = 0; i < n; i++) {
+    const a = i * 2.39, r = (0.15 + ((i * 37) % 10) / 10 * 0.32) * w, x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (i % 3 === 2) c.push(cz(new THREE.DodecahedronGeometry(0.09 + (i % 4) * 0.03), i % 2 ? '#7d838c' : '#5c6168', x, 0.07, z, a, a, 0));
+    else c.push(cz(cyl(0.06, 0.07, 0.45 + (i % 4) * 0.18, 6), i % 2 ? '#2e2620' : '#4a3a2c', x, 0.07, z, Math.PI / 2, a, 0.15 * (i % 3)));
+  }
+  c.push(cz(cyl(0.07, 0.09, 0.6, 6), '#2e2620', w * 0.2, 0.3, w * 0.15, 0.25, 0, 0.2));
+  return polacz(c);
+});
 export const pieniek = cache(() => polacz([cz(cyl(0.15, 0.18, 0.22, 10), '#6b4527', 0, 0.11, 0), cz(cyl(0.14, 0.14, 0.02, 10), '#e0c08a', 0, 0.225, 0)]));
 export const kolo = cache((r1, r2) => new THREE.RingGeometry(r1, r2, 28).rotateX(-Math.PI / 2));
