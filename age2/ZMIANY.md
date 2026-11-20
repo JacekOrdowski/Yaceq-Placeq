@@ -5,6 +5,26 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 14 (20.11.2026)
+
+**Zmienione**
+- Mapa jest 2 razy większa w każdą stronę: 192 × 192 kratki zamiast 96 × 96 (4 razy więcej miejsca).
+  Dworki stoją dalej od siebie, więc wojsko idzie do wroga dłużej.
+- Na dużej mapie jest więcej wszystkiego: około 4 razy więcej lasów, nowe kępy krzaków z jagodami, kamienia, rudy żelaza
+  i złota w dalszych częściach doliny, więcej trawy, kwiatów i grzybów, więcej ptaków.
+- Góry, wulkany i jezioro za mapą odsunięte dalej, chmury nad całą mapą, ścieżki od Dworków do środka dłuższe.
+- Kamerę można oddalić trochę bardziej niż wcześniej.
+- Komputer szuka żelaza, kamienia i złota dalej od swojego Dworku i stawia tam kopalnie.
+- Komputer dokupuje żelazo za złoto na Jarmarku, gdy go brakuje. Wcześniej w późnej grze miał tysiące złota,
+  ale bez żelaza nie mógł robić lepszego wojska, więc gry komputer kontra komputer nie miały końca.
+
+**Do sprawdzenia**
+- Gra zaczęta wcześniej (na małej mapie) nie zginęła: przeszła do wersji 13 (Inne wersje gry → Wersja 13 → Graj dalej).
+  Menu o tym przypomina.
+- Gry komputer kontra komputer kończą się po 26–62 minutach. Wyjątek: gdy obie strony grają na łatwym, gra trwa ponad 2 godziny.
+- Gracz, który nic nie robi, na łatwym przegrywa po 20–32 minutach.
+- Czy na telefonie duża mapa działa płynnie (na komputerze tak).
+
 ## Wersja 13 (20.11.2026)
 
 **Dodane**

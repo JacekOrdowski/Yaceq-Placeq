@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL } from './dane.js';
 
-const WERSJA = 13;
+const WERSJA = 14;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 13, opis: 'Nowa muzyka na prawdziwych instrumentach (8 utworów CC0): spokojne utwory na zmianę, w czasie walki bitwa, płynne przejścia. Do tego wszystko z wersji 12.' },
+  { nr: 14, opis: 'Mapa 2 razy większa w każdą stronę (192 × 192): więcej lasów, krzaków, kamienia, rudy i złota; komputer dokupuje żelazo. Do tego wszystko z wersji 13.' },
+  { nr: 13, opis: 'Nowa muzyka na prawdziwych instrumentach (8 utworów CC0): spokojne utwory na zmianę, w czasie walki bitwa, płynne przejścia. Do tego wszystko z wersji 12. Mała mapa.', adres: 'wersje/13/' },
   { nr: 12, opis: 'Prawdziwe dźwięki: miecz o miecz, tarcze, siekiera, kilof, kowadło, monety, walące się budynki; głośność i strona zależne od kamery. Do tego wszystko z wersji 11.', adres: 'wersje/12/' },
   { nr: 11, opis: 'Grafika na maksa: faktury, chodzenie nogami, wiatr, dym, ogień, iskry, wióry, góry i wulkany za mapą, jezioro, chmury, ptaki. Do tego wszystko z wersji 10.', adres: 'wersje/11/' },
   { nr: 10, opis: 'Tryby żołnierzy (Obrona, Agresja, Szał), ruiny po zburzonych budynkach, żołnierze nie utykają już przy rogach budynków. Do tego wszystko z wersji 9.', adres: 'wersje/10/' },
@@ -27,17 +28,24 @@ const KLUCZ = 'age-of-haskap-2';
 const $ = id => document.getElementById(id);
 const losowo = (a, b) => a + Math.random() * (b - a);
 
+// mapa 192 × 192 kratki (do wersji 13: 96 × 96); Dworki stoją w (BAZA, BAZA) i (−BAZA, −BAZA)
+const N = 192, POL = N / 2, BAZA = 60;
+
 // ================= ustawienia i zapis =================
 function wczytaj() {
   const z = { muzyka: true, dzwieki: true, trudnosc: 'latwy', wygrane: {}, gra: null };
   try { const s = JSON.parse(localStorage.getItem(KLUCZ)); if (s && typeof s === 'object') Object.assign(z, s); } catch (e) { /* brak zapisu */ }
+  // gra zaczęta na małej mapie (do wersji 13) dokańcza się w kopii wersji 13, która ma swój zapis
+  if (z.gra && (z.gra.mapa || 96) !== N) {
+    try { if (!localStorage.getItem('age-of-haskap-2-w13')) localStorage.setItem('age-of-haskap-2-w13', JSON.stringify(z)); } catch (e) { /* pełna pamięć */ }
+    z.gra = null; z.malaMapa = true;
+  }
   return z;
 }
 const zapis = wczytaj();
 function zapiszDysk() { try { localStorage.setItem(KLUCZ, JSON.stringify(zapis)); } catch (e) { /* pełna pamięć albo tryb prywatny */ } }
 
 // ================= mapa: kratki =================
-const N = 96, POL = N / 2;
 const blok = new Uint8Array(N * N);   // 0 wolne, 1 zasób (drzewo, krzak, skała), 2 budynek, 4 pole (można chodzić, nie można budować)
 const naKom = new Int32Array(N * N);  // id zasobu albo budynku w tej kratce
 const kom = (x, z) => { const i = Math.floor(x + POL), j = Math.floor(z + POL); return i < 0 || j < 0 || i >= N || j >= N ? -1 : j * N + i; };
@@ -198,15 +206,15 @@ function malujZiemie(seed) {
   c.lineCap = 'round'; c.lineJoin = 'round';
   for (const zn of [1, -1]) {
     const pkt = [];
-    for (let t = 0; t <= 1.0001; t += 0.05) { const b = 30 * (1 - t), w = Math.sin(t * 7 + zn) * 2.2 * Math.sin(t * Math.PI); pkt.push([zn * (b + w), zn * (b - w)]); }
+    for (let t = 0; t <= 1.0001; t += 0.025) { const b = BAZA * (1 - t), w = Math.sin(t * 9 + zn) * 3 * Math.sin(t * Math.PI); pkt.push([zn * (b + w), zn * (b - w)]); }
     for (const [szer, kol] of [[1.9, 'rgba(160,128,84,0.35)'], [1.2, 'rgba(178,146,100,0.5)'], [0.5, 'rgba(196,166,120,0.45)']]) {
       c.strokeStyle = kol; c.lineWidth = szer * sk; c.beginPath(); pkt.forEach(([x, z], i) => i ? c.lineTo(P(x), P(z)) : c.moveTo(P(x), P(z))); c.stroke();
     }
   }
   // 4. place przy Dworkach
-  for (const [x, z] of [[30, 30], [-30, -30]]) { plama(P(x), P(z), 7.5 * sk, 'rgba(190,156,108,0.65)'); plama(P(x), P(z), 4.5 * sk, 'rgba(196,164,116,0.5)'); }
+  for (const [x, z] of [[BAZA, BAZA], [-BAZA, -BAZA]]) { plama(P(x), P(z), 7.5 * sk, 'rgba(190,156,108,0.65)'); plama(P(x), P(z), 4.5 * sk, 'rgba(196,164,116,0.5)'); }
   // 5. drobne szczegóły: źdźbła trawy, kwiatki, kamyczki
-  for (let i = 0; i < 36000; i++) {
+  for (let i = 0; i < 52000; i++) {
     const x = r() * R, z = r() * R, q = r();
     c.fillStyle = q < 0.35 ? 'rgba(40,100,35,0.35)' : q < 0.7 ? 'rgba(150,210,110,0.35)' : q < 0.85 ? 'rgba(90,150,60,0.4)' : 'rgba(200,220,140,0.3)';
     c.fillRect(x, z, 1.5, 3 + r() * 4);
@@ -409,7 +417,7 @@ const WYS_ZAS = { drzewo: 2.4, krzak: 0.9, kamien: 0.8, ruda: 0.8, zloto: 0.8 };
 // mapa jest taka sama dla obu stron: wszystko z połowy gracza odbijamy na połowę komputera
 function generujMape(seed) {
   const r = rng(seed), plan = new Uint8Array(N * N); // 0 nic, 1 drzewo, 2 krzak, 3 kamień, 4 złoto
-  const TC = [30, 30];
+  const TC = [BAZA, BAZA];
   const daj = (x, z, typ) => {
     const i = Math.floor(x + POL), j = Math.floor(z + POL);
     if (i < 1 || j < 1 || i >= N - 1 || j >= N - 1 || i + j < N - 1) return;
@@ -436,9 +444,9 @@ function generujMape(seed) {
   }
   // surowce przy bazie
   const a0 = r() * 6.283, przy = (a, d) => [TC[0] + Math.cos(a) * d, TC[1] + Math.sin(a) * d];
-  const wewn = ([x, z]) => [Math.max(-40, Math.min(40, x)), Math.max(-40, Math.min(40, z))];
+  const wewn = ([x, z]) => [Math.max(8 - POL, Math.min(POL - 8, x)), Math.max(8 - POL, Math.min(POL - 8, z))];
   // kierunki dobrane tak, żeby surowce nie wchodziły za brzeg mapy (baza stoi blisko rogu x+, z+)
-  const kier = a => { const [x, z] = przy(a, 10); return x > 42 || z > 42 ? a + Math.PI : a; };
+  const kier = a => { const [x, z] = przy(a, 10); return x > POL - 6 || z > POL - 6 ? a + Math.PI : a; };
   const aK = kier(a0), aZ = kier(a0 + 2.1), aKa = kier(a0 + 4.2), aL = kier(a0 + 1.05);
   kepa(...wewn(przy(aK, 7)), 7, 2, 1.2);
   kepa(...wewn(przy(aZ, 10)), 5, 4, 1.0);
@@ -446,8 +454,8 @@ function generujMape(seed) {
   las(...wewn(przy(aL, 14)), 5);
   kepa(...wewn(przy(aK + 0.6, 16)), 5, 2, 1.3);
   // lasy na mapie
-  for (let k = 0; k < 14; k++) {
-    const x = -44 + r() * 88, z = -44 + r() * 88; if (x + z < 4) continue;
+  for (let k = 0; k < 56; k++) {
+    const x = 4 - POL + r() * (N - 8), z = 4 - POL + r() * (N - 8); if (x + z < 4) continue;
     if (Math.hypot(x - TC[0], z - TC[1]) < 12) continue;
     las(x, z, 2.5 + r() * 3.5);
   }
@@ -455,6 +463,14 @@ function generujMape(seed) {
   kepa(8 + r() * 6, -6 + r() * 6, 5, 4, 1.0);
   kepa(-4 + r() * 6, 12 + r() * 5, 4, 3, 1.0);
   kepa(14 + r() * 6, 14 + r() * 6, 5, 2, 1.2);
+  // duża mapa: więcej kęp krzaków, kamienia, rudy i złota w dalszych częściach doliny
+  for (let k = 0, n = 0; k < 200 && n < 16; k++) {
+    const x = 10 - POL + r() * (N - 20), z = 10 - POL + r() * (N - 20);
+    if (x + z < 8 || Math.hypot(x - TC[0], z - TC[1]) < 20) continue;
+    const typ = [2, 3, 4, 2, 3, 1][n % 6];
+    if (typ === 1) las(x, z, 3 + r() * 3); else kepa(x, z, typ === 2 ? 6 : 5, typ, typ === 2 ? 1.2 : 1.0);
+    n++;
+  }
   // droga od ratusza do środka mapy zawsze wolna
   for (let t = 0; t <= 1; t += 0.01) {
     const x = TC[0] * (1 - t), z = TC[1] * (1 - t);
@@ -516,9 +532,9 @@ const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
 const ID_ZLOZ = 900000;
 function dodatkoweZloza(seed) {
   const r = rng(seed * 31 + 17), lista = { kamien: [], zloto: [] }, plan = new Map();
-  const TC = [30, 30];
+  const TC = [BAZA, BAZA];
   const wolne = (i, j) => { const c = kom2(i, j), m = kom2(N - 1 - i, N - 1 - j); return c >= 0 && m >= 0 && blok[c] === 0 && blok[m] === 0 && !plan.has(c) && !plan.has(m) && i > 2 && j > 2 && i < N - 3 && j < N - 3; };
-  const naDrodze = (x, z) => { const t = Math.max(0, Math.min(1, (x * 30 + z * 30) / 1800)); return Math.hypot(x - 30 * t, z - 30 * t) < 2.6; };
+  const naDrodze = (x, z) => { const t = Math.max(0, Math.min(1, (x + z) / (2 * BAZA))); return Math.hypot(x - BAZA * t, z - BAZA * t) < 2.6; };
   const kepa = (cx, cz, ile, rodzaj) => {
     let n = 0;
     for (let k = 0; k < 80 && n < ile; k++) {
@@ -532,13 +548,14 @@ function dodatkoweZloza(seed) {
   const szukaj = (dMin, dMax, rodzaj, ile) => {
     for (let p = 0; p < 40; p++) {
       const a = r() * 6.283, d = dMin + r() * (dMax - dMin), x = TC[0] + Math.cos(a) * d, z = TC[1] + Math.sin(a) * d;
-      if (x + z < 3 || Math.abs(x) > 41 || Math.abs(z) > 41) continue;
+      if (x + z < 3 || Math.abs(x) > POL - 7 || Math.abs(z) > POL - 7) continue;
       const i = Math.floor(x + POL), j = Math.floor(z + POL); if (!wolne(i, j)) continue;
       kepa(x, z, ile, rodzaj); return;
     }
   };
   szukaj(11, 16, 'kamien', 6); szukaj(16, 24, 'kamien', 6); szukaj(24, 34, 'kamien', 5);
   szukaj(10, 14, 'zloto', 5); szukaj(26, 36, 'zloto', 5);
+  szukaj(36, 50, 'kamien', 6); szukaj(50, 70, 'kamien', 5); szukaj(40, 55, 'zloto', 5); szukaj(55, 75, 'zloto', 5);
   let id = ID_ZLOZ;
   for (const [c, rodzaj] of [...plan.entries()].sort((a, b) => a[0] - b[0])) {
     const [x, z] = srodekKom(c), kl = rodzaj + '_d';
@@ -561,10 +578,10 @@ function rozmiescOzdoby(seed) {
   OZD.clear();
   const r = rng(seed * 7 + 11), lista = {};
   for (const k of MOD.OZDOBY) lista[k] = [];
-  const odBazy = (x, z) => Math.min(Math.hypot(x - 30, z - 30), Math.hypot(x + 30, z + 30));
+  const odBazy = (x, z) => Math.min(Math.hypot(x - BAZA, z - BAZA), Math.hypot(x + BAZA, z + BAZA));
   const przyLesie = c => { const i = c % N, j = (c / N) | 0; for (let k = 0; k < 8; k++) { const n = kom2(i + DI[k], j + DJ[k]); if (n >= 0 && blok[n] === 1) { const z0 = ZAS.get(naKom[n]); if (z0 && z0.rodzaj === 'drzewo') return true; } } return false; };
-  for (let k = 0; k < 5200; k++) {
-    const x = -46.5 + r() * 93, z = -46.5 + r() * 93, c = kom(x, z);
+  for (let k = 0; k < 18000; k++) {
+    const x = 1.5 - POL + r() * (N - 3), z = 1.5 - POL + r() * (N - 3), c = kom(x, z);
     if (c < 0 || blok[c] !== 0 || odBazy(x, z) < 6.5) continue;
     const q = r(), las = przyLesie(c), kw = szumMapy(x * 0.12, z * 0.12, 77);
     let typ;
@@ -699,7 +716,7 @@ function wygladz(px, pz, pts) {
   }
   return out;
 }
-function celePunkt(x, z) { const c = najblizszaWolna(kom(Math.max(-47.5, Math.min(47.5, x)), Math.max(-47.5, Math.min(47.5, z))), 10); return c >= 0 ? [c] : []; }
+function celePunkt(x, z) { const c = najblizszaWolna(kom(Math.max(0.5 - POL, Math.min(POL - 0.5, x)), Math.max(0.5 - POL, Math.min(POL - 0.5, z))), 10); return c >= 0 ? [c] : []; }
 function celeWokol(i0, j0, w) {
   const out = [];
   for (let i = i0 - 1; i <= i0 + w; i++) out.push(kom2(i, j0 - 1), kom2(i, j0 + w));
@@ -806,7 +823,7 @@ function awansuj(strona, nowy) {
 
 function przesun(u, nx, nz) {
   RUCH = u.strona;
-  nx = Math.max(-47.6, Math.min(47.6, nx)); nz = Math.max(-47.6, Math.min(47.6, nz));
+  nx = Math.max(0.4 - POL, Math.min(POL - 0.4, nx)); nz = Math.max(0.4 - POL, Math.min(POL - 0.4, nz));
   if (wolneXZ(nx, nz)) { u.x = nx; u.z = nz; } else if (wolneXZ(nx, u.z)) u.x = nx; else if (wolneXZ(u.x, nz)) u.z = nz;
 }
 // idzie po drodze; zwraca true, gdy doszedł do końca
@@ -1427,7 +1444,7 @@ function ai(strona, dt) {
         }
         continue;
       }
-      const r = najblizszyZasob(s, skup.x, skup.z, 50);
+      const r = najblizszyZasob(s, skup.x, skup.z, 90);
       if (r) { rozkazZbieraj(o, r); licz[s]++; break; }
     }
   }
@@ -1436,7 +1453,7 @@ function ai(strona, dt) {
   if (brak(najmniej) > 1.5 && brak(najwiecej) < -1.5) {
     const o = osadnicy.find(o => o.zad && o.zad.typ === 'zbieraj' && o.zad.sur === najwiecej && o.niesie.ile < 2);
     const skup = najblizszySkup(strona, najmniej, ratusz.x, ratusz.z) || ratusz;
-    const r = najmniej !== 'jagody' || najblizszyZasob('jagody', skup.x, skup.z, 26) ? najblizszyZasob(najmniej, skup.x, skup.z, 50) : null;
+    const r = najmniej !== 'jagody' || najblizszyZasob('jagody', skup.x, skup.z, 26) ? najblizszyZasob(najmniej, skup.x, skup.z, 90) : null;
     if (o && r) rozkazZbieraj(o, r);
     else if (o && najmniej === 'jagody') stop(o); // bez krzaków: osadnik staje i za chwilę idzie na pole (albo je zbuduje)
   }
@@ -1451,7 +1468,7 @@ function ai(strona, dt) {
   // 6. miejsca do odnoszenia surowców blisko pracy
   const potrzebaSkupu = (typ, sur, minLudzi) => {
     if (brakBudynku(strona, typ) || budowane.some(b => b.typ === typ) || licz[sur] < minLudzi || !stacR(BUDYNKI[typ].koszt)) return;
-    const r = najblizszyZasob(sur, ratusz.x, ratusz.z, 40); if (!r) return;
+    const r = najblizszyZasob(sur, ratusz.x, ratusz.z, 80); if (!r) return;
     const skup = najblizszySkup(strona, sur, r.x, r.z);
     if (skup && dystDoProst(r.x, r.z, skup) < 7) return;
     aiPostaw(strona, typ, aiMiejsce(typ, r.x, r.z, 2, 6, 1), osadnicy);
@@ -1466,7 +1483,7 @@ function ai(strona, dt) {
   postawRaz('koszary', osadnicy.length >= 10);
   if (era >= 2) {
     postawRaz('kuznia'); postawRaz('strzelnica'); postawRaz('stajnia', maG('kuznia'));
-    if (!ma('kopalnia')) { const r = najblizszyZasob('zelazo', ratusz.x, ratusz.z, 40); if (r && stacR(BUDYNKI.kopalnia.koszt)) aiPostaw(strona, 'kopalnia', aiMiejsce('kopalnia', r.x, r.z, 2, 6, 1), osadnicy); }
+    if (!ma('kopalnia')) { const r = najblizszyZasob('zelazo', ratusz.x, ratusz.z, 80); if (r && stacR(BUDYNKI.kopalnia.koszt)) aiPostaw(strona, 'kopalnia', aiMiejsce('kopalnia', r.x, r.z, 2, 6, 1), osadnicy); }
   }
   if (era >= 3) postawRaz('warsztat');
   const wieze = moje.filter(b => b.typ === 'wieza').length;
@@ -1482,6 +1499,8 @@ function ai(strona, dt) {
     // nadmiar sprzedaje za złoto, a gdy brakuje jagód (jedzenia dla wojska), dokupuje je za złoto
     for (const s of ['zelazo', 'drewno', 'kamien', 'jagody']) if (zas[s] > (s === 'jagody' ? 1400 : 900) && zas.zloto < 800) { handluj(strona, s, false); break; }
     if (zas.jagody < 300 && zas.zloto >= cenaKupna(strona, 'jagody')) handluj(strona, 'jagody', true);
+    // żelaza bywa mało (złoża się kończą): dokupuje je za złoto, żeby robić lepsze wojsko i ulepszenia
+    else if (zas.zelazo < 400 && zas.zloto >= cenaKupna(strona, 'zelazo') + 150) handluj(strona, 'zelazo', true);
   }
   // 7b. rozbudowa ambon
   for (const w of moje) if (w.typ === 'wieza' && w.gotowy && !w.kolejka.length && !brakRozbudowy(w) && stacR(WIEZA_POZIOMY[(w.poziom || 1) + 1].koszt)) { dodajDoKolejki(w, 'rozb'); break; }
@@ -1604,12 +1623,12 @@ let CHMURY = null, PTAKI = [];
 function zbudujNiebo() {
   const cv = document.createElement('canvas'); cv.width = cv.height = 512; const c = cv.getContext('2d');
   for (let i = 0; i < 26; i++) { const x = Math.random() * 512, y = Math.random() * 512, r = 30 + Math.random() * 70, g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(0,0,0,0.5)'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; for (const dx of [-512, 0, 512]) for (const dy of [-512, 0, 512]) c.fillRect(x - r + dx, y - r + dy, r * 2, r * 2); }
-  const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1.3, 1.3);
-  CHMURY = new THREE.Mesh(new THREE.PlaneGeometry(140, 140).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0.22, depthWrite: false, color: '#000000' }));
+  const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2.6, 2.6);
+  CHMURY = new THREE.Mesh(new THREE.PlaneGeometry(N + 44, N + 44).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0.22, depthWrite: false, color: '#000000' }));
   CHMURY.position.y = 0.025; CHMURY.renderOrder = 1; scena.add(CHMURY);
   const gk = new THREE.BoxGeometry(0.45, 0.03, 0.14), mk = new THREE.MeshBasicMaterial({ color: '#2b2b33' });
-  for (let s = 0; s < 3; s++) {
-    const cx = lo(-30, 30), cz = lo(-30, 30), r = lo(14, 26), wys = lo(11, 16), szyb = lo(0.12, 0.2) * (Math.random() < 0.5 ? 1 : -1);
+  for (let s = 0; s < 8; s++) {
+    const cx = lo(-POL * 0.7, POL * 0.7), cz = lo(-POL * 0.7, POL * 0.7), r = lo(14, 26), wys = lo(11, 16), szyb = lo(0.12, 0.2) * (Math.random() < 0.5 ? 1 : -1);
     for (let i = 0; i < 5; i++) {
       const p = new THREE.Group(), l = new THREE.Mesh(gk, mk), pr = new THREE.Mesh(gk, mk);
       l.position.x = -0.2; pr.position.x = 0.2; p.add(l, pr); p.add(new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.07, 0.28), mk));
@@ -1679,18 +1698,18 @@ function sprawdzKoniec() {
 function nowaGra(trudnosc) {
   wyczyscSwiat();
   const seed = Math.floor(Math.random() * 1e9);
-  S = { v: 1, seed, trudnosc, trudnoscGracza: 'sredni', czas: 0, nextId: 1, zas: [{ ...START }, { ...START }], era: [1, 1], ul: [{}, {}], wynik: null,
+  S = { v: 1, mapa: N, seed, trudnosc, trudnoscGracza: 'sredni', czas: 0, nextId: 1, zas: [{ ...START }, { ...START }], era: [1, 1], ul: [{}, {}], wynik: null,
     stat: [0, 1].map(() => ({ zebrane: 0, wyszkoleni: 0, pokonani: 0, zburzone: 0, budynki: 0 })), ai: [nowyAI(), nowyAI()], usuniete: [], pomoc: {}, aiGracz: false };
   S.nextId = generujMape(seed);
   dodatkoweZloza(seed);
   rozmiescOzdoby(seed);
   zbudujZiemie();
   for (const s of [STRONA_GRACZA, KOMPUTER]) {
-    const cx = s === STRONA_GRACZA ? 30 : -30, cz = cx;
+    const cx = s === STRONA_GRACZA ? BAZA : -BAZA, cz = cx;
     const r = nowyBudynek(s, 'ratusz', cx + POL - 2, cz + POL - 2, true);
     for (let k = 0; k < 3; k++) { const a = (s ? 0.8 : -2.35) + (k - 1) * 0.6; nowaJednostka(s, 'osadnik', r.x + Math.sin(a) * 3.2, r.z + Math.cos(a) * 3.2); }
   }
-  kam.x = 30; kam.z = 30; kam.d = 30; kam.kat = Math.PI / 4;
+  kam.x = BAZA; kam.z = BAZA; kam.d = 30; kam.kat = Math.PI / 4;
   zapiszGre();
 }
 function zbudujZiemie() {
@@ -1699,7 +1718,7 @@ function zbudujZiemie() {
   mz.onBeforeCompile = sh => {
     sh.uniforms.tDetal = { value: teksturaDetalu() };
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D tDetal;')
-      .replace('#include <map_fragment>', '#include <map_fragment>\n{ vec3 dd = texture2D(tDetal, vMapUv * 46.0).rgb; diffuseColor.rgb *= 0.72 + 0.56 * dd; }');
+      .replace('#include <map_fragment>', '#include <map_fragment>\n{ vec3 dd = texture2D(tDetal, vMapUv * ' + (46 * N / 96).toFixed(1) + ').rgb; diffuseColor.rgb *= 0.72 + 0.56 * dd; }');
   };
   ziemia = new THREE.Mesh(new THREE.PlaneGeometry(N, N).rotateX(-Math.PI / 2), mz);
   ziemia.receiveShadow = true; scena.add(ziemia);
@@ -1721,13 +1740,13 @@ function teksturaDetalu() {
 let WULKANY = [];
 function zbudujOkolice(seed) {
   const grupa = new THREE.Group(), r = rng(seed * 3 + 1), zi = seed % 991;
-  const S2 = 440, SEG = 150, geo = new THREE.PlaneGeometry(S2, S2, SEG, SEG).rotateX(-Math.PI / 2);
+  const OD = POL - 48, S2 = 440 + 2 * OD, SEG = Math.round(150 * S2 / 440), geo = new THREE.PlaneGeometry(S2, S2, SEG, SEG).rotateX(-Math.PI / 2);
   const pos = geo.attributes.position, kol = [], c = new THREE.Color();
   // jezioro po jednej stronie (za brzegiem mapy), wulkany daleko
-  const jez = { x: 30 + r() * 30, z: -95 - r() * 25, r: 34 };
-  WULKANY = [[-150 + r() * 40, -170 + r() * 30, 52], [160 + r() * 30, -120 + r() * 50, 44], [-60 + r() * 40, 175 + r() * 20, 38]];
+  const jez = { x: BAZA + r() * 30, z: -95 - OD - r() * 25, r: 34 };
+  WULKANY = [[-150 - OD + r() * 40, -170 - OD + r() * 30, 52], [160 + OD + r() * 30, -120 - OD + r() * 50, 44], [-60 + r() * 40, 175 + OD + r() * 20, 38]];
   const wys = (x, z) => {
-    const d = Math.max(Math.abs(x), Math.abs(z)) - 50;
+    const d = Math.max(Math.abs(x), Math.abs(z)) - POL - 2;
     if (d < 0) return -0.06;
     let h = (szumMapy(x * 0.03, z * 0.03, zi) * 0.7 + szumMapy(x * 0.09, z * 0.09, zi + 5) * 0.3) * Math.min(1, d / 22) * (8 + d * 0.32);
     for (const [vx, vz, vh] of WULKANY) { const dv = Math.hypot(x - vx, z - vz); if (dv < vh * 1.6) h = Math.max(h, vh * Math.max(0, 1 - dv / (vh * 1.6)) ** 1.25 - (dv < 4 ? 3 : 0)); }
@@ -1736,7 +1755,7 @@ function zbudujOkolice(seed) {
   };
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i), z = pos.getZ(i), h = wys(x, z); pos.setY(i, h);
-    if (h < 0.05) c.set(Math.max(Math.abs(x), Math.abs(z)) < 52 ? '#5f9e4a' : '#c9b98a');
+    if (h < 0.05) c.set(Math.max(Math.abs(x), Math.abs(z)) < POL + 4 ? '#5f9e4a' : '#c9b98a');
     else if (h < 5) c.set('#5d9a44').lerp(new THREE.Color('#3f7a35'), h / 5);
     else if (h < 16) c.set('#3f7a35').lerp(new THREE.Color('#7d7a6e'), (h - 5) / 11);
     else if (h < 26) c.set('#7d7a6e').lerp(new THREE.Color('#9d978a'), (h - 16) / 10);
@@ -1751,8 +1770,8 @@ function zbudujOkolice(seed) {
   woda.position.set(jez.x, -0.25, jez.z); grupa.add(woda); grupa.userData.woda = woda;
   // las na wzgórzach (świerki i sosny, bez cieni)
   const L = [], m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
-  for (let k = 0; k < 4000 && L.length < 1400; k++) {
-    const x = (r() - 0.5) * 300, z = (r() - 0.5) * 300; if (Math.max(Math.abs(x), Math.abs(z)) < 51) continue;
+  for (let k = 0; k < 6000 && L.length < 1900; k++) {
+    const x = (r() - 0.5) * (300 + 2 * OD), z = (r() - 0.5) * (300 + 2 * OD); if (Math.max(Math.abs(x), Math.abs(z)) < POL + 3) continue;
     const h = wys(x, z); if (h < 0.3 || h > 14 || szumMapy(x * 0.05, z * 0.05, zi + 9) < 0.35) continue;
     L.push([x, h, z, 1.1 + r() * 1.4, r() * 6.283, r() < 0.7 ? 'swierk' : 'sosna']);
   }
@@ -1827,7 +1846,7 @@ function wczytajGre(o) {
 // ================= kamera i rysowanie =================
 const EL = 0.98; // nachylenie kamery
 function ustawKamere() {
-  kam.x = Math.max(-46, Math.min(46, kam.x)); kam.z = Math.max(-46, Math.min(46, kam.z)); kam.d = Math.max(13, Math.min(62, kam.d));
+  kam.x = Math.max(2 - POL, Math.min(POL - 2, kam.x)); kam.z = Math.max(2 - POL, Math.min(POL - 2, kam.z)); kam.d = Math.max(13, Math.min(72, kam.d));
   // przy oddalaniu kamera się pochyla: widać horyzont z górami i wulkanami
   const el = EL - 0.42 * Math.max(0, Math.min(1, (kam.d - 30) / 32));
   const h = Math.sin(el) * kam.d, p = Math.cos(el) * kam.d;
@@ -2484,7 +2503,7 @@ function ustawPrzelaczniki() { for (const [id, k] of [['m-muz', 'muzyka'], ['m-d
 function pokazMenu() {
   pauza = true; ciszaMuzyki();
   const jest = zapis.gra && !zapis.gra.wynik;
-  $('m-dalej').hidden = !jest;
+  $('m-dalej').hidden = !jest; $('m-stara').hidden = !zapis.malaMapa;
   if (jest) $('m-dalej').textContent = `Graj dalej (${TRUDNOSC[zapis.gra.trudnosc].nazwa.toLowerCase()}, ${Math.floor(zapis.gra.czas / 60)} min)`;
   const w = zapis.wygrane, ile = Object.values(w).reduce((a, b) => a + b, 0);
   $('m-wygrane').textContent = ile ? `🏆 Wygrane: ${Object.entries(w).filter(([, n]) => n).map(([k, n]) => `${TRUDNOSC[k].nazwa.toLowerCase()} ${n}`).join(', ')}` : '';
@@ -2503,7 +2522,7 @@ function pokazWersje() {
   }
   pokazOkno('o-wersje');
 }
-function startuj() { ukryjOkna(); pauza = false; odswiezPanel(true); odswiezHud(); grajMuzyke(); }
+function startuj() { if (zapis.malaMapa) { zapis.malaMapa = false; zapiszDysk(); } ukryjOkna(); pauza = false; odswiezPanel(true); odswiezHud(); grajMuzyke(); }
 $('m-dalej').onclick = () => { audio(); dzwiek('klik'); if (!S || S.seed !== zapis.gra.seed || S.wynik) wczytajGre(zapis.gra); startuj(); };
 $('m-nowa').onclick = () => { audio(); dzwiek('klik'); for (const b of document.querySelectorAll('[data-trudnosc]')) b.classList.toggle('wybrany', b.dataset.trudnosc === zapis.trudnosc); pokazOkno('o-nowa'); };
 for (const b of document.querySelectorAll('[data-trudnosc]')) b.onclick = () => {
