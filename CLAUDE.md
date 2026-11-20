@@ -115,6 +115,11 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
 - Test bez klikania: `window.__haskap` (`krok(sekundy)`, `komputerKontraKomputer(trudnosc)` = komputer gra też za gracza).
   Po zmianach w liczbach albo w `ai` puść kilka gier komputer kontra komputer: gra ma się kończyć (zwykle 25–45 minut) bez błędów,
   a gracz, który nic nie robi, na łatwym poziomie przegrywa dopiero po około 25 minutach.
+- Dźwięki: krótkie pliki WAV w `age2/dzwieki/` (CC0, źródła w `age2/dzwieki/ZRODLA.md`), lista grup w `ODGLOSY` w `age2/gra.js`,
+  funkcja `odglos(nazwa, x, z)` gra dźwięk z głośnością i stroną zależną od kamery. Na tym komputerze nie ma ffmpeg:
+  OGG zamienia się na WAV w przeglądarce (dekodowanie, mono 22050 Hz, przycięcie ciszy).
+- Grafika: faktury i ruch (nogi, koła, wiatr) liczy karta graficzna (`MAT.onBeforeCompile` w `age2/gra.js`, atrybuty `wzor` i `staw`
+  z `polacz` w `age2/modele.js`); efekty (dym, ogień, iskry) to `EF` i `emitujEfekty`, okolica za mapą to `zbudujOkolice`.
 - Nowa wersja: podnieś `WERSJA` w `age2/gra.js`, dopisz sekcję w `age2/ZMIANY.md` (te same zasady co wyżej).
   Poprzednią wersję zapisz jako kopię: `python narzedzia/age2-wersja.py NUMER SKROT_COMMITA` i dopisz ją w `WERSJE`
   z `adres: 'wersje/NUMER/'` (kopie mają zapis `age-of-haskap-2-wNUMER`).

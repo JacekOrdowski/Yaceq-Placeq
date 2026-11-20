@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL } from './dane.js';
 
-const WERSJA = 11;
+const WERSJA = 12;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 11, opis: 'Grafika na maksa: faktury, chodzenie nogami, wiatr, dym, ogień, iskry, wióry, góry i wulkany za mapą, jezioro, chmury, ptaki. Do tego wszystko z wersji 10.' },
+  { nr: 12, opis: 'Prawdziwe dźwięki: miecz o miecz, tarcze, siekiera, kilof, kowadło, monety, walące się budynki; głośność i strona zależne od kamery. Do tego wszystko z wersji 11.' },
+  { nr: 11, opis: 'Grafika na maksa: faktury, chodzenie nogami, wiatr, dym, ogień, iskry, wióry, góry i wulkany za mapą, jezioro, chmury, ptaki. Do tego wszystko z wersji 10.', adres: 'wersje/11/' },
   { nr: 10, opis: 'Tryby żołnierzy (Obrona, Agresja, Szał), ruiny po zburzonych budynkach, żołnierze nie utykają już przy rogach budynków. Do tego wszystko z wersji 9.', adres: 'wersje/10/' },
   { nr: 9, opis: 'Dużo więcej kamienia, złoto, Jarmark z handlem i wozy kupieckie z reniferami (im dalej, tym więcej złota). Do tego wszystko z wersji 8.', adres: 'wersje/9/' },
   { nr: 8, opis: 'Mury i bramy (palisada → cegła → stal), zaznaczanie ramką po przytrzymaniu palca, obracanie mapy dwoma palcami. Do tego wszystko z wersji 7.', adres: 'wersje/8/' },
@@ -235,6 +236,7 @@ let AC = null;
 function audio() {
   if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } }
   if (AC && AC.state === 'suspended') AC.resume();
+  if (AC) zaladujOdglosy();
   return AC;
 }
 function ton(f1, f2, czas, typ = 'sine', gl = 0.12, opozn = 0) {
@@ -254,6 +256,54 @@ function szum(czas, gl = 0.1, f = 1200, opozn = 0) {
   s.connect(fl).connect(g).connect(ac.destination); s.start(t); s.stop(t + czas + 0.02);
 }
 const ostDzwiek = {};
+// ================= nagrane dźwięki (CC0, źródła w dzwieki/ZRODLA.md), głośność i strona zależne od kamery =================
+const ODGLOSY = {
+  miecz: 4, zamach: 3, tarcza: 3, siekiera: 3, kilof: 3, kowadlo: 2, mlotek: 3, monety: 2, walenie: 3, drzewo: 2, brama: 2, krok: 4, krzak: 2,
+  odloz: 1, ulepszenie: 1, skrzyp: 1, kamyk: 1,
+};
+const BUF = {};
+let odglosyLaduja = false, grajace = 0;
+const ostOdglos = {};
+function zaladujOdglosy() {
+  if (odglosyLaduja || !AC) return; odglosyLaduja = true;
+  for (const [n, ile] of Object.entries(ODGLOSY)) for (let i = 1; i <= ile; i++) {
+    const nazwa = ile === 1 ? n : n + i;
+    fetch('dzwieki/' + nazwa + '.wav').then(r => r.arrayBuffer()).then(d => AC.decodeAudioData(d)).then(b => { (BUF[n] || (BUF[n] = [])).push(b); }).catch(() => {});
+  }
+}
+// odgłos w miejscu (x, z): bliżej środka ekranu i przy przybliżeniu głośniej, z lewej strony ekranu słychać z lewej
+function odglos(n, x, z, glosnosc = 1, ostep = 70) {
+  if (!zapis.dzwieki || !AC || symulacja || !BUF[n] || !BUF[n].length) return false;
+  const t = performance.now(); if (ostOdglos[n] && t - ostOdglos[n] < ostep) return true; if (grajace > 14) return true;
+  let g = glosnosc, pan = 0;
+  if (x != null) {
+    const [sx, sy, sz] = naEkran(x, 0.5, z), W = innerWidth, Hh = innerHeight;
+    if (sz > 1 || sx < -120 || sx > W + 120 || sy < -120 || sy > Hh + 120) return true;
+    const odSr = Math.min(1, Math.hypot(sx - W / 2, sy - Hh * 0.45) / (Math.max(W, Hh) * 0.6));
+    g *= Math.max(0.15, Math.min(1.4, 24 / kam.d)) * (1 - 0.55 * odSr);
+    pan = Math.max(-1, Math.min(1, (sx - W / 2) / (W / 2))) * 0.75;
+  }
+  if (g < 0.03) return true;
+  ostOdglos[n] = t;
+  const lista = BUF[n], b = lista[Math.floor(Math.random() * lista.length)];
+  const src = AC.createBufferSource(), gain = AC.createGain();
+  src.buffer = b; src.playbackRate.value = 0.92 + Math.random() * 0.16; gain.gain.value = g * 0.6;
+  let wyj = gain;
+  if (AC.createStereoPanner) { const p = AC.createStereoPanner(); p.pan.value = pan; gain.connect(p); wyj = p; }
+  src.connect(gain); wyj.connect(AC.destination);
+  grajace++; src.onended = () => { grajace--; };
+  src.start();
+  return true;
+}
+const TARCZOWNI = ['tarczownik', 'obronca', 'wlocznik', 'pikinier', 'wojownik'];
+function odglosUderzenia(u, c) {
+  const x = (u.x + c.x) / 2, z = (u.z + c.z) / 2;
+  if (jestBudynkiem(c)) return odglos(c.typ === 'mur' && poziomMuru(c.strona) > 1 || c.typ === 'wieza' && (c.poziom || 1) > 1 ? 'kilof' : 'mlotek', x, z, 0.8);
+  if (u.typ === 'osadnik' || u.d.tylkoBudynki) return odglos('mlotek', x, z, 0.7);
+  if (TARCZOWNI.includes(c.typ) && Math.random() < 0.45) return odglos('tarcza', x, z);
+  return odglos('miecz', x, z);
+}
+
 function dzwiek(n) {
   if (!zapis.dzwieki || !AC || symulacja) return;
   const t = performance.now(); if (ostDzwiek[n] && t - ostDzwiek[n] < 70) return; ostDzwiek[n] = t;
@@ -778,7 +828,7 @@ function handel(u, dt) {
     if (z.faza === 'naTarg') {
       const zysk = zyskKursu(j, dom);
       S.zas[u.strona].zloto += zysk; S.stat[u.strona].zebrane += zysk;
-      if (u.strona === STRONA_GRACZA && !S.aiGracz) { napis(j.x, 2.6, j.z, '+' + zysk + ' 🪙', '#ffd84a'); EF.zloto(j.x, 1.5, j.z); }
+      if (u.strona === STRONA_GRACZA && !S.aiGracz) { napis(j.x, 2.6, j.z, '+' + zysk + ' 🪙', '#ffd84a'); EF.zloto(j.x, 1.5, j.z); odglos('monety', j.x, j.z, 0.8); }
       z.faza = 'doDomu'; z.dom = 0;
     } else z.faza = 'naTarg';
     u.sciezka = null; return;
@@ -853,8 +903,8 @@ function zadaj(cel, ile, od) {
   if (cel.hp <= 0) jestBudynkiem(cel) ? zniszczBudynek(cel) : zabij(cel);
 }
 function uderz(u, c) {
-  if (u.d.zasieg) { rzut(u, c, atakJ(u)); dzwiek('rzut'); }
-  else { zadaj(c, obrazenia(u, c, atakJ(u)), u); if (naEkranie(u)) { dzwiek('uderz'); EF.iskry((u.x + c.x) / 2, 0.7, (u.z + c.z) / 2, jestBudynkiem(c) ? 3 : 5, jestBudynkiem(c) ? '#e0c08a' : '#ffd84a'); } }
+  if (u.d.zasieg) { rzut(u, c, atakJ(u)); if (!odglos('zamach', u.x, u.z, 0.45)) dzwiek('rzut'); }
+  else { zadaj(c, obrazenia(u, c, atakJ(u)), u); if (naEkranie(u)) { if (!odglosUderzenia(u, c)) dzwiek('uderz'); EF.iskry((u.x + c.x) / 2, 0.7, (u.z + c.z) / 2, jestBudynkiem(c) ? 3 : 5, jestBudynkiem(c) ? '#e0c08a' : '#ffd84a'); } }
 }
 const KAMYK = MOD.kamyk();
 function rzut(od, cel, atak) {
@@ -880,7 +930,7 @@ function zniszczBudynek(b, wlasnaReka = false) {
   if (b.plac) b.mesh.remove(b.plac);
   UMIERA.push({ mesh: b.mesh, t: 0, j: false });
   if (naEkranie(b)) EF.zawalenie(b);
-  if (naEkranie(b)) dzwiek('zniszcz');
+  if (naEkranie(b) && !odglos('walenie', b.x, b.z, 1.2, 0)) dzwiek('zniszcz');
   if (!wlasnaReka) {
     S.stat[wrog(b.strona)].zburzone++;
     // zostają ruiny (bez placu budowy); komputer odczeka, zanim postawi taki budynek znowu
@@ -938,6 +988,7 @@ function odnies(u, dt, poOddaniu) {
   if (dystDoProst(u.x, u.z, b) < 0.8) {
     const s = u.niesie.sur, ile = u.niesie.ile;
     S.zas[u.strona][s] += ile; S.stat[u.strona].zebrane += ile; u.niesie = { sur: null, ile: 0 };
+    if (u.strona === STRONA_GRACZA) odglos(s === 'zloto' ? 'monety' : 'odloz', u.x, u.z, 0.35, 150);
     u.sciezka = null; z.skup = 0; poOddaniu(); return;
   }
   if (!u.sciezka && !ustawDroge(u, celeBudynku(b), b.x, b.z)) { if (!u.sciezka) { u.zad = null; return; } }
@@ -1078,7 +1129,7 @@ function nowyBudynek(strona, typ, i0, j0, gotowy = false, id, poziom = 1) {
 function ukonczBudynek(b) {
   b.gotowy = true; b.postep = 1; b.mesh.scale.y = 1;
   if (b.plac) { b.mesh.remove(b.plac); b.plac = null; }
-  if (b.strona === STRONA_GRACZA && !S.aiGracz) { dzwiek('buduj'); toast(b.d.emoji + ' Gotowe: ' + b.d.nazwa); }
+  if (b.strona === STRONA_GRACZA && !S.aiGracz) { dzwiek('buduj'); odglos(b.d.brama ? 'brama' : 'skrzyp', b.x, b.z, 0.7); toast(b.d.emoji + ' Gotowe: ' + b.d.nazwa); }
   S.stat[b.strona].budynki++;
 }
 function ludnosc(strona) { let n = 0; for (const u of JED) if (u.strona === strona) n++; return n; }
@@ -1166,7 +1217,7 @@ function aktualizujBudynek(b, dt) {
       for (const e of JED) { if (e.strona === b.strona) continue; const d = Math.hypot(e.x - b.x, e.z - b.z); if (d < nd) { nd = d; naj = e; } }
       // ambona: gdy w zasięgu nie ma ludzi, strzela w budynki wroga (także w place budowy)
       if (!naj && b.typ === 'wieza') { let nb = st.zasieg; for (const o of BUD) { if (o.strona === b.strona) continue; const d = dystDoProst(b.x, b.z, o); if (d < nb) { nb = d; naj = o; } } }
-      if (naj) { rzut(b, naj, st.atak); b.cd = st.odstep; } else b.cd = 0.4;
+      if (naj) { rzut(b, naj, st.atak); b.cd = st.odstep; odglos('zamach', b.x, b.z, 0.4); } else b.cd = 0.4;
     }
   }
   const q = b.kolejka[0]; if (!q) return;
@@ -1193,7 +1244,7 @@ function aktualizujBudynek(b, dt) {
         o.mesh.geometry = MOD.budynek(modelBud(o.typ, 1, o.strona), o.strona);
       }
       if (q.typ === 'rekawice') for (const u of JED) if (u.strona === b.strona && u.typ === 'osadnik') { u.max = maxHpJ(u.strona, 'osadnik'); u.hp += 15; }
-      if (b.strona === STRONA_GRACZA && !S.aiGracz) { toast(ULEPSZENIA[q.typ].emoji + ' Ulepszone: ' + ULEPSZENIA[q.typ].nazwa); dzwiek('buduj'); }
+      if (b.strona === STRONA_GRACZA && !S.aiGracz) { toast(ULEPSZENIA[q.typ].emoji + ' Ulepszone: ' + ULEPSZENIA[q.typ].nazwa); dzwiek('buduj'); odglos('ulepszenie'); }
     } else if (q.rodzaj === 'rozb') {
       // rozbudowa ambony: nowy wygląd, więcej życia (rany zostają), mocniejsze strzały
       const ubyl = b.max - b.hp; b.poziom = (b.poziom || 1) + 1; b.max = maxHpBud(b.strona, b.typ, b.poziom); b.hp = Math.max(1, b.max - ubyl);
@@ -1372,7 +1423,9 @@ function ai(strona, dt) {
   if (jar) {
     const wozy = ludzie.filter(u => u.d.kupiec).length + jar.kolejka.length;
     if (wozy < 3 && lud < limit && !jar.kolejka.length && stacR(JEDNOSTKI.woz.koszt)) dodajDoKolejki(jar, 'j', 'woz');
-    for (const s of ['drewno', 'jagody', 'kamien', 'zelazo']) if (zas[s] > 1400 && zas.zloto < 600) { handluj(strona, s, false); break; }
+    // nadmiar sprzedaje za złoto, a gdy brakuje jagód (jedzenia dla wojska), dokupuje je za złoto
+    for (const s of ['zelazo', 'drewno', 'kamien', 'jagody']) if (zas[s] > (s === 'jagody' ? 1400 : 900) && zas.zloto < 800) { handluj(strona, s, false); break; }
+    if (zas.jagody < 300 && zas.zloto >= cenaKupna(strona, 'jagody')) handluj(strona, 'jagody', true);
   }
   // 7b. rozbudowa ambon
   for (const w of moje) if (w.typ === 'wieza' && w.gotowy && !w.kolejka.length && !brakRozbudowy(w) && stacR(WIEZA_POZIOMY[(w.poziom || 1) + 1].koszt)) { dodajDoKolejki(w, 'rozb'); break; }
@@ -1478,14 +1531,14 @@ function emitujEfekty(dt) {
     if (!naEkranie(b)) continue;
     const obr = b.strona === KOMPUTER ? -1 : 1;
     if (b.gotowy) for (const [ox, oy, oz] of KOMINY[b.typ] || []) if (Math.random() < 0.35) EF.dym(b.x + ox * obr, oy, b.z + oz * obr, false, 0.8);
-    if (b.typ === 'kuznia' && b.gotowy && Math.random() < 0.25) EF.iskry(b.x + 0.55 * obr, 0.55, b.z - 0.6 * obr, 2, '#ffb347');
+    if (b.typ === 'kuznia' && b.gotowy && Math.random() < 0.25) { EF.iskry(b.x + 0.55 * obr, 0.55, b.z - 0.6 * obr, 2, '#ffb347'); if (Math.random() < 0.3) odglos('kowadlo', b.x, b.z, 0.45, 900); }
     const z = b.hp / b.max;
     if (b.gotowy && z < 0.6 && Math.random() < 0.5) EF.dym(b.x + lo(-b.w / 3, b.w / 3), wysokoscBud(b) * 0.7, b.z + lo(-b.w / 3, b.w / 3), true, 1 + b.w * 0.15);
     if (b.gotowy && z < 0.35) for (let i = 0; i < 2; i++) EF.ogien(b.x + lo(-b.w / 3, b.w / 3), wysokoscBud(b) * lo(0.4, 0.8), b.z + lo(-b.w / 3, b.w / 3));
   }
   // kurz spod nóg (tylko u kilku widocznych, żeby telefon nie zwolnił)
   let ile = 0;
-  for (const u of JED) { if (!u.idzie || ile > 25 || Math.random() > 0.35 || !naEkranie(u)) continue; ile++; EF.kurz(u.x, u.z, 1, u.d.linia === 'renifer' || u.d.kupiec ? 1.6 : 1); }
+  for (const u of JED) { if (!u.idzie || ile > 25 || Math.random() > 0.35 || !naEkranie(u)) continue; ile++; EF.kurz(u.x, u.z, 1, u.d.linia === 'renifer' || u.d.kupiec ? 1.6 : 1); if (kam.d < 22) odglos('krok', u.x, u.z, 0.22, 140); }
   // dym z wulkanów
   for (const [vx, vz, vh] of WULKANY) if (Math.random() < 0.5) czastka(CZ_NORM, vx + lo(-2, 2), vh - 2, vz + lo(-2, 2), lo(0.5, 1.5), lo(1.5, 2.5), lo(-0.5, 0.5), lo(10, 16), 6, 22, 0.35, '#9a9a9a');
 }
@@ -1531,7 +1584,7 @@ function krokGry(dt) {
     const p = POC[i]; p.t += dt;
     if (zyje(p.cel)) { p.ox = p.cel.x; p.oz = p.cel.z; }
     if (p.t >= p.T) {
-      if (zyje(p.cel)) { zadaj(p.cel, obrazenia(p.od, p.cel, p.atak), zyje(p.od) ? p.od : null); if (naEkranie(p.cel)) EF.kurz(p.ox, p.oz, 3, 0.8); }
+      if (zyje(p.cel)) { zadaj(p.cel, obrazenia(p.od, p.cel, p.atak), zyje(p.od) ? p.od : null); if (naEkranie(p.cel)) { EF.kurz(p.ox, p.oz, 3, 0.8); odglos('kamyk', p.ox, p.oz, 0.5); } }
       scena.remove(p.mesh); POC.splice(i, 1);
     }
   }
@@ -1774,12 +1827,13 @@ function ruszReka(u, dt) {
   if (u.koszBok) u.koszBok.visible = kosz;
   let rx = 0, rz = 0;
   if (u.pracuje) {
-    if (narz === 'siekiera') { const p = (u.t * 1.5) % 1; rx = p < 0.22 ? lerp(-2.4, -0.25, p / 0.22) : lerp(-0.25, -2.4, (p - 0.22) / 0.78); rz = -0.45; if (u.pp < 0.22 && p >= 0.22 && naEkranie(u)) EF.wiory(u.x + Math.sin(u.ry) * 0.5, 0.6, u.z + Math.cos(u.ry) * 0.5, '#e0c08a'); u.pp = p; }
-    else if (narz === 'kilof') { const p = (u.t * 1.2) % 1; rx = p < 0.2 ? lerp(-2.8, 0.05, p / 0.2) : lerp(0.05, -2.8, (p - 0.2) / 0.8); if (u.pp < 0.2 && p >= 0.2 && naEkranie(u)) { const k = u.zad && u.zad.sur === 'zloto' ? '#ffd84a' : u.zad && u.zad.sur === 'zelazo' ? '#c4622d' : '#b3ada3'; EF.wiory(u.x + Math.sin(u.ry) * 0.55, 0.3, u.z + Math.cos(u.ry) * 0.55, k, 5); EF.iskry(u.x + Math.sin(u.ry) * 0.55, 0.3, u.z + Math.cos(u.ry) * 0.55, 2); } u.pp = p; }
-    else if (narz === 'mlotek') { const p = (u.t * 2.4) % 1; rx = p < 0.3 ? lerp(-1.9, -0.55, p / 0.3) : lerp(-0.55, -1.9, (p - 0.3) / 0.7); }
+    if (narz === 'siekiera') { const p = (u.t * 1.5) % 1; rx = p < 0.22 ? lerp(-2.4, -0.25, p / 0.22) : lerp(-0.25, -2.4, (p - 0.22) / 0.78); rz = -0.45; if (u.pp < 0.22 && p >= 0.22 && naEkranie(u)) { EF.wiory(u.x + Math.sin(u.ry) * 0.5, 0.6, u.z + Math.cos(u.ry) * 0.5, '#e0c08a'); odglos('siekiera', u.x, u.z, 0.55, 40); } u.pp = p; }
+    else if (narz === 'kilof') { const p = (u.t * 1.2) % 1; rx = p < 0.2 ? lerp(-2.8, 0.05, p / 0.2) : lerp(0.05, -2.8, (p - 0.2) / 0.8); if (u.pp < 0.2 && p >= 0.2 && naEkranie(u)) { const k = u.zad && u.zad.sur === 'zloto' ? '#ffd84a' : u.zad && u.zad.sur === 'zelazo' ? '#c4622d' : '#b3ada3'; EF.wiory(u.x + Math.sin(u.ry) * 0.55, 0.3, u.z + Math.cos(u.ry) * 0.55, k, 5); EF.iskry(u.x + Math.sin(u.ry) * 0.55, 0.3, u.z + Math.cos(u.ry) * 0.55, 2); odglos('kilof', u.x, u.z, 0.55, 40); } u.pp = p; }
+    else if (narz === 'mlotek') { const p = (u.t * 2.4) % 1; rx = p < 0.3 ? lerp(-1.9, -0.55, p / 0.3) : lerp(-0.55, -1.9, (p - 0.3) / 0.7); if (u.pp < 0.3 && p >= 0.3 && naEkranie(u)) odglos('mlotek', u.x, u.z, 0.4, 60); u.pp = p; }
     else if (narz === 'zrywa') {
       // ręka sięga do krzaka i wraca do koszyka przy boku
       const p = (u.t * 0.9) % 1, s = Math.sin(p * Math.PI * 2);
+      if (u.pp < 0.25 && p >= 0.25 && naEkranie(u)) odglos('krzak', u.x, u.z, 0.25, 120); u.pp = p;
       rx = lerp(-1.25, -0.15, (s + 1) / 2); rz = s > 0 ? lerp(0, 0.75, s) : 0;
     }
   } else if (u.idzie) rx = Math.sin(u.t * 11) * 0.45;
@@ -1828,7 +1882,7 @@ function rysuj(dt) {
   for (const e of wybrane) { const p = pierscien(e); if (!jestBudynkiem(e) && e.strona == null) p.position.set(e.x, 0.05, e.z); p.visible = true; }
   for (let k = GRUZY.length - 1; k >= 0; k--) { const g = GRUZY[k]; g.t += dt; if (g.t > 240) { g.mesh.position.y -= dt * 0.05; if (g.t > 246) { scena.remove(g.mesh); GRUZY.splice(k, 1); } } }
   for (const sc of SCIETE.values()) {
-    if (sc.t < 1) { sc.t = Math.min(1, sc.t + dt / 0.9); if (sc.t >= 1 && !sc.upadlo) { sc.upadlo = true; const ry = sc.g.rotation.y; EF.liscie(sc.z0.x + Math.sin(ry) * 1.3, sc.z0.z + Math.cos(ry) * 1.3); } }
+    if (sc.t < 1) { sc.t = Math.min(1, sc.t + dt / 0.9); if (sc.t >= 1 && !sc.upadlo) { sc.upadlo = true; odglos('drzewo', sc.z0.x, sc.z0.z, 0.9, 0); const ry = sc.g.rotation.y; EF.liscie(sc.z0.x + Math.sin(ry) * 1.3, sc.z0.z + Math.cos(ry) * 1.3); } }
     sc.drz.rotation.x = 1.5 * sc.t * sc.t;
     sc.drz.scale.setScalar(0.35 + 0.65 * Math.max(0, sc.z0.ile / sc.z0.start));
   }
@@ -2312,7 +2366,7 @@ $('panel').addEventListener('click', e => {
   else if (akcja === 'ul') blad = dodajDoKolejki(cel, 'u', arg);
   else if (akcja === 'era') blad = dodajDoKolejki(cel, 'era');
   else if (akcja === 'rozb') blad = dodajDoKolejki(cel, 'rozb');
-  else if (akcja === 'kup' || akcja === 'sprz') { blad = handluj(0, arg, akcja === 'kup'); if (!blad) { dzwiek('gotowe'); odswiezPanel(true); return; } }
+  else if (akcja === 'kup' || akcja === 'sprz') { blad = handluj(0, arg, akcja === 'kup'); if (!blad) { if (!odglos('monety')) dzwiek('gotowe'); odswiezPanel(true); return; } }
   else if (akcja === 'anuluj') { anulujZKolejki(cel, +arg); dzwiek('klik'); odswiezPanel(true); return; }
   if (blad) { toast(blad); dzwiek('blad'); } else dzwiek('tak');
   odswiezPanel(true);

@@ -42,6 +42,8 @@ def main():
             t = zamien(t, "'../survival/three.module.min.js'", "'../../../survival/three.module.min.js'", p)
         if p == 'gra.js':
             t = zamien(t, "'../muzyka/", "'../../../muzyka/", p)
+            # dźwięki (od wersji 12) są tylko w głównym folderze gry
+            t = t.replace("fetch('dzwieki/", "fetch('../../dzwieki/")
             t = zamien(t, "register('../sw.js', { scope: '../' })", "register('../../../sw.js', { scope: '../../../' })", p) if "register('../sw.js'" in t else t
             if not re.search(r"const KLUCZ = '[^']*';", t):
                 raise SystemExit('Nie znaleziono KLUCZ w gra.js')

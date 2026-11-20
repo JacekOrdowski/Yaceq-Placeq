@@ -5,6 +5,25 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 12 (20.11.2026)
+
+**Dodane**
+- Nagrane dźwięki (40 krótkich plików, razem około 0,5 MB), wszystkie na licencji CC0 (spis źródeł w `dzwieki/ZRODLA.md`):
+  - walka: miecz o miecz, uderzenie w tarczę (tarczownicy, włócznicy, kijarze), świst procy i strzału z ambony, uderzenie kamyka,
+  - praca: siekiera o drewno, kilof o kamień, stukanie młotka przy budowie, szelest krzaka przy zbieraniu jagód,
+    odkładanie towaru, brzęk monet przy złocie,
+  - budynki: kowadło w kuźni, walący się budynek, przewracające się drzewo, skrzypienie gotowego budynku, brama,
+  - kroki ludzi, gdy kamera jest blisko.
+- Dźwięk zależy od kamery: im bliżej środka ekranu i im bardziej przybliżone, tym głośniej;
+  co dzieje się z lewej strony ekranu, słychać z lewej (z prawej: z prawej).
+
+**Zmienione**
+- Komputer w późnej grze sprzedaje nadmiar żelaza i drewna na Jarmarku i dokupuje jagody, gdy ich brakuje.
+
+**Do sprawdzenia**
+- Gry komputer kontra komputer trwają teraz zwykle 45–55 minut, a czasem dłużej: pod koniec obie strony mają
+  Twierdze Jagodowe, których najsłabsze wojsko nie umie zburzyć.
+
 ## Wersja 11 (20.11.2026)
 
 **Dodane**
