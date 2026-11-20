@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL } from './dane.js';
 
-const WERSJA = 15;
+const WERSJA = 16;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 15, opis: 'Większy krzyżyk do zamykania okienka na dole (łatwiej trafić palcem). Do tego wszystko z wersji 14.' },
+  { nr: 16, opis: 'Kamerę można oddalić tak, że widać całą mapę; dokładniejszy obrys widoku na małej mapce; krzyżyk 3 razy większy. Do tego wszystko z wersji 15.' },
+  { nr: 15, opis: 'Większy krzyżyk do zamykania okienka na dole (łatwiej trafić palcem). Do tego wszystko z wersji 14.', adres: 'wersje/15/' },
   { nr: 14, opis: 'Mapa 2 razy większa w każdą stronę (192 × 192): więcej lasów, krzaków, kamienia, rudy i złota; komputer dokupuje żelazo. Do tego wszystko z wersji 13.', adres: 'wersje/14/' },
   { nr: 13, opis: 'Nowa muzyka na prawdziwych instrumentach (8 utworów CC0): spokojne utwory na zmianę, w czasie walki bitwa, płynne przejścia. Do tego wszystko z wersji 12. Mała mapa.', adres: 'wersje/13/' },
   { nr: 12, opis: 'Prawdziwe dźwięki: miecz o miecz, tarcze, siekiera, kilof, kowadło, monety, walące się budynki; głośność i strona zależne od kamery. Do tego wszystko z wersji 11.', adres: 'wersje/12/' },
@@ -1846,15 +1847,51 @@ function wczytajGre(o) {
 
 // ================= kamera i rysowanie =================
 const EL = 0.98; // nachylenie kamery
+// oddalanie: do D_DALEKO kamera się pochyla (widać horyzont z górami i wulkanami), dalej znów patrzy coraz bardziej z góry,
+// aż na samym końcu (dMaks) widać całą mapę
+const D_BLISKO = 13, D_DALEKO = 72, EL_GORA = 1.32;
+const do01 = v => Math.max(0, Math.min(1, v));
+function nachylenie(d) {
+  if (d <= D_DALEKO) return EL - 0.42 * do01((d - 30) / 32);
+  return EL - 0.42 + (EL_GORA - EL + 0.42) * do01((d - D_DALEKO) / 140);
+}
+function polozKamere(x, z, d) {
+  const el = nachylenie(d), h = Math.sin(el) * d, p = Math.cos(el) * d;
+  kamera.position.set(x + Math.sin(kam.kat) * p, h, z + Math.cos(kam.kat) * p); kamera.lookAt(x, 0, z); kamera.updateMatrixWorld();
+}
+// dolna krawędź widocznej części ekranu (nad panelem na dole)
+const dolWidoku = () => { const p = $('panel'); const t = p ? p.getBoundingClientRect().top : 0; return t > innerHeight * 0.4 ? t : innerHeight - 200; };
+// najdalsze oddalenie: cała mapa (patrząc na jej środek) mieści się na ekranie; liczone od nowa przy obrocie i zmianie ekranu
+let dMaksKlucz = '', dMaksW = 400;
+function dMaks() {
+  const dol = dolWidoku(), klucz = kam.kat.toFixed(2) + '|' + innerWidth + '|' + innerHeight + '|' + Math.round(dol);
+  if (klucz === dMaksKlucz) return dMaksW;
+  const yMin = 1 - 2 * (dol - 6) / innerHeight, yMax = 1 - 2 * 70 / innerHeight;
+  const miesci = d => {
+    polozKamere(0, 0, d);
+    for (const [x, z] of [[-POL, -POL], [POL, -POL], [POL, POL], [-POL, POL]]) {
+      V3.set(x, 0, z).project(kamera); if (Math.abs(V3.x) > 0.97 || V3.y < yMin || V3.y > yMax) return false;
+    }
+    return true;
+  };
+  let a = D_DALEKO, b = 4000;
+  for (let i = 0; i < 28; i++) { const m = (a + b) / 2; if (miesci(m)) b = m; else a = m; }
+  dMaksKlucz = klucz; dMaksW = b; return b;
+}
 function ustawKamere() {
-  kam.x = Math.max(2 - POL, Math.min(POL - 2, kam.x)); kam.z = Math.max(2 - POL, Math.min(POL - 2, kam.z)); kam.d = Math.max(13, Math.min(72, kam.d));
-  // przy oddalaniu kamera się pochyla: widać horyzont z górami i wulkanami
-  const el = EL - 0.42 * Math.max(0, Math.min(1, (kam.d - 30) / 32));
-  const h = Math.sin(el) * kam.d, p = Math.cos(el) * kam.d;
-  kamera.position.set(kam.x + Math.sin(kam.kat) * p, h, kam.z + Math.cos(kam.kat) * p); kamera.lookAt(kam.x, 0, kam.z); kamera.updateMatrixWorld();
+  const dm = dMaks();
+  kam.d = Math.max(D_BLISKO, Math.min(dm, kam.d));
+  // im dalej za D_DALEKO, tym bliżej środka mapy musi patrzeć kamera (na samym końcu cała mapa na środku ekranu)
+  const lim = (POL - 2) * (1 - do01((kam.d - D_DALEKO) / (dm - D_DALEKO)));
+  kam.x = Math.max(-lim, Math.min(lim, kam.x)); kam.z = Math.max(-lim, Math.min(lim, kam.z));
+  polozKamere(kam.x, kam.z, kam.d);
+  // z daleka: dalszy horyzont, mgła dalej, cienie na większym kawałku mapy
+  const near = kam.d > D_DALEKO ? kam.d * 0.05 : 0.5, far = Math.max(600, kam.d * 5);
+  if (kamera.near !== near || kamera.far !== far) { kamera.near = near; kamera.far = far; kamera.updateProjectionMatrix(); }
+  scena.fog.near = Math.max(90, kam.d * 1.3); scena.fog.far = Math.max(330, kam.d * 4.5);
   slonce.position.set(kam.x - 14, 34, kam.z - 4); slonce.target.position.set(kam.x, 0, kam.z);
-  const sc = slonce.shadow.camera, r = Math.min(38, kam.d * 0.85);
-  if (sc.right !== r) { sc.left = -r; sc.right = r; sc.top = r; sc.bottom = -r; sc.near = 1; sc.far = 90; sc.updateProjectionMatrix(); }
+  const dal = Math.max(0, kam.d - D_DALEKO), sc = slonce.shadow.camera, r = Math.min(38, kam.d * 0.85) + Math.min(POL * 1.1, dal * 0.6);
+  if (sc.right !== r) { sc.left = -r; sc.right = r; sc.top = r; sc.bottom = -r; sc.near = 1 - dal * 1.2; sc.far = 90 + dal * 1.2; sc.updateProjectionMatrix(); }
 }
 function rozmiar() {
   const w = innerWidth, h = innerHeight;
@@ -2045,9 +2082,17 @@ function rysujMini() {
   c.clearRect(0, 0, MINI, MINI); c.drawImage(miniTlo, 0, 0, MINI, MINI);
   for (const b of BUD) { const [x, y] = naMini(b.x, b.z), r = b.w * MK * 0.75; c.fillStyle = MOD.KOLORY_STRON[b.strona]; c.fillRect(x - r, y - r, r * 2, r * 2); }
   for (const u of JED) { const [x, y] = naMini(u.x, u.z); c.fillStyle = u.strona ? '#ff6a5a' : '#7fb2ff'; c.fillRect(x - 1, y - 1, 2.2, 2.2); }
-  // co widać na ekranie
-  const rogi = [[0, 0], [innerWidth, 0], [innerWidth, innerHeight], [0, innerHeight]].map(([px, py]) => naZiemi(px, py)).filter(Boolean);
-  if (rogi.length === 4) { c.strokeStyle = '#fff'; c.lineWidth = 1.2; c.beginPath(); rogi.forEach((p, i) => { const [x, y] = naMini(p.x, p.z); i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.closePath(); c.stroke(); }
+  // co widać na ekranie: od góry ekranu do panelu na dole (to, co zasłania panel, się nie liczy);
+  // ponad horyzontem (gdy kamera jest pochylona) bierzemy ziemię daleko w tę stronę, a obrys przycinamy do mapy
+  const dol = dolWidoku(), w = innerWidth, obrys = [];
+  for (const [px, py] of [[0, 0], [w / 2, 0], [w, 0], [w, dol / 2], [w, dol], [w / 2, dol], [0, dol], [0, dol / 2]]) {
+    const p = naZiemiDaleko(px, py); if (p) obrys.push(naMini(p.x, p.z));
+  }
+  if (obrys.length > 2) {
+    c.save(); c.beginPath(); [[-POL, -POL], [POL, -POL], [POL, POL], [-POL, POL]].forEach(([x, z], i) => { const [a, b] = naMini(x, z); i ? c.lineTo(a, b) : c.moveTo(a, b); }); c.closePath(); c.clip();
+    c.beginPath(); obrys.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath();
+    c.fillStyle = 'rgba(255,255,255,0.18)'; c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1.6; c.stroke(); c.restore();
+  }
   if (ping) { const [x, y] = naMini(ping.x, ping.z); c.strokeStyle = '#ff3b30'; c.lineWidth = 2; c.beginPath(); c.arc(x, y, 4 + (3 - ping.t) * 4 % 8, 0, 7); c.stroke(); }
 }
 
@@ -2055,6 +2100,13 @@ function rysujMini() {
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), ziemiaPl = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 function promien(px, py) { ndc.set(px / innerWidth * 2 - 1, -(py / innerHeight) * 2 + 1); ray.setFromCamera(ndc, kamera); return ray.ray; }
 function naZiemi(px, py) { ustawKamere(); const p = new THREE.Vector3(); return promien(px, py).intersectPlane(ziemiaPl, p) ? p : null; }
+// jak naZiemi, ale gdy promień nie trafia w ziemię albo trafia bardzo daleko (nad horyzontem), daje punkt w tę stronę daleko za mapą
+function naZiemiDaleko(px, py) {
+  const r = promien(px, py), p = new THREE.Vector3(), maks = N * 1.5;
+  if (r.intersectPlane(ziemiaPl, p) && Math.hypot(p.x - kam.x, p.z - kam.z) < maks) return p;
+  const kx = r.direction.x, kz = r.direction.z, l = Math.hypot(kx, kz); if (l < 1e-6) return null;
+  return p.set(kam.x + kx / l * maks, 0, kam.z + kz / l * maks);
+}
 const BX = new THREE.Box3(), TRAF = new THREE.Vector3(), PKT = new THREE.Vector3();
 function wskaz(px, py) {
   const g = naZiemi(px, py); if (!g) return null;

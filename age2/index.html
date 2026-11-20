@@ -70,7 +70,9 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .p-ik { font-size: 30px; width: 38px; text-align: center; }
 .p-hp { height: 6px; background: #e4e9f0; border-radius: 3px; overflow: hidden; margin-top: 2px; }
 .p-hp i { display: block; height: 100%; background: var(--green); }
-.p-x { width: 70px; height: 70px; border-radius: 50%; background: #e2e8f0; font-size: 34px; line-height: 1; font-weight: 900; color: var(--ink); flex: none; box-shadow: 0 3px 0 #c5cfdc; }
+.p-x { position: absolute; top: 9px; right: 10px; width: 102px; height: 102px; border-radius: 50%; background: #e2e8f0; font-size: 50px; line-height: 1; font-weight: 900; color: var(--ink); flex: none; box-shadow: 0 3px 0 #c5cfdc; }
+/* duży krzyżyk stoi w rogu panelu, obok nazwy i opisu (nie ściska rzędu przycisków) */
+#panel > div:has(.p-x) { padding-right: 106px; min-height: 102px; box-sizing: border-box; }
 .p-x:active { transform: translateY(2px); box-shadow: 0 1px 0 #c5cfdc; }
 .p-grupa { display: flex; flex-wrap: wrap; gap: 6px; font-weight: 900; font-size: 16px; }
 .p-grupa span { background: #eef2f7; border-radius: 10px; padding: 2px 7px; }
