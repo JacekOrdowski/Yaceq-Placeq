@@ -39,6 +39,8 @@ Pierwszy kawałek naszej własnej mapy ulepszeń, inspirowanej jagodą kamczack�
 **Do sprawdzenia**
 - Gra na telefonie: czy łatwo trafić w postacie i przyciski.
 
+Zapis w repozytorium: `2a3e548`
+
 ## Wersja 1 (20.11.2026)
 
 **Dodane**
