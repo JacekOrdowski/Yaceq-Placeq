@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC } from './dane.js';
 
-const WERSJA = 4;
+const WERSJA = 5;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 4, opis: 'Nowe, zaokrąglone postacie z buziami, drzewa przewracają się przy ścinaniu, burzenie własnych budynków. Do tego wszystko z wersji 3.' },
+  { nr: 5, opis: 'Słowiańskie budynki z bali pod strzechą i gontem, stosiki na plecach, ulepszenia plecaka. Do tego wszystko z wersji 4.' },
+  { nr: 4, opis: 'Nowe, zaokrąglone postacie z buziami, drzewa przewracają się przy ścinaniu, burzenie własnych budynków. Do tego wszystko z wersji 3.', adres: 'wersje/4/' },
   { nr: 3, opis: 'Zbieracze pracują rękami: zrywają jagody do koszyka, budują młotkiem, rąbią siekierą, kopią kilofem (bez kiwania). Do tego wszystko z wersji 2.', adres: 'wersje/3/' },
   { nr: 2, opis: 'Nasza mapa ulepszeń: 4 ery (Sadzonka, Kwitnienie, Owocowanie, Wielkie Zbiory), żelazo, renifery i łosie, awanse wojska, kuźnia.', adres: 'wersje/2/' },
   { nr: 1, opis: 'Pierwsza wersja: osadnicy, 4 surowce, 3 ery, wojsko i osada komputera.', adres: 'wersje/1/' },
@@ -82,7 +83,6 @@ const MAT = new THREE.MeshLambertMaterial({ vertexColors: true });
 const MAT_RING = [new THREE.MeshBasicMaterial({ color: '#4cff7a', transparent: true, opacity: 0.9, depthWrite: false }), new THREE.MeshBasicMaterial({ color: '#ff5a4a', transparent: true, opacity: 0.9, depthWrite: false })];
 const MAT_PLAC = new THREE.MeshLambertMaterial({ color: '#b0814f' });
 const MAT_ZNACZNIK = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.9, depthWrite: false });
-const NIESIE3D = {};
 
 function malujZiemie(seed) {
   const R = 1024, sk = R / N, cv = document.createElement('canvas'); cv.width = cv.height = R;
@@ -415,7 +415,7 @@ function nowaJednostka(strona, typ, x, z, id) {
   return u;
 }
 function predkosc(u) { const ul = S.ul[u.strona]; return u.d.szybkosc * (u.typ === 'osadnik' ? (ul.taczka ? 1.1 : 1) * (ul.wozek ? 1.1 : 1) : 1); }
-function udzwig(u) { const ul = S.ul[u.strona]; return UDZWIG + (ul.kosz ? 3 : 0) + (ul.taczka ? 4 : 0) + (ul.wozek ? 5 : 0); }
+function udzwig(u) { const ul = S.ul[u.strona]; return UDZWIG + (ul.kosz ? 3 : 0) + (ul.taczka ? 4 : 0) + (ul.wozek ? 5 : 0) + (ul.plecak1 ? 2 : 0) + (ul.plecak2 ? 3 : 0) + (ul.plecak3 ? 4 : 0); }
 function maxHpJ(strona, typ) { return JEDNOSTKI[typ].hp + (typ === 'osadnik' && S.ul[strona].rekawice ? 15 : 0); }
 // strzelcy (bez katapulty) korzystają z ulepszeń pocisków
 const strzelec = d => d.zasieg > 0 && !d.oblezenie;
@@ -1021,8 +1021,8 @@ function ai(strona, dt) {
   // 8. nowa era
   if (oszczedza && !ratusz.kolejka.length && !brakEry(strona) && stac(strona, nastEra.koszt)) dodajDoKolejki(ratusz, 'era');
   // 9. ulepszenia
-  for (const id of ['kosz', 'rekawice', 'deski', 'sciolka', 'kilof', 'taczka', 'siekiera_z', 'kilof_z', 'bron1', 'zbroja1', 'pociski1', 'aw_tarczownik', 'aw_procarz2', 'nawadnianie',
-    'wozek', 'pila', 'bron2', 'zbroja2', 'pociski2', 'aw_obronca', 'aw_pikinier', 'aw_kusznik', 'aw_jezdziec', 'mrozoodporne', 'bron3', 'zbroja3', 'pociski3', 'aw_rycerz']) {
+  for (const id of ['kosz', 'plecak1', 'rekawice', 'deski', 'sciolka', 'kilof', 'taczka', 'siekiera_z', 'kilof_z', 'bron1', 'zbroja1', 'pociski1', 'aw_tarczownik', 'aw_procarz2', 'nawadnianie',
+    'wozek', 'pila', 'bron2', 'zbroja2', 'pociski2', 'aw_obronca', 'plecak2', 'aw_pikinier', 'aw_kusznik', 'plecak3', 'aw_jezdziec', 'mrozoodporne', 'bron3', 'zbroja3', 'pociski3', 'aw_rycerz']) {
     const d = ULEPSZENIA[id], b = moje.find(o => o.typ === d.z && o.gotowy && !o.kolejka.length);
     if (b && !brakUlepszenia(strona, id) && stacR(d.koszt) && (osadnicy.length >= celOs - 6 || era > 1)) { dodajDoKolejki(b, 'u', id); break; }
   }
@@ -1250,13 +1250,11 @@ function rysuj(dt) {
     if (u.typ === 'osadnik') ruszReka(u, dt);
     // co niesie osadnik
     if (u.typ === 'osadnik') {
-      const s = u.niesie.ile > 0.5 ? u.niesie.sur : null;
+      // stosik na plecach: jedna sztuka na każde 3 niesione (najwyżej 8), więc po ulepszeniu plecaka stos jest wyższy
+      const n = u.niesie.ile > 0.5 ? Math.min(8, Math.ceil(u.niesie.ile / 3)) : 0, s = n ? u.niesie.sur + n : null;
       if (s !== u.pokazane) {
         if (u.koszyk) { m.remove(u.koszyk); u.koszyk = null; }
-        if (s) {
-          const g = NIESIE3D[s] || (NIESIE3D[s] = s === 'jagody' ? MOD.kosz() : s === 'drewno' ? MOD.polacz([{ g: new THREE.CylinderGeometry(0.07, 0.07, 0.42, 8).rotateZ(Math.PI / 2), k: '#9a6a3a', m: new THREE.Matrix4() }]) : MOD.skala(s === 'zelazo' ? 'ruda' : s));
-          u.koszyk = new THREE.Mesh(g, MAT); u.koszyk.position.set(0, 0.62, -0.25); if (s === 'kamien' || s === 'zelazo') u.koszyk.scale.setScalar(0.45); m.add(u.koszyk);
-        }
+        if (s) { u.koszyk = new THREE.Mesh(MOD.stos(u.niesie.sur, n), MAT); u.koszyk.position.set(0, 0.5, -0.27); m.add(u.koszyk); }
         u.pokazane = s;
       }
     }

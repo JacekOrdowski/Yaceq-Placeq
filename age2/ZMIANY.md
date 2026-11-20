@@ -5,6 +5,26 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 5 (20.11.2026)
+
+**Dodane**
+- Ulepszenia plecaka w Dworku: Plecak z łyka → Plecak skórzany → Plecak na stelażu (zbieracze niosą więcej).
+- Stosiki na plecach (jak w Age of Yaceq, tylko mniejsze): koszyczki z jagodami, polana, kamienie albo ruda.
+  Im więcej zbieracz niesie, tym wyższy stosik, najwyżej 8 sztuk.
+
+**Zmienione**
+- Wszystkie budynki w nowym, słowiańskim stylu (nasze projekty, dużo szczegółów):
+  - Dom: chatka z bali pod strzechą, okiennice, komin, ławka i drewutnia.
+  - Dworek Jagodowy: dwór z bali na kamiennej podmurówce, ganek na słupach, gontowy dach, dzwonniczka.
+  - Spichlerz na palach z kamiennymi grzybkami, drabiną, koszami i workami.
+  - Tartak to skład drewna: wiata, stosy bali, deski, kozioł z piłą, pniak z siekierą.
+  - Kamieniołom z żurawiem i taczką; Kopalnia rudy z wejściem w skale, torami i wózkiem.
+  - Plantacja z grządkami, płotkiem i strachem na wróble; Strażnica Krzaka z palisadą i kukłą do ćwiczeń;
+    Strzelnica z tarczami na snopkach; Zagroda reniferów z wybiegiem i stogiem siana;
+    Kuźnia z ogniem i kowadłem; Ambona na nogach z bali; Warsztat z wielkim kołem.
+  - Kolor gracza widać na kalenicach z deskami na krzyż, okiennicach i chorągiewkach.
+- W każdej skale z rudą jest teraz 450 żelaza zamiast 250 (żelaza brakowało w długich grach).
+
 ## Wersja 4 (20.11.2026)
 
 **Dodane**

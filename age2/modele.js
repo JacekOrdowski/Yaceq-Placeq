@@ -180,83 +180,289 @@ export const taran = cache(strona => {
 });
 export const JEDNOSTKI3D = { osadnik, wojownik, tarczownik, obronca, wlocznik, pikinier, procarz, procarz2, kusznik, zwiadowca, jezdziec, rycerz, taran, katapulta };
 
-// ---------- budynki (środek modelu = środek budynku, podłoga na y = 0) ----------
-function flaga(k, x, y, z) { return [cz(cyl(0.03, 0.03, 1.0), BRAZ, x, y + 0.5, z), cz(box(0.45, 0.28, 0.03), k, x + 0.24, y + 0.85, z)]; }
+// ---------- budynki w stylu słowiańskim (nasze projekty; środek modelu = środek budynku, podłoga na y = 0) ----------
+// kolor gracza widać na kalenicach, okiennicach i chorągiewkach; dachy są ze strzechy albo z gontu
+const BAL = '#c08a52', BAL2 = '#a87443', STRZECHA = '#d4b265', STRZECHA2 = '#b8954c', GONT = '#7b5a3c', GONT2 = '#6a4c31', BIEL = '#efe6d2',
+  SZYBA = '#ffe39a', CIEMNE_D = '#3a2a1a', SIANO = '#e2c76a', ZIEMIA = '#8b5a30', TRAWA = '#3e8e3e', OGIEN = '#ff8a2a';
+const pryzma = new THREE.CylinderGeometry(1, 1, 1, 3, 1, false, Math.PI / 2);
+// część obrócona wokół osi y całego budynku (np. dach z kalenicą wzdłuż z)
+function obroc(czesci, ry, ox = 0, oz = 0) {
+  const m = new THREE.Matrix4().makeTranslation(ox, 0, oz).multiply(new THREE.Matrix4().makeRotationY(ry)).multiply(new THREE.Matrix4().makeTranslation(-ox, 0, -oz));
+  for (const p of czesci) p.m = m.clone().multiply(p.m);
+  return czesci;
+}
+// ściany z bali (zrąb) od y0 do y0 + h; bale wystają na rogach
+function zrab(cx, cz0, w, d, h, r = 0.06, y0 = 0, k1 = BAL, k2 = BAL2) {
+  const c = [cz(box(w - 0.02, h, d - 0.02), BAL2, cx, y0 + h / 2, cz0)];
+  const n = Math.max(2, Math.round(h / (2 * r)));
+  for (let i = 0; i < n; i++) {
+    const y = y0 + r + i * 2 * r, k = i % 2 ? k1 : k2;
+    c.push(cz(cyl(r, r, w + 3 * r, 6), k, cx, y, cz0 + d / 2, 0, 0, Math.PI / 2), cz(cyl(r, r, w + 3 * r, 6), k, cx, y, cz0 - d / 2, 0, 0, Math.PI / 2));
+    if (y + r < y0 + h + 0.001) c.push(cz(cyl(r, r, d + 3 * r, 6), i % 2 ? k2 : k1, cx + w / 2, y + r * 0.6, cz0, Math.PI / 2, 0, 0), cz(cyl(r, r, d + 3 * r, 6), i % 2 ? k2 : k1, cx - w / 2, y + r * 0.6, cz0, Math.PI / 2, 0, 0));
+  }
+  return c;
+}
+// dach dwuspadowy z kalenicą wzdłuż x; D = połowa głębokości razem z okapem; dW = głębokość ściany pod dachem (szczyt)
+function dach(cx, cz0, yB, L, D, H, kolor, kalenica, dW = 0, kSzczytu = BAL, koniki = true) {
+  const a = Math.atan2(H, D), S = Math.hypot(D, H) + 0.05;
+  const c = [cz(box(L, 0.08, S), kolor, cx, yB + H / 2, cz0 + D / 2, a), cz(box(L, 0.08, S), kolor, cx, yB + H / 2, cz0 - D / 2, -a)];
+  // dolna krawędź strzechy / gontu trochę ciemniejsza
+  c.push(cz(box(L + 0.02, 0.05, 0.12), kolor === STRZECHA ? STRZECHA2 : GONT2, cx, yB + 0.02, cz0 + D - 0.04), cz(box(L + 0.02, 0.05, 0.12), kolor === STRZECHA ? STRZECHA2 : GONT2, cx, yB + 0.02, cz0 - D + 0.04));
+  c.push(cz(box(L + 0.06, 0.1, 0.16), kalenica, cx, yB + H + 0.03, cz0));
+  if (dW > 0) {
+    const hW = H * (dW / 2) / D, yS = yB + H - hW;
+    c.push(cz(pryzma, kSzczytu, cx, yS + hW / 3, cz0, 0, 0, Math.PI / 2, hW / 1.5 - 0.02, L - 0.1, dW / 1.732));
+    // biała deska pod szczytem
+    c.push(cz(box(0.04, 0.05, dW * 0.7), BIEL, cx + L / 2 - 0.04, yS + 0.04, cz0), cz(box(0.04, 0.05, dW * 0.7), BIEL, cx - L / 2 + 0.04, yS + 0.04, cz0));
+  }
+  if (koniki) for (const sx of [-1, 1]) {
+    const x = cx + sx * (L / 2 + 0.02), y = yB + H + 0.12;
+    c.push(cz(box(0.05, 0.42, 0.07), kalenica, x, y, cz0, 0.65, 0, 0), cz(box(0.05, 0.42, 0.07), kalenica, x, y, cz0, -0.65, 0, 0),
+      cz(box(0.05, 0.1, 0.14), kalenica, x, y + 0.2, cz0 + 0.14), cz(box(0.05, 0.1, 0.14), kalenica, x, y + 0.2, cz0 - 0.14));
+  }
+  return c;
+}
+// okno z okiennicami w kolorze gracza (na ścianie od strony +z; ry obraca na inne ściany)
+function okno(k, x, y, z, ry = 0, s = 1) {
+  return obroc([cz(box(0.3 * s, 0.26 * s, 0.04), CIEMNE_D, x, y, z), cz(box(0.22 * s, 0.18 * s, 0.05), SZYBA, x, y, z + 0.005), cz(box(0.02, 0.18 * s, 0.06), CIEMNE_D, x, y, z + 0.01),
+    cz(box(0.12 * s, 0.28 * s, 0.03), k, x - 0.22 * s, y, z + 0.02), cz(box(0.12 * s, 0.28 * s, 0.03), k, x + 0.22 * s, y, z + 0.02),
+    cz(box(0.36 * s, 0.04, 0.08), BIEL, x, y - 0.15 * s, z + 0.03)], ry, x, z - 0.0);
+}
+function drzwi(x, y, z, w = 0.32, h = 0.55) {
+  return [cz(box(w + 0.08, h + 0.06, 0.04), CIEMNE_D, x, y + h / 2, z), cz(box(w, h, 0.05), '#7a4a26', x, y + h / 2, z + 0.01),
+    cz(box(0.02, h, 0.06), '#5a3518', x, y + h / 2, z + 0.02), cz(kula(0.025, 5), METAL, x + w * 0.3, y + h * 0.5, z + 0.04)];
+}
+function flaga(k, x, y, z, h = 1.0) { return [cz(cyl(0.03, 0.03, h), BRAZ, x, y + h / 2, z), cz(box(0.42, 0.26, 0.03), k, x + 0.23, y + h - 0.16, z), cz(kula(0.045, 6), '#f2c94c', x, y + h + 0.03, z)]; }
+function plot(x0, z0, x1, z1, h = 0.4, kol = BAL2) {
+  const c = [], d = Math.hypot(x1 - x0, z1 - z0), n = Math.max(2, Math.round(d / 0.32)), ry = Math.atan2(x1 - x0, z1 - z0);
+  for (let i = 0; i <= n; i++) { const t = i / n; c.push(cz(cyl(0.03, 0.035, h, 5), kol, x0 + (x1 - x0) * t, h / 2, z0 + (z1 - z0) * t)); }
+  for (const y of [h * 0.4, h * 0.8]) c.push(cz(cyl(0.02, 0.02, d, 5), kol, (x0 + x1) / 2, y, (z0 + z1) / 2, Math.PI / 2, ry, 0));
+  return c;
+}
+function palisada(x0, z0, x1, z1, h = 0.8) {
+  const c = [], d = Math.hypot(x1 - x0, z1 - z0), n = Math.max(2, Math.round(d / 0.14));
+  for (let i = 0; i <= n; i++) { const t = i / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t, hh = h * (0.9 + (i % 3) * 0.06); c.push(cz(cyl(0.065, 0.07, hh, 6), i % 2 ? BAL : BAL2, x, hh / 2, z), cz(stozek(0.065, 0.14, 6), BAL2, x, hh + 0.07, z)); }
+  return c;
+}
+function stosBali(cx, cz0, dl, r, rzedy, ry = 0, kol = '#9a6a3a') {
+  const c = [];
+  for (let rz = 0; rz < rzedy; rz++) for (let i = 0; i < rzedy - rz; i++) {
+    const z = cz0 + (i - (rzedy - rz - 1) / 2) * r * 2.02, y = r + rz * r * 1.75;
+    c.push(cz(cyl(r, r, dl, 7), i % 2 ? kol : '#8a5c32', cx, y, z, 0, 0, Math.PI / 2), cz(cyl(r * 0.8, r * 0.8, 0.01, 7), '#e0c08a', cx + dl / 2 + 0.003, y, z, 0, 0, Math.PI / 2));
+  }
+  return obroc(c, ry, cx, cz0);
+}
+function koszyk(x, z, s = 1) { return [cz(cyl(0.14 * s, 0.11 * s, 0.18 * s, 10), SLOMA, x, 0.09 * s, z), cz(kula(0.11 * s, 7), '#3a4bb0', x, 0.17 * s, z, 0, 0, 0, 1, 0.45, 1)]; }
+function worek(x, z, ry = 0) { return [cz(kula(0.14, 7), '#d9c79e', x, 0.13, z, 0, ry, 0, 1, 1.1, 0.85), cz(cyl(0.04, 0.06, 0.06, 6), '#b9a77e', x, 0.29, z)]; }
+function kamienie(x, z, n, s = 1, k1 = KAMIEN, k2 = KAMIEN2) {
+  const c = [];
+  for (let i = 0; i < n; i++) { const a = i * 2.4, rr = 0.1 + (i % 3) * 0.06; c.push(cz(new THREE.DodecahedronGeometry(0.12 * s), i % 2 ? k1 : k2, x + Math.cos(a) * rr * s, 0.08 * s + (i > 3 ? 0.12 * s : 0), z + Math.sin(a) * rr * s, a, a * 0.7, 0)); }
+  return c;
+}
+
 const BUD = {
+  // Dworek Jagodowy: dwór z bali na kamiennej podmurówce, ganek na słupach, wysoki dach z gontu, dzwonniczka
   ratusz(k, d) {
-    return [cz(box(3.7, 0.35, 3.7), KAMIEN2, 0, 0.17, 0), cz(box(3.2, 1.6, 3.2), '#efe2c4', 0, 1.15, 0),
-      cz(dach4(2.6, 1.4), k, 0, 2.65, 0, 0, Math.PI / 4), cz(box(0.9, 1.1, 0.9), '#efe2c4', 0, 3.6, 0), cz(dach4(0.8, 0.8), d, 0, 4.55, 0, 0, Math.PI / 4),
-      cz(box(0.8, 1.1, 0.06), CIEMNE, 0, 0.9, 1.61), cz(box(0.5, 0.5, 0.06), '#7fb5e8', -1.0, 1.3, 1.61), cz(box(0.5, 0.5, 0.06), '#7fb5e8', 1.0, 1.3, 1.61),
-      cz(box(0.06, 0.5, 0.5), '#7fb5e8', 1.61, 1.3, 0), cz(box(0.06, 0.5, 0.5), '#7fb5e8', -1.61, 1.3, 0),
-      cz(kula(0.22, 8), '#3a4bb0', -0.2, 2.25, 1.62), cz(kula(0.22, 8), '#3a4bb0', 0.2, 2.25, 1.62), cz(kula(0.22, 8), '#3a4bb0', 0, 2.55, 1.6), cz(box(0.3, 0.1, 0.1), '#3e8e3e', 0.15, 2.82, 1.6, 0, 0, 0.5),
-      ...flaga(k, 0, 4.9, 0)];
-  },
-  dom(k, d) {
-    return [cz(box(1.5, 0.9, 1.5), '#d8a874', 0, 0.45, 0), cz(dach4(1.3, 0.9), d, 0, 1.35, 0, 0, Math.PI / 4), cz(box(0.4, 0.6, 0.05), CIEMNE, 0, 0.3, 0.76),
-      cz(box(0.3, 0.3, 0.05), '#7fb5e8', 0.45, 0.55, 0.76), cz(box(0.2, 0.5, 0.2), KAMIEN2, -0.4, 1.5, -0.3)];
-  },
-  spichlerz(k, d) {
-    const c = [cz(cyl(0.9, 0.95, 1.6, 12), '#d9b36c', -0.4, 0.8, -0.3), cz(stozek(1.1, 0.9, 12), k, -0.4, 2.05, -0.3), cz(box(1.0, 0.7, 0.9), DREWNO, 0.75, 0.35, 0.6)];
-    for (const [x, z] of [[0.4, 1.2], [0.85, 1.25], [1.25, 1.1]]) c.push(cz(cyl(0.18, 0.14, 0.22, 8), SLOMA, x, 0.11, z), cz(kula(0.13, 6), '#3a4bb0', x, 0.24, z, 0, 0, 0, 1, 0.5, 1));
+    const c = [cz(box(3.5, 0.26, 3.0), KAMIEN2, 0, 0.13, -0.25), cz(box(3.56, 0.06, 3.06), KAMIEN, 0, 0.27, -0.25),
+      ...zrab(0, -0.3, 3.0, 2.3, 1.45, 0.085, 0.28),
+      ...dach(0, -0.3, 1.68, 3.6, 1.55, 1.25, GONT, k, 2.3),
+      // ganek
+      cz(box(1.7, 0.14, 0.9), BAL2, 0, 0.35, 1.3), cz(box(0.5, 0.08, 0.3), KAMIEN, 0, 0.18, 1.85),
+      ...dach(0, 1.3, 1.2, 1.9, 0.62, 0.36, GONT, k, 0, BAL, false),
+      ...drzwi(0, 0.42, 0.86, 0.5, 0.8),
+      cz(kula(0.1, 8), '#3a4bb0', -0.1, 1.33, 0.89), cz(kula(0.1, 8), '#3a4bb0', 0.1, 1.33, 0.89), cz(kula(0.1, 8), '#3a4bb0', 0, 1.49, 0.88), cz(box(0.18, 0.05, 0.05), TRAWA, 0.1, 1.62, 0.88, 0, 0, 0.5),
+      ...okno(k, -1.05, 1.0, 0.87, 0, 1.1), ...okno(k, 1.05, 1.0, 0.87, 0, 1.1),
+      ...okno(k, 1.53, 1.0, -0.3, Math.PI / 2, 1.1), ...okno(k, -1.53, 1.0, -0.3, -Math.PI / 2, 1.1),
+      // dzwonniczka na dachu
+      cz(box(0.6, 0.55, 0.6), BAL, 0, 3.1, -0.3), cz(box(0.36, 0.3, 0.62), CIEMNE_D, 0, 3.15, -0.3), cz(kula(0.1, 8), '#c9a227', 0, 3.1, -0.3),
+      cz(dach4(0.55, 0.6), GONT, 0, 3.66, -0.3, 0, Math.PI / 4), cz(kula(0.06, 6), '#f2c94c', 0, 3.98, -0.3),
+      ...flaga(k, 1.45, 0.4, 1.7, 1.6), ...flaga(k, -1.45, 0.4, 1.7, 1.6),
+      ...koszyk(1.2, 1.5), ...koszyk(-1.2, 1.55, 0.9)];
+    for (const x of [-0.75, 0.75]) for (const z of [0.95, 1.7]) c.push(cz(cyl(0.06, 0.07, 0.8, 8), BAL, x, 0.82, z), cz(box(0.16, 0.06, 0.16), BAL2, x, 1.23, z));
+    c.push(cz(box(1.6, 0.06, 0.05), BAL2, 0, 0.75, 1.72), cz(box(0.6, 0.06, 0.05), BAL2, -0.45, 0.75, 1.72));
     return c;
   },
+  // chatka: zrąb z bali, strzecha, okiennice, komin, drewutnia i ławka
+  dom(k, d) {
+    return [cz(box(1.5, 0.1, 1.3), KAMIEN2, 0, 0.05, -0.05),
+      ...zrab(0, -0.05, 1.25, 1.05, 0.72, 0.06, 0.08),
+      ...dach(0, -0.05, 0.78, 1.65, 0.78, 0.66, STRZECHA, k, 1.05),
+      ...drzwi(0.28, 0.1, 0.49),
+      ...okno(k, -0.28, 0.48, 0.49),
+      ...okno(k, 0.64, 0.48, -0.05, Math.PI / 2, 0.8),
+      cz(box(0.2, 0.55, 0.2), KAMIEN, -0.38, 1.25, -0.3), cz(box(0.24, 0.06, 0.24), KAMIEN2, -0.38, 1.54, -0.3),
+      cz(box(0.5, 0.06, 0.16), BAL2, -0.42, 0.2, 0.75), cz(box(0.05, 0.18, 0.12), BAL2, -0.62, 0.09, 0.75), cz(box(0.05, 0.18, 0.12), BAL2, -0.22, 0.09, 0.75),
+      ...stosBali(-0.82, -0.1, 0.32, 0.055, 3, Math.PI / 2),
+      cz(box(0.25, 0.04, 0.2), KAMIEN, 0.28, 0.02, 0.7)];
+  },
+  // spichlerz na palach z kamiennymi grzybkami, drabina, kosze i worki
+  spichlerz(k, d) {
+    const c = [];
+    for (const x of [-0.7, 0, 0.7]) for (const z of [-0.6, 0.45]) c.push(cz(cyl(0.07, 0.08, 0.45, 6), BAL2, x, 0.22, z), cz(cyl(0.13, 0.1, 0.07, 8), KAMIEN, x, 0.48, z));
+    c.push(cz(box(1.75, 0.08, 1.35), BAL2, 0, 0.55, -0.08), ...zrab(0, -0.08, 1.6, 1.15, 0.85, 0.06, 0.59),
+      ...dach(0, -0.08, 1.42, 2.1, 0.9, 0.8, STRZECHA, k, 1.15),
+      ...drzwi(0.35, 0.6, 0.5, 0.36, 0.6), ...okno(k, -0.35, 1.05, 0.5, 0, 0.8));
+    for (const s of [-1, 1]) c.push(cz(box(0.04, 0.85, 0.04), BAL2, 0.35 + s * 0.15, 0.36, 0.78, -0.35, 0, 0));
+    for (let i = 0; i < 4; i++) c.push(cz(box(0.3, 0.03, 0.04), BAL, 0.35, 0.08 + i * 0.17, 0.92 - i * 0.06, -0.35, 0, 0));
+    c.push(...koszyk(-0.55, 0.85), ...koszyk(-0.85, 0.7, 0.9), ...koszyk(-0.3, 1.05, 0.85), ...worek(0.95, 0.85), ...worek(1.15, 0.6, 0.5), ...flaga(k, -1.2, 0, -0.8, 1.3));
+    return c;
+  },
+  // skład drewna (tartak): wiata na słupach, stosy bali, deski, kozioł z belką, pniak z siekierą
   tartak(k, d) {
     const c = [];
-    for (const [x, z] of [[-1.1, -1.0], [1.1, -1.0], [-1.1, 0.6], [1.1, 0.6]]) c.push(cz(box(0.15, 1.4, 0.15), BRAZ, x, 0.7, z));
-    c.push(cz(box(2.6, 0.12, 2.0), k, 0, 1.5, -0.2, 0.18, 0, 0));
-    for (let i = 0; i < 3; i++) c.push(cz(cyl(0.18, 0.18, 2.0, 8), '#9a6a3a', 0, 0.18 + i * 0.32, -0.6 + (i % 2) * 0.2, 0, 0, Math.PI / 2));
-    c.push(cz(cyl(0.18, 0.18, 2.0, 8), '#9a6a3a', 0, 0.18, -0.25, 0, 0, Math.PI / 2), cz(cyl(0.35, 0.35, 0.05, 12), METAL, 0.9, 0.5, 1.05, Math.PI / 2, 0, 0));
+    for (const [x, z] of [[-1.15, -1.15], [1.15, -1.15], [-1.15, -0.1], [1.15, -0.1]]) c.push(cz(cyl(0.07, 0.08, 1.2, 6), BAL, x, 0.6, z));
+    c.push(...dach(0, -0.62, 1.2, 2.6, 0.75, 0.45, GONT, k, 0, BAL, true));
+    for (let i = 0; i < 6; i++) c.push(cz(box(2.0, 0.05, 0.22), i % 2 ? '#d4a76a' : '#c9995c', 0, 0.04 + i * 0.055, -0.95));
+    for (let i = 0; i < 5; i++) c.push(cz(box(2.0, 0.05, 0.22), i % 2 ? '#d4a76a' : '#c9995c', 0, 0.04 + i * 0.055, -0.6));
+    c.push(...stosBali(-0.45, 0.65, 1.3, 0.12, 3), ...stosBali(0.85, 0.75, 0.9, 0.1, 2, Math.PI / 2));
+    // kozioł do piłowania z belką i piłą
+    for (const x of [0.55, 1.05]) c.push(cz(box(0.05, 0.5, 0.05), BAL2, x, 0.22, 0.05, 0.45, 0, 0), cz(box(0.05, 0.5, 0.05), BAL2, x, 0.22, 0.05, -0.45, 0, 0));
+    c.push(cz(cyl(0.1, 0.1, 0.9, 7), '#9a6a3a', 0.8, 0.45, 0.05, 0, 0, Math.PI / 2), cz(box(0.5, 0.12, 0.015), METAL, 0.8, 0.62, 0.05, 0, 0, 0.3), cz(box(0.08, 0.05, 0.03), BRAZ, 1.05, 0.7, 0.05));
+    // pniak z siekierą i wióry
+    c.push(cz(cyl(0.17, 0.19, 0.3, 9), '#7a5030', -1.05, 0.15, 1.0), cz(cyl(0.16, 0.16, 0.01, 9), '#e0c08a', -1.05, 0.305, 1.0),
+      cz(cyl(0.02, 0.02, 0.38, 5), BRAZ, -1.0, 0.45, 1.02, 0, 0, -0.5), cz(box(0.03, 0.1, 0.13), METAL, -1.08, 0.32, 1.02, 0, 0, -0.5));
+    for (let i = 0; i < 6; i++) c.push(cz(box(0.08, 0.015, 0.04), '#e0c08a', -0.85 + (i % 3) * 0.12, 0.01, 0.8 + Math.floor(i / 3) * 0.25, 0, i, 0));
+    c.push(...flaga(k, 1.25, 0, -1.25, 1.4));
     return c;
   },
+  // kamieniołom: bloki kamienia, szopka, żuraw z liną, taczka z kamieniami
   szopa(k, d) {
-    return [cz(box(1.8, 1.1, 1.4), '#a08a6e', -0.4, 0.55, -0.4), cz(dach4(1.4, 0.8), k, -0.4, 1.5, -0.4, 0, Math.PI / 4, 0, 1.25, 1, 1),
-      cz(box(0.9, 0.35, 0.6), BRAZ, 0.8, 0.45, 0.9), cz(cyl(0.12, 0.12, 0.08, 8), CIEMNE, 0.45, 0.18, 0.9, 0, 0, Math.PI / 2), cz(cyl(0.12, 0.12, 0.08, 8), CIEMNE, 1.15, 0.18, 0.9, 0, 0, Math.PI / 2),
-      cz(kula(0.15, 5), KAMIEN, 0.65, 0.7, 0.9), cz(kula(0.14, 5), '#f2c94c', 0.95, 0.7, 0.85), cz(box(0.5, 0.6, 0.05), CIEMNE, -0.4, 0.3, 0.31)];
+    const c = [cz(box(1.1, 0.75, 0.8), BAL2, -0.75, 0.38, -0.85), ...dach(-0.75, -0.85, 0.75, 1.3, 0.55, 0.4, GONT, k, 0.8),
+      cz(box(0.5, 0.3, 0.5), KAMIEN, 0.6, 0.15, -0.8), cz(box(0.5, 0.3, 0.5), KAMIEN2, 1.1, 0.15, -0.85), cz(box(0.48, 0.28, 0.48), KAMIEN, 0.85, 0.44, -0.82, 0, 0.2, 0),
+      cz(box(0.4, 0.25, 0.4), KAMIEN2, -0.9, 0.12, 0.35, 0, 0.4, 0), cz(box(0.36, 0.22, 0.36), KAMIEN, -0.55, 0.11, 0.6, 0, 0.9, 0),
+      ...kamienie(0.2, 0.75, 7, 1.2)];
+    // żuraw: trójnóg, belka, lina, wiszący blok
+    c.push(cz(cyl(0.04, 0.05, 1.7, 6), BAL, 0.75, 0.8, 0.2, 0.25, 0, 0.2), cz(cyl(0.04, 0.05, 1.7, 6), BAL, 1.05, 0.8, 0.0, -0.1, 0, -0.25), cz(cyl(0.04, 0.05, 1.7, 6), BAL, 0.6, 0.8, -0.1, -0.3, 0, 0.05),
+      cz(cyl(0.035, 0.035, 1.4, 6), BAL2, 0.55, 1.62, 0.35, 0, 0, Math.PI / 2 - 0.25), cz(cyl(0.01, 0.01, 0.8, 4), '#d9c79e', 0.05, 1.2, 0.35), cz(box(0.25, 0.2, 0.25), KAMIEN, 0.05, 0.72, 0.35));
+    // taczka
+    c.push(cz(box(0.35, 0.15, 0.45), BAL2, -0.15, 0.25, 1.05), cz(cyl(0.1, 0.1, 0.05, 10), CIEMNE, -0.15, 0.1, 1.33, 0, 0, Math.PI / 2), cz(box(0.03, 0.03, 0.5), BAL2, -0.27, 0.22, 0.75), cz(box(0.03, 0.03, 0.5), BAL2, -0.03, 0.22, 0.75),
+      ...kamienie(-0.15, 1.05, 3, 0.6), ...flaga(k, -1.25, 0, 0.0, 1.3));
+    return c;
   },
+  // kopalnia rudy: skalny pagórek, wejście w drewnianej ramie, tory z wózkiem, latarnia, kupka rudy
   kopalnia(k, d) {
-    return [cz(box(1.4, 1.0, 1.2), '#7d6a5a', -0.6, 0.5, -0.6), cz(dach4(1.1, 0.7), k, -0.6, 1.35, -0.6, 0, Math.PI / 4, 0, 1.2, 1, 1),
-      cz(box(1.0, 1.0, 0.25), CIEMNE, 0.6, 0.5, -0.9), cz(box(1.2, 0.15, 0.4), BRAZ, 0.6, 1.05, -0.85), cz(box(0.15, 1.0, 0.15), BRAZ, 0.05, 0.5, -0.75), cz(box(0.15, 1.0, 0.15), BRAZ, 1.15, 0.5, -0.75),
-      cz(box(0.08, 0.04, 1.6), METAL, 0.45, 0.03, 0.4), cz(box(0.08, 0.04, 1.6), METAL, 0.75, 0.03, 0.4), cz(box(0.5, 0.3, 0.6), '#555b63', 0.6, 0.3, 0.7),
-      cz(kula(0.12, 5), '#c4622d', 0.5, 0.5, 0.7), cz(kula(0.11, 5), '#7b5a4a', 0.72, 0.5, 0.62)];
+    const c = [];
+    for (const [x, z, s] of [[-0.6, -0.8, 0.75], [0.3, -0.95, 0.7], [0.95, -0.5, 0.55], [-1.05, -0.2, 0.5], [-0.2, -0.55, 0.6]]) c.push(cz(new THREE.DodecahedronGeometry(s), x > 0 ? '#7d7369' : '#8a8178', x, s * 0.55, z, x, z, 0, 1, 0.8, 1));
+    c.push(cz(box(0.75, 0.75, 0.3), '#1b1714', 0, 0.38, -0.1), cz(box(0.1, 0.85, 0.12), BAL, -0.42, 0.42, 0.02), cz(box(0.1, 0.85, 0.12), BAL, 0.42, 0.42, 0.02), cz(box(1.0, 0.12, 0.16), BAL2, 0, 0.88, 0.02),
+      cz(box(0.4, 0.14, 0.03), BAL, 0, 1.05, 0.05), cz(kula(0.05, 6), '#c4622d', -0.1, 1.05, 0.08), cz(kula(0.05, 6), '#c4622d', 0.1, 1.05, 0.08));
+    for (const x of [-0.18, 0.18]) c.push(cz(box(0.04, 0.03, 1.4), METAL, x, 0.02, 0.6));
+    for (let i = 0; i < 6; i++) c.push(cz(box(0.5, 0.025, 0.07), BAL2, 0, 0.01, 0.0 + i * 0.24));
+    c.push(cz(box(0.42, 0.25, 0.5), '#555b63', 0, 0.25, 0.85), cz(cyl(0.07, 0.07, 0.5, 8), CIEMNE, 0, 0.08, 0.7, 0, 0, Math.PI / 2), cz(cyl(0.07, 0.07, 0.5, 8), CIEMNE, 0, 0.08, 1.0, 0, 0, Math.PI / 2),
+      ...kamienie(0, 0.85, 4, 0.5, '#c4622d', '#7b5a4a').map(p => { p.m.premultiply(new THREE.Matrix4().makeTranslation(0, 0.3, 0)); return p; }),
+      ...kamienie(0.85, 0.75, 6, 0.9, '#c4622d', '#7b5a4a'),
+      cz(cyl(0.035, 0.04, 1.1, 6), BAL2, -0.75, 0.55, 0.65), cz(box(0.16, 0.2, 0.16), CIEMNE_D, -0.75, 1.0, 0.75), cz(kula(0.06, 6), SZYBA, -0.75, 0.98, 0.75),
+      ...flaga(k, 1.15, 0, 0.3, 1.2));
+    return c;
   },
+  // plantacja haskapu: grządki, krzaki przy palikach, płotek z wikliny, strach na wróble
   pole(k, d) {
-    const c = [cz(box(2.9, 0.06, 2.9), '#8b5a30', 0, 0.03, 0)];
-    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) c.push(cz(kula(0.3, 6), '#3e8e3e', i * 0.9, 0.22, j * 0.9, 0, 0, 0, 1, 0.7, 1), cz(kula(0.09, 5), '#3a4bb0', i * 0.9 + 0.12, 0.38, j * 0.9 + 0.1));
-    c.push(cz(box(0.08, 0.5, 0.08), BRAZ, -1.35, 0.25, -1.35), cz(box(0.4, 0.25, 0.03), k, -1.15, 0.45, -1.35));
+    const c = [cz(box(2.9, 0.06, 2.9), ZIEMIA, 0, 0.03, 0)];
+    for (let i = -1; i <= 1; i++) {
+      c.push(cz(box(0.5, 0.06, 2.6), '#7a4d27', i * 0.9, 0.08, 0));
+      for (let j = -1; j <= 1; j++) {
+        const x = i * 0.9, z = j * 0.85;
+        c.push(cz(kula(0.26, 7), TRAWA, x, 0.3, z, 0, 0, 0, 1, 0.8, 1), cz(kula(0.18, 6), '#4ea055', x + 0.1, 0.42, z + 0.05), cz(cyl(0.015, 0.015, 0.6, 4), BAL2, x - 0.18, 0.3, z));
+        for (const [dx, dy, dz] of [[0.14, 0.42, 0.16], [-0.12, 0.36, 0.18], [0.02, 0.52, -0.12], [0.2, 0.3, -0.08]]) c.push(cz(kula(0.05, 5), '#3a4bb0', x + dx, dy, z + dz, 0, 0, 0, 0.8, 1.3, 0.8));
+      }
+    }
+    c.push(...plot(-1.4, -1.4, 1.4, -1.4, 0.32), ...plot(-1.4, -1.4, -1.4, 1.4, 0.32));
+    // strach na wróble
+    c.push(cz(cyl(0.025, 0.025, 0.9, 5), BAL2, 1.25, 0.45, -1.2), cz(cyl(0.02, 0.02, 0.6, 5), BAL2, 1.25, 0.72, -1.2, 0, 0, Math.PI / 2), cz(kula(0.1, 7), SIANO, 1.25, 0.98, -1.2),
+      cz(cyl(0.16, 0.16, 0.02, 10), SLOMA, 1.25, 1.06, -1.2), cz(box(0.22, 0.28, 0.08), k, 1.25, 0.66, -1.2));
     return c;
   },
+  // Strażnica Krzaka: długa izba z bali, palisada, stojak z włóczniami, kukła do ćwiczeń, chorągiew
   koszary(k, d) {
-    return [cz(box(2.6, 1.2, 1.8), '#c79a63', 0, 0.6, -0.3), cz(dach4(1.9, 0.9), k, 0, 1.65, -0.3, 0, Math.PI / 4, 0, 1.4, 1, 1),
-      cz(box(0.7, 0.8, 0.05), CIEMNE, 0, 0.4, 0.61), cz(box(1.2, 0.08, 0.08), BRAZ, 0.6, 0.6, 1.1), cz(box(0.08, 0.7, 0.08), BRAZ, 0.1, 0.35, 1.1), cz(box(0.08, 0.7, 0.08), BRAZ, 1.1, 0.35, 1.1),
-      cz(cyl(0.02, 0.02, 1.0), BRAZ, 0.4, 0.6, 1.15, 0, 0, 0.2), cz(cyl(0.02, 0.02, 1.0), BRAZ, 0.8, 0.6, 1.15, 0, 0, -0.2), ...flaga(k, -1.1, 1.2, -1.1)];
+    const c = [cz(box(2.5, 0.1, 1.6), KAMIEN2, -0.1, 0.05, -0.55), ...zrab(-0.1, -0.55, 2.3, 1.35, 0.95, 0.07, 0.1),
+      ...dach(-0.1, -0.55, 1.05, 2.6, 0.95, 0.75, GONT, k, 1.35),
+      ...drzwi(-0.1, 0.1, 0.13, 0.42, 0.65), ...okno(k, -0.75, 0.62, 0.13), ...okno(k, 0.55, 0.62, 0.13),
+      cz(cyl(0.2, 0.2, 0.04, 14), k, -0.1, 0.95, 0.15, Math.PI / 2, 0, 0), cz(cyl(0.07, 0.07, 0.05, 10), METAL, -0.1, 0.95, 0.17, Math.PI / 2, 0, 0),
+      ...palisada(-1.35, 0.45, -1.35, 1.3, 0.8), ...palisada(-1.35, 1.3, -0.5, 1.3, 0.8)];
+    // stojak z włóczniami
+    c.push(cz(box(0.6, 0.05, 0.06), BAL2, 0.75, 0.55, 0.6), cz(box(0.05, 0.6, 0.05), BAL2, 0.47, 0.3, 0.6), cz(box(0.05, 0.6, 0.05), BAL2, 1.03, 0.3, 0.6));
+    for (let i = 0; i < 4; i++) c.push(cz(cyl(0.015, 0.015, 1.0, 4), BAL, 0.57 + i * 0.12, 0.5, 0.62, 0.12, 0, 0), cz(stozek(0.03, 0.1, 4), METAL, 0.57 + i * 0.12, 1.0, 0.68, 0.12, 0, 0));
+    // kukła ze słomy
+    c.push(cz(cyl(0.03, 0.03, 1.0, 5), BAL2, 0.35, 0.5, 1.15), cz(kula(0.17, 7), SIANO, 0.35, 0.75, 1.15, 0, 0, 0, 1, 1.4, 1), cz(kula(0.1, 7), SIANO, 0.35, 1.05, 1.15), cz(cyl(0.02, 0.02, 0.5, 5), BAL2, 0.35, 0.82, 1.15, 0, 0, Math.PI / 2));
+    c.push(...flaga(k, 1.2, 0, -0.1, 1.9));
+    return c;
   },
+  // strzelnica: chatka, tarcze na snopkach słomy, płotek, ławka
   strzelnica(k, d) {
-    const c = [cz(box(1.8, 1.0, 1.4), '#c79a63', -0.4, 0.5, -0.5), cz(dach4(1.35, 0.8), k, -0.4, 1.4, -0.5, 0, Math.PI / 4, 0, 1.3, 1, 1)];
-    for (const x of [0.2, 1.0]) c.push(cz(cyl(0.35, 0.35, 0.08, 14), '#f3efe6', x, 0.7, 1.0, Math.PI / 2, 0, 0), cz(cyl(0.22, 0.22, 0.09, 14), '#d8382f', x, 0.7, 1.0, Math.PI / 2, 0, 0), cz(cyl(0.08, 0.08, 0.1, 10), '#f3efe6', x, 0.7, 1.0, Math.PI / 2, 0, 0), cz(box(0.06, 0.4, 0.06), BRAZ, x, 0.2, 1.0));
+    const c = [...zrab(-0.6, -0.75, 1.3, 1.0, 0.75, 0.06, 0), ...dach(-0.6, -0.75, 0.75, 1.6, 0.72, 0.6, STRZECHA, k, 1.0),
+      ...drzwi(-0.35, 0, -0.24), ...okno(k, -0.95, 0.45, -0.24, 0, 0.8)];
+    for (const [x, z] of [[0.45, 0.85], [1.05, 0.55]]) c.push(cz(box(0.5, 0.35, 0.3), SIANO, x, 0.18, z), cz(cyl(0.24, 0.24, 0.04, 16), '#f3efe6', x, 0.62, z, Math.PI / 2, 0, 0),
+      cz(cyl(0.16, 0.16, 0.045, 16), '#d8382f', x, 0.62, z + 0.003, Math.PI / 2, 0, 0), cz(cyl(0.07, 0.07, 0.05, 12), '#f3efe6', x, 0.62, z + 0.006, Math.PI / 2, 0, 0), cz(box(0.04, 0.3, 0.04), BAL2, x, 0.42, z - 0.05));
+    c.push(...plot(-1.35, 0.25, -1.35, 1.35, 0.35), cz(box(0.7, 0.05, 0.18), BAL2, -0.6, 0.22, 0.6), cz(box(0.05, 0.2, 0.15), BAL2, -0.88, 0.1, 0.6), cz(box(0.05, 0.2, 0.15), BAL2, -0.32, 0.1, 0.6),
+      ...kamienie(-0.45, 0.95, 4, 0.5), ...flaga(k, 1.25, 0, -1.1, 1.4));
     return c;
   },
+  // Zagroda reniferów: obora z bali, ogrodzony wybieg, stóg siana, koryto, poroże nad drzwiami
   stajnia(k, d) {
-    const c = [cz(box(2.2, 1.1, 1.5), '#a8693a', 0, 0.55, -0.5), cz(dach4(1.6, 0.9), k, 0, 1.55, -0.5, 0, Math.PI / 4, 0, 1.4, 1, 1), cz(box(0.8, 0.8, 0.05), CIEMNE, 0, 0.4, 0.26)];
-    for (let x = -1.2; x <= 1.21; x += 0.6) c.push(cz(box(0.07, 0.5, 0.07), BRAZ, x, 0.25, 1.3));
-    c.push(cz(box(2.5, 0.06, 0.06), BRAZ, 0, 0.4, 1.3), cz(box(0.5, 0.25, 0.3), SLOMA, 1.0, 0.13, 0.75));
+    const c = [...zrab(0, -0.85, 2.1, 1.0, 0.85, 0.065, 0), ...dach(0, -0.85, 0.85, 2.4, 0.72, 0.62, STRZECHA, k, 1.0),
+      cz(box(0.7, 0.7, 0.05), CIEMNE_D, 0, 0.35, -0.33), cz(box(0.05, 0.7, 0.06), BAL, 0, 0.35, -0.31), cz(box(0.7, 0.05, 0.06), BAL, 0, 0.35, -0.31, 0, 0, 0.78),
+      ...okno(k, 0.75, 0.5, -0.33, 0, 0.8), ...okno(k, -0.75, 0.5, -0.33, 0, 0.8),
+      ...plot(-1.35, -0.2, -1.35, 1.35, 0.42), ...plot(-1.35, 1.35, 1.35, 1.35, 0.42), ...plot(1.35, 1.35, 1.35, -0.2, 0.42)];
+    for (const sx of [-1, 1]) c.push(cz(cyl(0.018, 0.018, 0.35, 4), '#d9c7a3', sx * 0.12, 0.92, -0.3, 0, 0, sx * 0.6), cz(cyl(0.015, 0.015, 0.18, 4), '#d9c7a3', sx * 0.22, 1.04, -0.3, 0, 0, sx * 0.1));
+    c.push(cz(kula(0.4, 8), SIANO, 0.8, 0.3, 0.7, 0, 0, 0, 1, 0.8, 1), cz(kula(0.25, 7), '#ecd47e', 0.75, 0.55, 0.65),
+      cz(box(0.6, 0.15, 0.22), BAL2, -0.6, 0.18, 0.75), cz(box(0.52, 0.04, 0.15), '#7fb5e8', -0.6, 0.25, 0.75), ...flaga(k, -1.2, 0, -1.25, 1.3));
     return c;
   },
+  // kuźnia: kamienno-drewniana, otwarta z przodu, kamienny komin z ogniem, kowadło na pniaku, koryto z wodą
   kuznia(k, d) {
-    return [cz(box(2.2, 1.2, 1.7), KAMIEN, 0, 0.6, -0.4), cz(dach4(1.6, 0.8), k, 0, 1.6, -0.4, 0, Math.PI / 4, 0, 1.3, 1, 1), cz(box(0.45, 1.4, 0.45), KAMIEN2, 0.7, 1.7, -0.8),
-      cz(box(0.5, 0.25, 0.25), '#555b63', 0.4, 0.5, 0.9), cz(box(0.25, 0.35, 0.2), '#555b63', 0.4, 0.2, 0.9), cz(box(0.6, 0.5, 0.06), '#ff8a3d', -0.4, 0.4, 0.46)];
+    const c = [cz(box(2.2, 0.85, 0.3), KAMIEN, 0, 0.42, -1.05), cz(box(0.3, 0.85, 1.4), KAMIEN2, -1.0, 0.42, -0.45),
+      ...dach(0, -0.35, 0.85, 2.5, 1.0, 0.6, GONT, k, 0, BAL, true)];
+    for (const x of [1.05, 0.0]) c.push(cz(cyl(0.07, 0.08, 0.85, 6), BAL, x, 0.42, 0.45));
+    c.push(cz(box(0.7, 0.45, 0.6), KAMIEN2, 0.55, 0.22, -0.65), cz(box(0.45, 0.06, 0.4), OGIEN, 0.55, 0.46, -0.6), cz(kula(0.12, 6), '#ffd36b', 0.55, 0.5, -0.6, 0, 0, 0, 1.4, 0.5, 1.2),
+      cz(box(0.45, 1.6, 0.45), KAMIEN, 0.75, 1.2, -0.95), cz(box(0.52, 0.08, 0.52), KAMIEN2, 0.75, 2.0, -0.95),
+      cz(cyl(0.16, 0.19, 0.32, 8), '#7a5030', -0.2, 0.16, 0.2), cz(box(0.36, 0.12, 0.16), '#4a4f57', -0.2, 0.38, 0.2), cz(box(0.16, 0.1, 0.12), '#4a4f57', -0.4, 0.37, 0.2), cz(box(0.2, 0.08, 0.1), '#4a4f57', -0.2, 0.28, 0.2),
+      cz(box(0.6, 0.22, 0.28), BAL2, -0.75, 0.11, 0.8), cz(box(0.52, 0.04, 0.2), '#7fb5e8', -0.75, 0.2, 0.8),
+      cz(box(0.3, 0.2, 0.25), '#7a4a26', 0.1, 0.3, -0.7, 0, 0, 0.2));
+    for (let i = 0; i < 3; i++) c.push(cz(box(0.04, 0.3, 0.02), BRAZ, -0.5 + i * 0.18, 0.62, -0.88), cz(box(0.1, 0.06, 0.03), METAL, -0.5 + i * 0.18, 0.48, -0.87));
+    c.push(cz(new THREE.TorusGeometry(0.1, 0.025, 5, 10, Math.PI * 1.3), METAL, 1.05, 0.95, 0.55, 0, 0, Math.PI * 0.85), ...flaga(k, -1.25, 0, 0.9, 1.3));
+    return c;
   },
+  // Ambona: drewniana wieża na czterech nogach z bali, krzyżulce, pomost z barierką, daszek z gontu, drabina
   wieza(k, d) {
-    return [cz(box(1.3, 3.0, 1.3), KAMIEN, 0, 1.5, 0), cz(box(1.6, 0.3, 1.6), KAMIEN2, 0, 3.15, 0), cz(dach4(1.25, 1.0), k, 0, 3.8, 0, 0, Math.PI / 4),
-      cz(box(0.25, 0.4, 0.05), CIEMNE, 0, 2.2, 0.66), cz(box(0.5, 0.8, 0.05), CIEMNE, 0, 0.4, 0.66), ...flaga(k, 0, 4.2, 0)];
+    const c = [], h = 2.5;
+    for (const [x, z] of [[-0.55, -0.55], [0.55, -0.55], [-0.55, 0.55], [0.55, 0.55]]) c.push(cz(cyl(0.08, 0.1, h, 7), BAL, x * 0.9, h / 2, z * 0.9, z * 0.06, 0, -x * 0.06), cz(cyl(0.11, 0.12, 0.12, 7), KAMIEN, x * 0.95, 0.06, z * 0.95));
+    for (const y of [0.8, 1.7]) for (const [a, b, ry] of [[0, 0.5, 0], [0, -0.5, 0], [0.5, 0, Math.PI / 2], [-0.5, 0, Math.PI / 2]]) {
+      c.push(cz(box(0.04, 0.95, 0.05), BAL2, a, y, b, 0, ry, 0.85), cz(box(0.04, 0.95, 0.05), BAL2, a, y, b, 0, ry, -0.85));
+    }
+    c.push(cz(box(1.4, 0.1, 1.4), BAL2, 0, h, 0));
+    for (const [a, b, ry] of [[0, 0.68, 0], [0, -0.68, 0], [0.68, 0, Math.PI / 2], [-0.68, 0, Math.PI / 2]]) c.push(cz(box(1.4, 0.06, 0.05), BAL, a, h + 0.4, b, 0, ry, 0), cz(box(1.4, 0.28, 0.03), BAL2, a, h + 0.18, b, 0, ry, 0));
+    for (const [x, z] of [[-0.62, -0.62], [0.62, -0.62], [-0.62, 0.62], [0.62, 0.62]]) c.push(cz(cyl(0.04, 0.04, 0.85, 5), BAL, x, h + 0.42, z));
+    c.push(cz(dach4(1.15, 0.65), GONT, 0, h + 1.15, 0, 0, Math.PI / 4), cz(box(0.16, 0.16, 0.16), k, 0, h + 1.5, 0), ...flaga(k, 0, h + 1.5, 0, 0.7));
+    for (const s of [-1, 1]) c.push(cz(box(0.04, h + 0.1, 0.04), BAL2, s * 0.16, h / 2, 0.82, -0.12, 0, 0));
+    for (let i = 0; i < 8; i++) c.push(cz(box(0.32, 0.03, 0.04), BAL, 0, 0.2 + i * 0.3, 0.86 - i * 0.036));
+    return c;
   },
+  // warsztat: otwarta wiata z ramą, wielkie koło, niedokończone ramię machiny, stół z narzędziami, zwój liny
   warsztat(k, d) {
     const c = [];
-    for (const [x, z] of [[-1.2, -1.1], [1.2, -1.1], [-1.2, 0.3], [1.2, 0.3]]) c.push(cz(box(0.16, 1.6, 0.16), BRAZ, x, 0.8, z));
-    c.push(cz(dach4(1.9, 0.9), k, 0, 2.0, -0.4, 0, Math.PI / 4, 0, 1.3, 1, 1), cz(cyl(0.6, 0.6, 0.12, 14), DREWNO, 0.6, 0.6, 0.9, Math.PI / 2, 0, 0), cz(box(1.4, 0.3, 0.6), DREWNO, -0.4, 0.15, -0.4));
+    for (const [x, z] of [[-1.15, -1.1], [1.15, -1.1], [-1.15, 0.3], [1.15, 0.3]]) c.push(cz(cyl(0.08, 0.09, 1.5, 6), BAL, x, 0.75, z));
+    c.push(cz(box(2.4, 0.1, 0.12), BAL2, 0, 1.45, 0.3), cz(box(2.4, 0.1, 0.12), BAL2, 0, 1.45, -1.1), ...dach(0, -0.4, 1.5, 2.6, 0.95, 0.6, GONT, k, 0, BAL, true),
+      cz(new THREE.TorusGeometry(0.45, 0.05, 6, 16), BAL2, 0.55, 0.5, 0.75, 0, Math.PI / 2, 0), cz(cyl(0.07, 0.07, 0.12, 8), BAL, 0.55, 0.5, 0.75, 0, 0, Math.PI / 2));
+    for (let i = 0; i < 4; i++) c.push(cz(box(0.04, 0.9, 0.04), BAL2, 0.55, 0.5, 0.75, i * Math.PI / 4, 0, 0));
+    c.push(cz(box(1.2, 0.12, 0.12), BAL, -0.4, 0.3, -0.4, 0, 0.3, 0.35), cz(box(0.2, 0.25, 0.4), BAL2, -0.4, 0.12, -0.4), cz(cyl(0.14, 0.12, 0.08, 10), BAL2, 0.15, 0.55, -0.6),
+      cz(box(0.8, 0.06, 0.4), BAL, -0.6, 0.5, 0.85), cz(box(0.06, 0.48, 0.06), BAL2, -0.95, 0.24, 0.7), cz(box(0.06, 0.48, 0.06), BAL2, -0.25, 0.24, 0.7), cz(box(0.06, 0.48, 0.06), BAL2, -0.95, 0.24, 1.0), cz(box(0.06, 0.48, 0.06), BAL2, -0.25, 0.24, 1.0),
+      cz(box(0.25, 0.04, 0.05), METAL, -0.7, 0.55, 0.85, 0, 0.4, 0), cz(cyl(0.015, 0.015, 0.25, 4), BRAZ, -0.45, 0.55, 0.9, 0, 0, Math.PI / 2), cz(box(0.08, 0.06, 0.08), '#555b63', -0.33, 0.56, 0.9),
+      cz(new THREE.TorusGeometry(0.15, 0.05, 5, 12), '#d9c79e', 1.0, 0.05, -0.55, Math.PI / 2, 0, 0), cz(new THREE.TorusGeometry(0.12, 0.05, 5, 12), '#d9c79e', 1.0, 0.12, -0.55, Math.PI / 2, 0, 0),
+      ...stosBali(-0.3, -0.85, 1.4, 0.09, 2), ...flaga(k, 1.25, 0, 1.2, 1.3));
     return c;
   },
 };
 export const budynek = cache((typ, strona) => polacz(BUD[typ](KOLORY_STRON[strona], CIEMNIEJ[strona])));
+// stosik rzeczy na plecach zbieracza: n sztuk (jagody w koszyczkach, polana, kamienie, ruda)
+export const stos = cache((sur, n) => {
+  const c = [], kol = { kamien: [KAMIEN, KAMIEN2], zelazo: ['#c4622d', '#7b5a4a'] }[sur];
+  for (let i = 0; i < n; i++) {
+    const rz = Math.floor(i / 2), x = (i % 2 ? 0.09 : -0.09) * (n === 1 ? 0 : 1), y = rz * 0.13;
+    if (sur === 'jagody') c.push(cz(cyl(0.085, 0.07, 0.1, 8), SLOMA, x, y, 0), cz(kula(0.07, 6), '#3a4bb0', x, y + 0.04, 0, 0, 0, 0, 1, 0.5, 1));
+    else if (sur === 'drewno') c.push(cz(cyl(0.055, 0.055, 0.34, 7), i % 2 ? '#9a6a3a' : '#8a5c32', 0, y + (i % 2) * 0.06, 0.0 + (i % 2 ? 0.0 : 0), 0, 0, Math.PI / 2), cz(cyl(0.045, 0.045, 0.01, 7), '#e0c08a', 0.171, y + (i % 2) * 0.06, 0, 0, 0, Math.PI / 2));
+    else c.push(cz(new THREE.DodecahedronGeometry(0.075), kol[i % 2], x, y, 0, i, i * 0.5, 0));
+  }
+  return polacz(c);
+});
 
 // ---------- przyroda ----------
 export const drzewo = cache(() => polacz([cz(cyl(0.12, 0.16, 0.7, 6), '#6b4527', 0, 0.35, 0), cz(stozek(0.7, 1.2, 7), '#2f7d3a', 0, 1.1, 0), cz(stozek(0.55, 1.0, 7), '#3b9446', 0, 1.6, 0), cz(stozek(0.36, 0.7, 7), '#47a653', 0, 2.05, 0)]));

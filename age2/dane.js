@@ -85,6 +85,9 @@ export const ULEPSZENIA = {
   rekawice: { nazwa: 'Rękawice zbieracza', emoji: '🧤', z: 'ratusz', era: 1, koszt: { jagody: 50, drewno: 25 }, czas: 20, opis: 'Zbieracze mają więcej życia' },
   kosz: { nazwa: 'Wiklinowy kosz', emoji: '🧺', z: 'ratusz', era: 1, koszt: { jagody: 75, drewno: 50 }, czas: 20, opis: 'Zbieracze niosą więcej naraz' },
   taczka: { nazwa: 'Taczka', emoji: '🛒', z: 'ratusz', era: 2, wymaga: 'kosz', koszt: { jagody: 150, drewno: 75 }, czas: 30, opis: 'Niosą jeszcze więcej i chodzą szybciej' },
+  plecak1: { nazwa: 'Plecak z łyka', emoji: '🎒', z: 'ratusz', era: 1, koszt: { jagody: 60, drewno: 40 }, czas: 20, opis: 'Zbieracze niosą o 2 więcej' },
+  plecak2: { nazwa: 'Plecak skórzany', emoji: '🎒', z: 'ratusz', era: 2, wymaga: 'plecak1', koszt: { jagody: 125, drewno: 75 }, czas: 30, opis: 'Niosą jeszcze o 3 więcej' },
+  plecak3: { nazwa: 'Plecak na stelażu', emoji: '🎒', z: 'ratusz', era: 3, wymaga: 'plecak2', koszt: { jagody: 200, drewno: 100, zelazo: 40 }, czas: 40, opis: 'Niosą jeszcze o 4 więcej' },
   wozek: { nazwa: 'Wózek jagodowy', emoji: '🛻', z: 'ratusz', era: 3, wymaga: 'taczka', koszt: { jagody: 250, drewno: 150, zelazo: 50 }, czas: 40, opis: 'Najwięcej naraz i najszybciej' },
   // Spichlerz: plantacje
   sciolka: { nazwa: 'Ściółka', emoji: '🍂', z: 'spichlerz', era: 1, koszt: { jagody: 75, drewno: 75 }, czas: 20, opis: 'Plantacje dają o 15% więcej jagód' },
@@ -121,7 +124,7 @@ export const ULEPSZENIA = {
 export const ZBIERANIE = { jagody: 0.8, drewno: 0.65, kamien: 0.5, zelazo: 0.5, pole: 0.5 };
 export const UDZWIG = 10;
 // ile jest w jednym drzewie, krzaku, skale
-export const ZAPAS = { drzewo: 100, krzak: 125, kamien: 250, ruda: 250 };
+export const ZAPAS = { drzewo: 100, krzak: 125, kamien: 250, ruda: 450 };
 
 // poziomy trudności (komputer): tempo zbierania, kiedy pierwszy atak (sekundy), ile wojska w kolejnych atakach,
 // ilu zbieraczy w kolejnych erach, ile ambon
