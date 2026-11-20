@@ -45,7 +45,7 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
   box-shadow: 0 2px 0 rgba(0,0,0,0.12); }
 
 /* ---------- przyciski z boku ---------- */
-#boczne { position: fixed; right: max(8px, env(safe-area-inset-right, 0px)); bottom: max(calc(env(safe-area-inset-bottom, 0px) + 214px), calc(var(--panel-h, 200px) + 14px)); z-index: 10;
+#boczne { position: fixed; right: max(8px, env(safe-area-inset-right, 0px)); bottom: calc(var(--panel-h, 200px) + 14px); z-index: 10;
   display: flex; flex-direction: column; gap: 7px; }
 .okr { width: 50px; height: 50px; border-radius: 16px; background: #fff; box-shadow: 0 4px 0 #c3ccda; font-size: 22px; position: relative; }
 .okr b { position: absolute; right: -5px; top: -6px; min-width: 20px; height: 20px; border-radius: 10px; background: var(--ink); color: #fff; font-size: 12px;
@@ -53,7 +53,7 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 #b-bezczynni.jest b { background: var(--orange); animation: puls 1s infinite; }
 .okr.wl { background: #c9f7d5; box-shadow: 0 4px 0 #7fcf95; }
 @keyframes puls { 50% { transform: scale(1.18); } }
-#mini { position: fixed; left: max(8px, env(safe-area-inset-left, 0px)); bottom: max(calc(env(safe-area-inset-bottom, 0px) + 214px), calc(var(--panel-h, 200px) + 14px)); z-index: 10;
+#mini { position: fixed; left: max(8px, env(safe-area-inset-left, 0px)); bottom: calc(var(--panel-h, 200px) + 14px); z-index: 10;
   width: 120px; height: 120px; border-radius: 14px; background: rgba(33, 48, 71, 0.55); box-shadow: 0 3px 10px rgba(0,0,0,0.25); touch-action: none; }
 
 /* ---------- panel na dole ---------- */
@@ -62,7 +62,10 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
   padding: 9px max(10px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 9px) max(10px, env(safe-area-inset-left, 0px)); }
 /* okienko rośnie, gdy jest kolejka: przyciski na dole zawsze widać w całości */
 #panel { min-height: 200px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; }
-.p-nic { text-align: center; font-weight: 800; padding-top: 22px; line-height: 1.5; }
+.p-nic { text-align: center; font-weight: 800; line-height: 1.4; }
+/* nic nie wybrane: panel zwinięty do paska */
+#panel.zwiniety { min-height: 0; }
+#panel.zwiniety #p-akcje { display: none; }
 .p-nic small { color: var(--ink-soft); }
 .p-glowa { display: flex; align-items: center; gap: 9px; }
 .p-glowa > div { flex: 1; min-width: 0; }

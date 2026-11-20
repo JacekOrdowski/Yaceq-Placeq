@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL } from './dane.js';
 
-const WERSJA = 17;
+const WERSJA = 18;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 17, opis: 'Przyciski w okienku na dole nie chowają się już, gdy coś czeka w kolejce (okienko rośnie). Do tego wszystko z wersji 16.' },
+  { nr: 18, opis: 'Gdy nic nie jest wybrane, okienko na dole zwija się do cienkiego paska (więcej widać mapy). Do tego wszystko z wersji 17.' },
+  { nr: 17, opis: 'Przyciski w okienku na dole nie chowają się już, gdy coś czeka w kolejce (okienko rośnie). Do tego wszystko z wersji 16.', adres: 'wersje/17/' },
   { nr: 16, opis: 'Kamerę można oddalić tak, że widać całą mapę; dokładniejszy obrys widoku na małej mapce; krzyżyk 3 razy większy. Do tego wszystko z wersji 15.', adres: 'wersje/16/' },
   { nr: 15, opis: 'Większy krzyżyk do zamykania okienka na dole (łatwiej trafić palcem). Do tego wszystko z wersji 14.', adres: 'wersje/15/' },
   { nr: 14, opis: 'Mapa 2 razy większa w każdą stronę (192 × 192): więcej lasów, krzaków, kamienia, rudy i złota; komputer dokupuje żelazo. Do tego wszystko z wersji 13.', adres: 'wersje/14/' },
@@ -1865,7 +1866,7 @@ const dolWidoku = () => { const p = $('panel'); const t = p ? p.getBoundingClien
 // najdalsze oddalenie: cała mapa (patrząc na jej środek) mieści się na ekranie; liczone od nowa przy obrocie i zmianie ekranu
 let dMaksKlucz = '', dMaksW = 400;
 function dMaks() {
-  const dol = dolWidoku(), klucz = kam.kat.toFixed(2) + '|' + innerWidth + '|' + innerHeight + '|' + Math.round(dol);
+  const dol = innerHeight - 200, klucz = kam.kat.toFixed(2) + '|' + innerWidth + '|' + innerHeight + '|' + Math.round(dol);
   if (klucz === dMaksKlucz) return dMaksW;
   const yMin = 1 - 2 * (dol - 6) / innerHeight, yMax = 1 - 2 * 70 / innerHeight;
   const miesci = d => {
@@ -2378,7 +2379,8 @@ function odswiezPanel(wymus = false) {
   panelKlucz = klucz;
   let h = '', a = '', zburzHTML = '';
   if (!sel.length) {
-    h = `<div class="p-nic">👆 Dotknij zbieracza albo budynku.<br><small>Przesuwaj palcem mapę, dwoma palcami przybliżaj i obracaj, przytrzymaj palec, żeby zaznaczyć ramką.</small></div>`;
+    // nic nie wybrane: panel zwinięty do jednego paska (podpowiedź o sterowaniu tylko przez pierwsze 3 minuty gry)
+    h = `<div class="p-nic">👆 Dotknij zbieracza albo budynku${S.czas < 180 ? '<br><small>Przesuwaj palcem mapę, dwoma palcami przybliżaj i obracaj, przytrzymaj palec, żeby zaznaczyć ramką.</small>' : ''}</div>`;
   } else if (pierwszy.rodzaj) {
     h = `<div class="p-glowa"><span class="p-ik">${EMOJI_SUR[pierwszy.sur]}</span><div><b>${{ drzewo: 'Drzewo', krzak: 'Krzak z jagodami', kamien: 'Kamień', ruda: 'Ruda żelaza', zloto: 'Złoto' }[pierwszy.rodzaj]}</b><small data-ile>Zostało: ${Math.ceil(pierwszy.ile)}</small></div></div>`;
   } else if (jestBudynkiem(pierwszy)) {
@@ -2446,7 +2448,7 @@ function odswiezPanel(wymus = false) {
     }
   }
   a += zburzHTML;
-  info.innerHTML = h; p.innerHTML = a; p.scrollLeft = 0;
+  info.innerHTML = h; p.innerHTML = a; p.scrollLeft = 0; $('panel').classList.toggle('zwiniety', !sel.length);
   aktualizujPanel();
 }
 function aktualizujPanel() {
@@ -2468,7 +2470,7 @@ function aktualizujPanel() {
 }
 let zburzPyt = 0, zburzPytT = 0;
 // mapka i przyciski z boku stoją zawsze nad okienkiem na dole (okienko rośnie, gdy jest kolejka albo wysokie przyciski)
-if (window.ResizeObserver) new ResizeObserver(() => { const p = $('panel'); if (!p.hidden) document.documentElement.style.setProperty('--panel-h', p.offsetHeight + 'px'); }).observe($('panel'));
+if (window.ResizeObserver) { const ro = new ResizeObserver(() => { const p = $('panel').hidden ? $('stawianie') : $('panel'); document.documentElement.style.setProperty('--panel-h', p.offsetHeight + 'px'); }); ro.observe($('panel')); ro.observe($('stawianie')); }
 $('panel').addEventListener('click', e => {
   const b = e.target.closest('[data-a]'); if (!b || !S) return;
   audio();
