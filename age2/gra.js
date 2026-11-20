@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL } from './dane.js';
 
-const WERSJA = 18;
+const WERSJA = 19;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 18, opis: 'Gdy nic nie jest wybrane, okienko na dole zwija się do cienkiego paska (więcej widać mapy). Do tego wszystko z wersji 17.' },
+  { nr: 19, opis: 'Naprawione przybliżanie po dużym oddaleniu: każde przybliżenie wyraźnie pokazuje mniej mapy. Do tego wszystko z wersji 18.' },
+  { nr: 18, opis: 'Gdy nic nie jest wybrane, okienko na dole zwija się do cienkiego paska (więcej widać mapy). Do tego wszystko z wersji 17.', adres: 'wersje/18/' },
   { nr: 17, opis: 'Przyciski w okienku na dole nie chowają się już, gdy coś czeka w kolejce (okienko rośnie). Do tego wszystko z wersji 16.', adres: 'wersje/17/' },
   { nr: 16, opis: 'Kamerę można oddalić tak, że widać całą mapę; dokładniejszy obrys widoku na małej mapce; krzyżyk 3 razy większy. Do tego wszystko z wersji 15.', adres: 'wersje/16/' },
   { nr: 15, opis: 'Większy krzyżyk do zamykania okienka na dole (łatwiej trafić palcem). Do tego wszystko z wersji 14.', adres: 'wersje/15/' },
@@ -1853,9 +1854,18 @@ const EL = 0.98; // nachylenie kamery
 // aż na samym końcu (dMaks) widać całą mapę
 const D_BLISKO = 13, D_DALEKO = 72, EL_GORA = 1.32;
 const do01 = v => Math.max(0, Math.min(1, v));
+// za D_DALEKO kamera unosi się powoli tak, żeby z każdym oddaleniem widać było coraz dalej (a z każdym przybliżeniem bliżej);
+// wcześniej unosiła się za szybko i przybliżanie od daleka prawie nic nie zmieniało na ekranie
 function nachylenie(d) {
   if (d <= D_DALEKO) return EL - 0.42 * do01((d - 30) / 32);
-  return EL - 0.42 + (EL_GORA - EL + 0.42) * do01((d - D_DALEKO) / 140);
+  // a: kąt między środkiem widoku a górą ekranu; zasieg(el) * d: jak daleko za środkiem widać ziemię u góry ekranu
+  const a = Math.atan(Math.tan(kamera.fov / 2 * Math.PI / 180) * (innerHeight / 2 - 80) / (innerHeight / 2));
+  const zasieg = el => Math.sin(el) / Math.tan(el - a) - Math.cos(el);
+  const cel = zasieg(EL - 0.42) * Math.pow(d / D_DALEKO, -0.4);
+  let lo = EL - 0.42, hi = EL_GORA;
+  if (zasieg(hi) >= cel) return hi;
+  for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2; if (zasieg(m) > cel) lo = m; else hi = m; }
+  return (lo + hi) / 2;
 }
 function polozKamere(x, z, d) {
   const el = nachylenie(d), h = Math.sin(el) * d, p = Math.cos(el) * d;

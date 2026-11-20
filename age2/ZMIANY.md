@@ -5,6 +5,15 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 19 (20.11.2026)
+
+**Zmienione**
+- Naprawione przybliżanie po dużym oddaleniu. Wcześniej, gdy przybliżało się od widoku całej mapy, kamera w połowie drogi
+  pochylała się w stronę horyzontu i na ekranie było widać tyle samo ziemi (czasem nawet więcej), więc wyglądało,
+  jakby przybliżanie nie działało. Teraz kamera unosi się i pochyla powoli, a każde przybliżenie wyraźnie pokazuje mniej mapy.
+  Z widoku całej mapy do Dworku wystarczają około 3 ruchy dwoma palcami.
+- Przy największym oddaleniu kamera patrzy trochę bardziej z ukosa niż w wersji 16–18 (cała mapa dalej się mieści).
+
 ## Wersja 18 (20.11.2026)
 
 **Zmienione**
