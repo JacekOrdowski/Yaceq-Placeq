@@ -5,6 +5,21 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 4 (20.11.2026)
+
+**Dodane**
+- Burzenie własnych budynków: w panelu budynku przycisk 💥 „Zburz”. Trzeba dotknąć go 2 razy
+  (najpierw pokazuje „Na pewno?”). Wraca połowa kosztu, a gdy budowa się jeszcze nie zaczęła, cały koszt.
+  Jedynego Dworku nie da się zburzyć.
+- Ścinanie drzew widać: przy pierwszym uderzeniu siekierą drzewo przewraca się na ziemię,
+  pień robi się coraz mniejszy, a gdy drewno się skończy, zostaje pieniek.
+
+**Zmienione**
+- Nowe postacie: zaokrąglone zamiast kanciastych, z buzią (oczy, nosek, rumieńce), włosami,
+  rękami, butami i paskiem; kapelusze, hełmy i kaptury też okrągłe.
+- Renifery i łosie zaokrąglone, z oczami i uszami; jeźdźcy siedzą w siodle.
+- Pień noszony na plecach jest mniejszy.
+
 ## Wersja 3 (20.11.2026)
 
 **Zmienione**

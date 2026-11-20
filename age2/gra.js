@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC } from './dane.js';
 
-const WERSJA = 3;
+const WERSJA = 4;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 3, opis: 'Zbieracze pracują rękami: zrywają jagody do koszyka, budują młotkiem, rąbią siekierą, kopią kilofem (bez kiwania). Do tego wszystko z wersji 2.' },
+  { nr: 4, opis: 'Nowe, zaokrąglone postacie z buziami, drzewa przewracają się przy ścinaniu, burzenie własnych budynków. Do tego wszystko z wersji 3.' },
+  { nr: 3, opis: 'Zbieracze pracują rękami: zrywają jagody do koszyka, budują młotkiem, rąbią siekierą, kopią kilofem (bez kiwania). Do tego wszystko z wersji 2.', adres: 'wersje/3/' },
   { nr: 2, opis: 'Nasza mapa ulepszeń: 4 ery (Sadzonka, Kwitnienie, Owocowanie, Wielkie Zbiory), żelazo, renifery i łosie, awanse wojska, kuźnia.', adres: 'wersje/2/' },
   { nr: 1, opis: 'Pierwsza wersja: osadnicy, 4 surowce, 3 ery, wojsko i osada komputera.', adres: 'wersje/1/' },
 ];
@@ -164,6 +165,8 @@ function wyczyscSwiat() {
   for (const p of POC) scena.remove(p.mesh);
   for (const u of UMIERA) scena.remove(u.mesh);
   for (const k in INST) { scena.remove(INST[k]); delete INST[k]; }
+  for (const sc of SCIETE.values()) scena.remove(sc.g);
+  SCIETE.clear();
   if (ziemia) { scena.remove(ziemia); ziemia.material.map.dispose(); ziemia = null; }
   if (dalej) { scena.remove(dalej); dalej = null; }
   JED = []; BUD = []; POC = []; UMIERA = []; wybrane = []; E.clear(); ZAS.clear();
@@ -259,14 +262,37 @@ function generujMape(seed) {
     im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere();
     INST[rodzaj] = im; scena.add(im);
   }
+  // pieńki po ściętych drzewach (na początku niewidoczne)
+  if (lista.drzewo.length) {
+    const pn = new THREE.InstancedMesh(MOD.pieniek(), MAT, lista.drzewo.length);
+    for (let i = 0; i < lista.drzewo.length; i++) pn.setMatrixAt(i, ZERO);
+    pn.instanceMatrix.needsUpdate = true; pn.frustumCulled = false; INST.pieniek = pn; scena.add(pn);
+  }
   return id;
 }
 const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
+// ścięte drzewa: przy pierwszym uderzeniu siekierą drzewo się przewraca, potem pień maleje, a na końcu zostaje pieniek
+const SCIETE = new Map();
+function zetnij(z0, odX, odZ, odrazu = false) {
+  if (z0.rodzaj !== 'drzewo' || SCIETE.has(z0.id) || !ZAS.has(z0.id)) return;
+  const im = INST.drzewo; if (im) { im.setMatrixAt(z0.inst, ZERO); im.instanceMatrix.needsUpdate = true; }
+  const g = new THREE.Group(); g.position.set(z0.x, 0, z0.z);
+  g.rotation.y = odX === z0.x && odZ === z0.z ? (z0.id * 2.39) % 6.283 : Math.atan2(z0.x - odX, z0.z - odZ);
+  g.add(new THREE.Mesh(MOD.pieniek(), MAT));
+  const drz = new THREE.Mesh(MOD.drzewo(), MAT); drz.castShadow = true; drz.position.y = 0.18; g.add(drz);
+  scena.add(g);
+  SCIETE.set(z0.id, { g, drz, z0, t: odrazu ? 1 : 0 });
+}
+function pieniekZostaje(z0) {
+  const im = INST.pieniek; if (!im) return;
+  im.setMatrixAt(z0.inst, new THREE.Matrix4().makeTranslation(z0.x, 0, z0.z)); im.instanceMatrix.needsUpdate = true;
+}
 function usunZasob(z0) {
   if (!ZAS.has(z0.id)) return;
   ZAS.delete(z0.id); E.delete(z0.id); z0.ile = 0;
   if (blok[z0.c] === 1) { blok[z0.c] = 0; naKom[z0.c] = 0; }
   const im = INST[z0.rodzaj]; if (im) { im.setMatrixAt(z0.inst, ZERO); im.instanceMatrix.needsUpdate = true; }
+  if (z0.rodzaj === 'drzewo') { const sc = SCIETE.get(z0.id); if (sc) { scena.remove(sc.g); SCIETE.delete(z0.id); } pieniekZostaje(z0); }
   S.usuniete.push(z0.id); miniBrud = true;
   wybrane = wybrane.filter(e => e !== z0);
 }
@@ -549,16 +575,16 @@ function zabij(u) {
   UMIERA.push({ mesh: u.mesh, t: 0, j: true, ry: u.ry });
   S.stat[wrog(u.strona)].pokonani++;
 }
-function zniszczBudynek(b) {
+function zniszczBudynek(b, wlasnaReka = false) {
   E.delete(b.id); BUD.splice(BUD.indexOf(b), 1);
   wybrane = wybrane.filter(e => e !== b);
   for (let j = b.j0; j < b.j0 + b.w; j++) for (let i = b.i0; i < b.i0 + b.w; i++) { const c = kom2(i, j); if (naKom[c] === b.id) { blok[c] = 0; naKom[c] = 0; } }
   if (b.plac) b.mesh.remove(b.plac);
   UMIERA.push({ mesh: b.mesh, t: 0, j: false });
   if (naEkranie(b)) dzwiek('zniszcz');
-  S.stat[wrog(b.strona)].zburzone++;
+  if (!wlasnaReka) S.stat[wrog(b.strona)].zburzone++;
   miniBrud = true;
-  if (b.strona === STRONA_GRACZA && b.typ === 'ratusz' && !S.aiGracz) toast('💥 Twój Dworek upadł!');
+  if (!wlasnaReka && b.strona === STRONA_GRACZA && b.typ === 'ratusz' && !S.aiGracz) toast('💥 Twój Dworek upadł!');
 }
 
 // ---------- zadania jednostek ----------
@@ -620,6 +646,7 @@ function zbieraj(u, dt) {
   }
   if (Math.abs(r.x - u.x) < 1.2 && Math.abs(r.z - u.z) < 1.2) {
     u.sciezka = null; u.pracuje = true; u.ry = Math.atan2(r.x - u.x, r.z - u.z); z.faza = 'zbiera';
+    if (r.rodzaj === 'drzewo' && !SCIETE.has(r.id)) zetnij(r, u.x, u.z);
     if (u.niesie.sur !== z.sur) u.niesie = { sur: z.sur, ile: 0 };
     const ile = Math.min(r.ile, tempoZbierania(u, z.sur) * dt);
     r.ile -= ile; u.niesie.ile += ile; z.ox = r.x; z.oz = r.z;
@@ -782,6 +809,15 @@ function dodajDoKolejki(b, rodzaj, typ) {
   else { const br = brakEry(b.strona); if (br) return br; koszt = NOWA_ERA[S.era[b.strona] + 1].koszt; czas = NOWA_ERA[S.era[b.strona] + 1].czas; }
   if (!zaplac(b.strona, koszt)) return 'Za mało surowców';
   b.kolejka.push({ rodzaj, typ, t: 0, czas, koszt });
+  return null;
+}
+// gracz sam burzy swój budynek: wraca połowa kosztu (cały koszt, gdy budowa się jeszcze nie zaczęła) i to, co czekało w kolejce
+function zburzWlasny(b) {
+  if (b.typ === 'ratusz' && BUD.filter(o => o.strona === b.strona && o.typ === 'ratusz').length < 2) return 'To twój jedyny Dworek: nie można go zburzyć';
+  const czesc = !b.gotowy && b.postep < 0.02 ? 1 : 0.5;
+  for (const s in b.d.koszt) S.zas[b.strona][s] += Math.floor(b.d.koszt[s] * czesc);
+  for (const q of b.kolejka) oddaj(b.strona, q.koszt);
+  zniszczBudynek(b, true);
   return null;
 }
 function anulujZKolejki(b, i) { const q = b.kolejka[i]; if (!q) return; oddaj(b.strona, q.koszt); b.kolejka.splice(i, 1); }
@@ -1113,9 +1149,9 @@ function wczytajGre(o) {
   S = { ...o }; delete S.zasoby; delete S.bud; delete S.jed; delete S.kamera;
   generujMape(S.seed);
   zbudujZiemie();
-  for (const id of S.usuniete) { const z0 = ZAS.get(id); if (z0) { S.usuniete = S.usuniete.filter(x => x !== id); usunZasob(z0); } }
+  for (const id of o.usuniete) { const z0 = ZAS.get(id); if (z0) usunZasob(z0); }
   S.usuniete = [...o.usuniete];
-  for (const [id, ile] of o.zasoby) { const z0 = ZAS.get(id); if (z0) z0.ile = ile; }
+  for (const [id, ile] of o.zasoby) { const z0 = ZAS.get(id); if (z0) { z0.ile = ile; if (ile < z0.start) zetnij(z0, z0.x, z0.z, true); } }
   sprzatnijListy();
   for (const [id, strona, typ, i0, j0, hp, postep, kolejka, zbiorka, rolnik] of o.bud) {
     const b = nowyBudynek(strona, typ, i0, j0, postep >= 1, id);
@@ -1177,13 +1213,13 @@ const lerp = (a, b, t) => a + (b - a) * t;
 function ruszReka(u, dt) {
   const z = u.zad, nz = z ? (z.typ === 'zbieraj' ? NARZ_PRACY.zbieraj[z.sur] : NARZ_PRACY[z.typ]) : null;
   const narz = nz && !(z.faza === 'niesie' && nz === 'zrywa') ? nz : 'reka';
-  if (!u.ramie) { u.ramie = new THREE.Group(); u.ramie.position.set(0.27, 0.73, 0); u.mesh.add(u.ramie); }
+  if (!u.ramie) { u.ramie = new THREE.Group(); u.ramie.position.set(0.215, 0.7, 0); u.mesh.add(u.ramie); }
   if (u.narz !== narz) {
     if (u.ramieM) u.ramie.remove(u.ramieM);
     u.ramieM = new THREE.Mesh(MOD.ramie3D(narz, u.strona), MAT); u.ramie.add(u.ramieM); u.narz = narz;
   }
   const kosz = narz === 'zrywa';
-  if (kosz && !u.koszBok) { u.koszBok = new THREE.Mesh(MOD.koszBok(), MAT); u.koszBok.position.set(-0.3, 0.42, 0.08); u.mesh.add(u.koszBok); }
+  if (kosz && !u.koszBok) { u.koszBok = new THREE.Mesh(MOD.koszBok(), MAT); u.koszBok.position.set(-0.31, 0.34, 0.06); u.mesh.add(u.koszBok); }
   if (u.koszBok) u.koszBok.visible = kosz;
   let rx = 0, rz = 0;
   if (u.pracuje) {
@@ -1218,8 +1254,8 @@ function rysuj(dt) {
       if (s !== u.pokazane) {
         if (u.koszyk) { m.remove(u.koszyk); u.koszyk = null; }
         if (s) {
-          const g = NIESIE3D[s] || (NIESIE3D[s] = s === 'jagody' ? MOD.kosz() : s === 'drewno' ? MOD.polacz([{ g: new THREE.CylinderGeometry(0.09, 0.09, 0.6, 6).rotateZ(Math.PI / 2), k: '#9a6a3a', m: new THREE.Matrix4() }]) : MOD.skala(s === 'zelazo' ? 'ruda' : s));
-          u.koszyk = new THREE.Mesh(g, MAT); u.koszyk.position.set(0, 0.95, -0.2); if (s === 'kamien' || s === 'zelazo') u.koszyk.scale.setScalar(0.45); m.add(u.koszyk);
+          const g = NIESIE3D[s] || (NIESIE3D[s] = s === 'jagody' ? MOD.kosz() : s === 'drewno' ? MOD.polacz([{ g: new THREE.CylinderGeometry(0.07, 0.07, 0.42, 8).rotateZ(Math.PI / 2), k: '#9a6a3a', m: new THREE.Matrix4() }]) : MOD.skala(s === 'zelazo' ? 'ruda' : s));
+          u.koszyk = new THREE.Mesh(g, MAT); u.koszyk.position.set(0, 0.62, -0.25); if (s === 'kamien' || s === 'zelazo') u.koszyk.scale.setScalar(0.45); m.add(u.koszyk);
         }
         u.pokazane = s;
       }
@@ -1232,6 +1268,11 @@ function rysuj(dt) {
     if (b.pierscien) { b.pierscien.position.set(b.x, 0.05, b.z); b.pierscien.visible = wybrane.includes(b); }
   }
   for (const e of wybrane) { const p = pierscien(e); if (!jestBudynkiem(e) && e.strona == null) p.position.set(e.x, 0.05, e.z); p.visible = true; }
+  for (const sc of SCIETE.values()) {
+    if (sc.t < 1) sc.t = Math.min(1, sc.t + dt / 0.9);
+    sc.drz.rotation.x = 1.5 * sc.t * sc.t;
+    sc.drz.scale.setScalar(0.35 + 0.65 * Math.max(0, sc.z0.ile / sc.z0.start));
+  }
   for (const p of POC) {
     const t = Math.min(1, p.t / p.T), y = p.y0 * (1 - t) + 0.6 * t + Math.sin(t * Math.PI) * 1.2;
     p.mesh.position.set(p.x0 + (p.ox - p.x0) * t, y, p.z0 + (p.oz - p.z0) * t);
@@ -1512,7 +1553,7 @@ function odswiezPanel(wymus = false) {
   const klucz = sel.map(e => e.id).join(',') + '|' + S.era[0] + '|' + (pierwszy && jestBudynkiem(pierwszy) ? pierwszy.gotowy + ':' + pierwszy.kolejka.map(q => q.typ).join('.') + ':' + Object.keys(S.ul[0]).join('.') : '');
   if (!wymus && klucz === panelKlucz) { aktualizujPanel(); return; }
   panelKlucz = klucz;
-  let h = '', a = '';
+  let h = '', a = '', zburzHTML = '';
   if (!sel.length) {
     h = `<div class="p-nic">👆 Dotknij zbieracza albo budynku.<br><small>Przesuwaj palcem mapę, dwoma palcami przybliżaj.</small></div>`;
   } else if (pierwszy.rodzaj) {
@@ -1520,6 +1561,8 @@ function odswiezPanel(wymus = false) {
   } else if (jestBudynkiem(pierwszy)) {
     const b = pierwszy, moj = b.strona === STRONA_GRACZA;
     h = `<div class="p-glowa"><span class="p-ik">${b.d.emoji}</span><div><b>${b.d.nazwa}${moj ? '' : ' (komputer)'}</b><small data-hp>❤️ ${Math.ceil(b.hp)} / ${b.max}</small><div class="p-hp"><i data-hpb style="width:${b.hp / b.max * 100}%"></i></div></div><button class="p-x" data-a="odznacz">✖</button></div>`;
+    zburzHTML = moj && !(b.typ === 'ratusz' && BUD.filter(o => o.strona === 0 && o.typ === 'ratusz').length < 2)
+      ? `<button class="akcja maly zburz" data-a="zburz"><span class="ak-ik">💥</span><b>Zburz</b><small>${!b.gotowy && b.postep < 0.02 ? 'wraca całość' : 'wraca połowa'}</small></button>` : '';
     if (moj && !b.gotowy) h += `<div class="p-opis">Plac budowy: zaznacz zbieraczy i dotknij go, żeby budowali.</div>`;
     else if (moj) {
       h += `<div class="p-opis">${b.d.opis}${b.d.pole ? (wolnePole(b) ? ' · nikt tu nie pracuje' : ' · pracuje tu zbieracz') : ''}${produkuje(b) ? ' · dotknij ziemi, żeby wskazać, dokąd mają iść nowi' : ''}</div>`;
@@ -1561,6 +1604,7 @@ function odswiezPanel(wymus = false) {
       a = `<button class="akcja maly" data-a="stop"><span class="ak-ik">✋</span><b>Stój</b></button>` + a;
     }
   }
+  a += zburzHTML;
   info.innerHTML = h; p.innerHTML = a; p.scrollLeft = 0;
   aktualizujPanel();
 }
@@ -1581,6 +1625,7 @@ function aktualizujPanel() {
     b.querySelectorAll('.ak-koszt span').forEach((s, i) => { const [sur, v] = Object.entries(k)[i]; s.classList.toggle('brak', S.zas[0][sur] < v); });
   }
 }
+let zburzPyt = 0, zburzPytT = 0;
 $('panel').addEventListener('click', e => {
   const b = e.target.closest('[data-a]'); if (!b || !S) return;
   audio();
@@ -1589,6 +1634,17 @@ $('panel').addEventListener('click', e => {
   if (akcja === 'stop') { for (const u of wybrane) if (u.strona === STRONA_GRACZA && !jestBudynkiem(u)) stop(u); dzwiek('klik'); return; }
   if (akcja === 'bud') { dzwiek('klik'); zacznijStawianie(arg); return; }
   if (!cel || !jestBudynkiem(cel)) return;
+  if (akcja === 'zburz') {
+    // dwa dotknięcia, żeby nie zburzyć niczego przez przypadek
+    const t = performance.now();
+    if (zburzPyt === cel.id && t - zburzPytT < 4000) {
+      zburzPyt = 0; const bl = zburzWlasny(cel);
+      if (bl) { toast(bl); dzwiek('blad'); } else { toast('💥 Zburzone: ' + cel.d.nazwa); dzwiek('zniszcz'); zaznacz([]); }
+      return;
+    }
+    zburzPyt = cel.id; zburzPytT = t; b.querySelector('b').textContent = 'Na pewno?'; b.querySelector('small').textContent = 'dotknij jeszcze raz'; dzwiek('klik');
+    return;
+  }
   let blad = null;
   if (akcja === 'szkol') blad = dodajDoKolejki(cel, 'j', arg);
   else if (akcja === 'ul') blad = dodajDoKolejki(cel, 'u', arg);
