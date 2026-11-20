@@ -24,6 +24,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
   (kilka przy każdej bazie i bliżej środka). Razem prawie 7 razy więcej kamienia niż wcześniej.
 - Zapisane gry wczytują się dalej (nowe złoża, które wypadłyby pod budynkiem, znikają).
 
+Zapis w repozytorium: `6659187`
+
 ## Wersja 8 (20.11.2026)
 
 **Dodane**
