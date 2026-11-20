@@ -26,6 +26,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 **Do sprawdzenia**
 - Posłuchać na telefonie, czy muzyka nie męczy i czy nie zagłusza dźwięków walki.
 
+Zapis w repozytorium: `45ccd86`
+
 ## Wersja 12 (20.11.2026)
 
 **Dodane**
