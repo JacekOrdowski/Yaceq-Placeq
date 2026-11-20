@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC } from './dane.js';
 
-const WERSJA = 2;
+const WERSJA = 3;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 2, opis: 'Nasza mapa ulepszeń: 4 ery (Sadzonka, Kwitnienie, Owocowanie, Wielkie Zbiory), żelazo, renifery i łosie, awanse wojska, kuźnia.' },
+  { nr: 3, opis: 'Zbieracze pracują rękami: zrywają jagody do koszyka, budują młotkiem, rąbią siekierą, kopią kilofem (bez kiwania). Do tego wszystko z wersji 2.' },
+  { nr: 2, opis: 'Nasza mapa ulepszeń: 4 ery (Sadzonka, Kwitnienie, Owocowanie, Wielkie Zbiory), żelazo, renifery i łosie, awanse wojska, kuźnia.', adres: 'wersje/2/' },
   { nr: 1, opis: 'Pierwsza wersja: osadnicy, 4 surowce, 3 ery, wojsko i osada komputera.', adres: 'wersje/1/' },
 ];
 const KLUCZ = 'age-of-haskap-2';
@@ -1170,14 +1171,47 @@ function pokazZnacznik(x, z, wrogi = false) {
   znacznik.material.color.set(wrogi ? '#ff5a4a' : '#ffffff');
   znacznik.position.set(x, 0.06, z); znacznik.userData.t = 0.7; znacznik.visible = true;
 }
+// ręka zbieracza: narzędzie zależy od pracy, każda praca ma swój ruch
+const NARZ_PRACY = { zbieraj: { jagody: 'zrywa', drewno: 'siekiera', kamien: 'kilof', zelazo: 'kilof' }, farma: 'zrywa', buduj: 'mlotek', atakuj: 'siekiera' };
+const lerp = (a, b, t) => a + (b - a) * t;
+function ruszReka(u, dt) {
+  const z = u.zad, nz = z ? (z.typ === 'zbieraj' ? NARZ_PRACY.zbieraj[z.sur] : NARZ_PRACY[z.typ]) : null;
+  const narz = nz && !(z.faza === 'niesie' && nz === 'zrywa') ? nz : 'reka';
+  if (!u.ramie) { u.ramie = new THREE.Group(); u.ramie.position.set(0.27, 0.73, 0); u.mesh.add(u.ramie); }
+  if (u.narz !== narz) {
+    if (u.ramieM) u.ramie.remove(u.ramieM);
+    u.ramieM = new THREE.Mesh(MOD.ramie3D(narz, u.strona), MAT); u.ramie.add(u.ramieM); u.narz = narz;
+  }
+  const kosz = narz === 'zrywa';
+  if (kosz && !u.koszBok) { u.koszBok = new THREE.Mesh(MOD.koszBok(), MAT); u.koszBok.position.set(-0.3, 0.42, 0.08); u.mesh.add(u.koszBok); }
+  if (u.koszBok) u.koszBok.visible = kosz;
+  let rx = 0, rz = 0;
+  if (u.pracuje) {
+    if (narz === 'siekiera') { const p = (u.t * 1.5) % 1; rx = p < 0.22 ? lerp(-2.4, -0.25, p / 0.22) : lerp(-0.25, -2.4, (p - 0.22) / 0.78); rz = -0.45; }
+    else if (narz === 'kilof') { const p = (u.t * 1.2) % 1; rx = p < 0.2 ? lerp(-2.8, 0.05, p / 0.2) : lerp(0.05, -2.8, (p - 0.2) / 0.8); }
+    else if (narz === 'mlotek') { const p = (u.t * 2.4) % 1; rx = p < 0.3 ? lerp(-1.9, -0.55, p / 0.3) : lerp(-0.55, -1.9, (p - 0.3) / 0.7); }
+    else if (narz === 'zrywa') {
+      // ręka sięga do krzaka i wraca do koszyka przy boku
+      const p = (u.t * 0.9) % 1, s = Math.sin(p * Math.PI * 2);
+      rx = lerp(-1.25, -0.15, (s + 1) / 2); rz = s > 0 ? lerp(0, 0.75, s) : 0;
+    }
+  } else if (u.idzie) rx = Math.sin(u.t * 11) * 0.45;
+  else rx = narz === 'reka' ? 0 : -0.35;
+  const k = Math.min(1, dt * 25);
+  u.ramie.rotation.x += (rx - u.ramie.rotation.x) * k; u.ramie.rotation.z += (rz - u.ramie.rotation.z) * k;
+}
 function rysuj(dt) {
   czasRys += dt;
   ustawKamere();
   for (const u of JED) {
     u.t += dt;
-    const m = u.mesh; m.position.set(u.x, u.idzie ? Math.abs(Math.sin(u.t * 11)) * 0.07 : 0, u.z);
+    const m = u.mesh;
     let dr = u.ry - m.rotation.y; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); m.rotation.y += dr * Math.min(1, dt * 12);
-    m.rotation.x = u.pracuje ? Math.max(0, Math.sin(u.t * 9)) * 0.28 : 0;
+    // wojsko walczące wręcz: krótki wypad do przodu przy uderzeniu (bez kiwania całym ciałem)
+    let wypad = 0;
+    if (u.pracuje && u.d.wojsko && !u.d.zasieg) { const f = (u.d.odstep - u.cd) / 0.3; if (f >= 0 && f <= 1) wypad = Math.sin(f * Math.PI) * (u.d.tylkoBudynki ? 0.3 : 0.16); }
+    m.position.set(u.x + Math.sin(m.rotation.y) * wypad, u.idzie ? Math.abs(Math.sin(u.t * 11)) * 0.05 : 0, u.z + Math.cos(m.rotation.y) * wypad);
+    if (u.typ === 'osadnik') ruszReka(u, dt);
     // co niesie osadnik
     if (u.typ === 'osadnik') {
       const s = u.niesie.ile > 0.5 ? u.niesie.sur : null;

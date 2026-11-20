@@ -5,6 +5,16 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 3 (20.11.2026)
+
+**Zmienione**
+- Ludziki nie kiwają się już całym ciałem. Zbieracz pracuje ręką z narzędziem:
+  - jagody: sięga do krzaka i wkłada jagody do koszyka przy boku (tak samo na plantacji),
+  - budowa: stuka młotkiem,
+  - drewno: zamach siekierą,
+  - kamień i ruda żelaza: kilof idzie w ruch nad głową.
+- Wojsko przy uderzeniu robi krótki wypad do przodu zamiast kiwania.
+
 ## Wersja 2 (20.11.2026)
 
 Pierwszy kawałek naszej własnej mapy ulepszeń, inspirowanej jagodą kamczacką.

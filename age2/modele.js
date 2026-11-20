@@ -52,10 +52,24 @@ function czlowiek(k, ciemny, glowa = 'kapelusz') {
   if (glowa === 'kaptur') c.push(cz(kula(0.17, 8), ciemny, 0, 0.95, -0.02, 0, 0, 0, 1, 0.9, 1));
   return c;
 }
+// zbieracz bez prawej ręki: ręka z narzędziem to osobna część, która się rusza (ramie3D)
 export const osadnik = cache(strona => {
   const k = KOLORY_STRON[strona];
-  return polacz([...czlowiek(k, CIEMNIEJ[strona]), cz(cyl(0.025, 0.025, 0.6), BRAZ, 0.28, 0.6, 0.1, 0.5, 0, 0), cz(box(0.16, 0.08, 0.04), METAL, 0.28, 0.86, 0.26, 0.5, 0, 0)]);
+  return polacz([...czlowiek(k, CIEMNIEJ[strona]), cz(box(0.1, 0.34, 0.1), k, -0.27, 0.56, 0), cz(kula(0.055, 6), SKORA, -0.27, 0.37, 0)]);
 });
+// prawa ręka z narzędziem; punkt obrotu (0, 0, 0) to bark, ręka zwisa w dół, narzędzie wskazuje do przodu
+// narzędzia: 'reka' (sama ręka), 'zrywa' (jagoda w dłoni), 'mlotek', 'siekiera', 'kilof'
+export const ramie3D = cache((narz, strona) => {
+  const k = KOLORY_STRON[strona], dl = -0.36;
+  const c = [cz(box(0.1, 0.34, 0.1), k, 0, -0.17, 0), cz(kula(0.055, 6), SKORA, 0, dl, 0)];
+  if (narz === 'zrywa') c.push(cz(kula(0.06, 6), '#3a4bb0', 0, dl - 0.02, 0.05));
+  if (narz === 'mlotek') c.push(cz(cyl(0.022, 0.022, 0.34, 6), BRAZ, 0, dl, 0.15, Math.PI / 2, 0, 0), cz(box(0.07, 0.15, 0.08), '#555b63', 0, dl, 0.31));
+  if (narz === 'siekiera') c.push(cz(cyl(0.022, 0.022, 0.55, 6), BRAZ, 0, dl, 0.22, Math.PI / 2, 0, 0), cz(box(0.03, 0.17, 0.12), METAL, 0, dl + 0.07, 0.44));
+  if (narz === 'kilof') c.push(cz(cyl(0.022, 0.022, 0.55, 6), BRAZ, 0, dl, 0.22, Math.PI / 2, 0, 0), cz(box(0.04, 0.42, 0.05), '#555b63', 0, dl, 0.47), cz(stozek(0.03, 0.08, 4), METAL, 0, dl + 0.25, 0.47), cz(stozek(0.03, 0.08, 4), METAL, 0, dl - 0.25, 0.47, Math.PI, 0, 0));
+  return polacz(c);
+});
+// koszyk przy lewym boku zbieracza (gdy zrywa jagody)
+export const koszBok = cache(() => polacz([cz(cyl(0.13, 0.1, 0.16, 8), SLOMA, 0, 0, 0), cz(kula(0.1, 6), '#3a4bb0', 0, 0.07, 0, 0, 0, 0, 1, 0.45, 1), cz(box(0.02, 0.18, 0.2), SLOMA, 0, 0.12, 0)]));
 export const kosz = cache(() => polacz([cz(cyl(0.16, 0.12, 0.18, 8), SLOMA, 0, 0, 0), cz(kula(0.12, 6), '#3a4bb0', 0, 0.08, 0, 0, 0, 0, 1, 0.5, 1)]));
 export const wojownik = cache(strona => {
   const k = KOLORY_STRON[strona], d = CIEMNIEJ[strona];
