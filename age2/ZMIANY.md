@@ -11,6 +11,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 - Krzyżyk do zamykania okienka na dole (przy budynku, osadniku albo wojsku) jest ponad 2 razy większy
   i ciemniejszy, więc łatwiej trafić w niego palcem.
 
+Zapis w repozytorium: `455306b`
+
 ## Wersja 14 (20.11.2026)
 
 **Zmienione**
