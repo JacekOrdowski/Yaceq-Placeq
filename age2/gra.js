@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL } from './dane.js';
 
-const WERSJA = 16;
+const WERSJA = 17;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 16, opis: 'Kamerę można oddalić tak, że widać całą mapę; dokładniejszy obrys widoku na małej mapce; krzyżyk 3 razy większy. Do tego wszystko z wersji 15.' },
+  { nr: 17, opis: 'Przyciski w okienku na dole nie chowają się już, gdy coś czeka w kolejce (okienko rośnie). Do tego wszystko z wersji 16.' },
+  { nr: 16, opis: 'Kamerę można oddalić tak, że widać całą mapę; dokładniejszy obrys widoku na małej mapce; krzyżyk 3 razy większy. Do tego wszystko z wersji 15.', adres: 'wersje/16/' },
   { nr: 15, opis: 'Większy krzyżyk do zamykania okienka na dole (łatwiej trafić palcem). Do tego wszystko z wersji 14.', adres: 'wersje/15/' },
   { nr: 14, opis: 'Mapa 2 razy większa w każdą stronę (192 × 192): więcej lasów, krzaków, kamienia, rudy i złota; komputer dokupuje żelazo. Do tego wszystko z wersji 13.', adres: 'wersje/14/' },
   { nr: 13, opis: 'Nowa muzyka na prawdziwych instrumentach (8 utworów CC0): spokojne utwory na zmianę, w czasie walki bitwa, płynne przejścia. Do tego wszystko z wersji 12. Mała mapa.', adres: 'wersje/13/' },
@@ -2466,6 +2467,8 @@ function aktualizujPanel() {
   }
 }
 let zburzPyt = 0, zburzPytT = 0;
+// mapka i przyciski z boku stoją zawsze nad okienkiem na dole (okienko rośnie, gdy jest kolejka albo wysokie przyciski)
+if (window.ResizeObserver) new ResizeObserver(() => { const p = $('panel'); if (!p.hidden) document.documentElement.style.setProperty('--panel-h', p.offsetHeight + 'px'); }).observe($('panel'));
 $('panel').addEventListener('click', e => {
   const b = e.target.closest('[data-a]'); if (!b || !S) return;
   audio();

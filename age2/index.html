@@ -45,7 +45,7 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
   box-shadow: 0 2px 0 rgba(0,0,0,0.12); }
 
 /* ---------- przyciski z boku ---------- */
-#boczne { position: fixed; right: max(8px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 214px); z-index: 10;
+#boczne { position: fixed; right: max(8px, env(safe-area-inset-right, 0px)); bottom: max(calc(env(safe-area-inset-bottom, 0px) + 214px), calc(var(--panel-h, 200px) + 14px)); z-index: 10;
   display: flex; flex-direction: column; gap: 7px; }
 .okr { width: 50px; height: 50px; border-radius: 16px; background: #fff; box-shadow: 0 4px 0 #c3ccda; font-size: 22px; position: relative; }
 .okr b { position: absolute; right: -5px; top: -6px; min-width: 20px; height: 20px; border-radius: 10px; background: var(--ink); color: #fff; font-size: 12px;
@@ -53,14 +53,15 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 #b-bezczynni.jest b { background: var(--orange); animation: puls 1s infinite; }
 .okr.wl { background: #c9f7d5; box-shadow: 0 4px 0 #7fcf95; }
 @keyframes puls { 50% { transform: scale(1.18); } }
-#mini { position: fixed; left: max(8px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 214px); z-index: 10;
+#mini { position: fixed; left: max(8px, env(safe-area-inset-left, 0px)); bottom: max(calc(env(safe-area-inset-bottom, 0px) + 214px), calc(var(--panel-h, 200px) + 14px)); z-index: 10;
   width: 120px; height: 120px; border-radius: 14px; background: rgba(33, 48, 71, 0.55); box-shadow: 0 3px 10px rgba(0,0,0,0.25); touch-action: none; }
 
 /* ---------- panel na dole ---------- */
 #panel, #stawianie { position: fixed; left: 0; right: 0; bottom: 0; z-index: 11; background: rgba(255, 255, 255, 0.96);
   border-radius: 20px 20px 0 0; box-shadow: 0 -4px 18px rgba(0,0,0,0.18);
   padding: 9px max(10px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 9px) max(10px, env(safe-area-inset-left, 0px)); }
-#panel { height: 200px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; }
+/* okienko rośnie, gdy jest kolejka: przyciski na dole zawsze widać w całości */
+#panel { min-height: 200px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; }
 .p-nic { text-align: center; font-weight: 800; padding-top: 22px; line-height: 1.5; }
 .p-nic small { color: var(--ink-soft); }
 .p-glowa { display: flex; align-items: center; gap: 9px; }
@@ -82,7 +83,7 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .kol span { position: relative; z-index: 1; }
 .kol i { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--green); }
 .p-kolejka small { font-size: 12px; font-weight: 900; color: var(--red); }
-#p-akcje { display: flex; gap: 7px; overflow-x: auto; overflow-y: hidden; flex: 1; padding-bottom: 2px; touch-action: pan-x; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+#p-akcje { display: flex; gap: 7px; overflow-x: auto; overflow-y: hidden; flex: 1 0 auto; min-height: 66px; padding-bottom: 2px; touch-action: pan-x; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 #p-akcje::-webkit-scrollbar { display: none; }
 .akcja { flex: none; width: 104px; border-radius: 14px; background: #eef4fb; box-shadow: 0 3px 0 #c9d3e2; padding: 5px 6px; text-align: left;
   display: flex; flex-direction: column; gap: 1px; align-self: stretch; }
