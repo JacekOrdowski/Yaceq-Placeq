@@ -8,15 +8,30 @@ function cz(g, kolor, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0, sx = 1, sy = 
   E.set(rx, ry, rz); Q.setFromEuler(E); P3.set(x, y, z); S3.set(sx, sy, sz);
   return { g, k: kolor, m: M4.clone().compose(P3, Q, S3) };
 }
-// skleja części w jedną bryłę z kolorami
-export function polacz(czesci) {
-  const pos = [], nor = [], col = [], c = new THREE.Color();
+// część, która się rusza: rodzaj 1 = noga albo ręka (wahadło wokół biodra/barku), 2 = wiatr, 3 = koło
+export function st(p, rodzaj, osY = 0, znak = 1, osZ = 0) { p.s = [rodzaj, osY, znak, osZ]; return p; }
+// faktury rysowane przez kartę graficzną: 1 drewno, 2 strzecha, 3 gont, 4 cegła, 5 kamień, 6 liście
+const WZORY = {
+  '#c08a52': 1, '#a87443': 1, '#b9864f': 1, '#9a6a3a': 1, '#8a5c32': 1, '#7a4a26': 1, '#d4a76a': 1, '#c9995c': 1, '#8a5530': 1, '#6b4527': 1, '#5e3d22': 1, '#7a5030': 1, '#6e4a2c': 1, '#5a3d26': 1, '#d8a874': 1, '#c79a63': 1, '#a8693a': 1, '#5a3518': 1, '#8a4f2a': 1, '#a0603a': 1,
+  '#d4b265': 2, '#b8954c': 2, '#e2c76a': 2, '#e3c56a': 2, '#ecd47e': 2, '#cfae62': 2,
+  '#7b5a3c': 3, '#6a4c31': 3,
+  '#b5553a': 4, '#9c4630': 4,
+  '#9aa0a8': 5, '#7d838c': 5, '#a3a9b1': 5, '#8f8a80': 5, '#7d7369': 5, '#8a8178': 5, '#a08a6e': 5, '#4d4a4f': 5, '#7b5a4a': 5,
+};
+const HSL = {};
+// skleja części w jedną bryłę z kolorami; opcje.wiatr: liście (albo wszystko, gdy opcje.wszystko) kołyszą się na wietrze
+export function polacz(czesci, opcje = {}) {
+  const pos = [], nor = [], col = [], wz = [], ru = [], c = new THREE.Color();
   for (const p of czesci) {
     const g = (p.g.index ? p.g.toNonIndexed() : p.g.clone()).applyMatrix4(p.m);
     c.set(p.k);
+    let w = WZORY[String(p.k).toLowerCase()] || 0;
+    if (!w) { c.getHSL(HSL); if (HSL.h > 0.2 && HSL.h < 0.45 && HSL.s > 0.25 && HSL.l < 0.7) w = 6; }
+    let s = p.s || [0, 0, 0, 0];
+    if (!p.s && opcje.wiatr && (opcje.wszystko || w === 6)) s = [2, 0, opcje.wiatr, 0];
     const a = g.attributes.position, n = g.attributes.normal;
     for (let i = 0; i < a.count; i++) {
-      pos.push(a.getX(i), a.getY(i), a.getZ(i)); nor.push(n.getX(i), n.getY(i), n.getZ(i)); col.push(c.r, c.g, c.b);
+      pos.push(a.getX(i), a.getY(i), a.getZ(i)); nor.push(n.getX(i), n.getY(i), n.getZ(i)); col.push(c.r, c.g, c.b); wz.push(w); ru.push(s[0], s[1], s[2], s[3]);
     }
     g.dispose();
   }
@@ -24,6 +39,8 @@ export function polacz(czesci) {
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setAttribute('wzor', new THREE.Float32BufferAttribute(wz, 1));
+  g.setAttribute('staw', new THREE.Float32BufferAttribute(ru, 4));
   g.computeBoundingSphere();
   return g;
 }
@@ -65,16 +82,16 @@ function nakrycie(rodzaj, k, ciemny, y = 0.9, z = 0) {
 // ludzik: buty, nogi, tunika z paskiem, ręce, głowa z twarzą; prawa ręka może być osobno (zbieracz)
 function czlowiek(k, ciemny, glowa = 'kapelusz', prawa = true, wlosy = WLOSY[0]) {
   const c = [
-    cz(kulaG(0.062, 8, 6), CIEMNE, -0.085, 0.045, 0.03, 0, 0, 0, 1, 0.7, 1.5), cz(kulaG(0.062, 8, 6), CIEMNE, 0.085, 0.045, 0.03, 0, 0, 0, 1, 0.7, 1.5),
-    cz(kaps(0.058, 0.2), SPODNIE, -0.085, 0.2, 0), cz(kaps(0.058, 0.2), SPODNIE, 0.085, 0.2, 0),
+    st(cz(kulaG(0.062, 8, 6), CIEMNE, -0.085, 0.045, 0.03, 0, 0, 0, 1, 0.7, 1.5), 1, 0.32, -1), st(cz(kulaG(0.062, 8, 6), CIEMNE, 0.085, 0.045, 0.03, 0, 0, 0, 1, 0.7, 1.5), 1, 0.32, 1),
+    st(cz(kaps(0.058, 0.2), SPODNIE, -0.085, 0.2, 0), 1, 0.32, -1), st(cz(kaps(0.058, 0.2), SPODNIE, 0.085, 0.2, 0), 1, 0.32, 1),
     cz(cyl(0.16, 0.22, 0.2, 14), k, 0, 0.4, 0),
     cz(kaps(0.165, 0.2, 12), k, 0, 0.58, 0, 0, 0, 0, 1, 1, 0.85),
     cz(cyl(0.172, 0.172, 0.045, 14), BRAZ, 0, 0.47, 0, 0, 0, 0, 1, 1, 0.86),
-    cz(kaps(0.05, 0.22), k, -0.215, 0.56, 0, 0, 0, -0.18), cz(kulaG(0.05, 8, 6), SKORA, -0.245, 0.4, 0.01),
+    st(cz(kaps(0.05, 0.22), k, -0.215, 0.56, 0, 0, 0, -0.18), 1, 0.68, 0.7), st(cz(kulaG(0.05, 8, 6), SKORA, -0.245, 0.4, 0.01), 1, 0.68, 0.7),
     ...glowaZ(0, 0.9, 0, wlosy),
     ...nakrycie(glowa, k, ciemny),
   ];
-  if (prawa) c.push(cz(kaps(0.05, 0.2), k, 0.225, 0.58, 0.05, -0.55, 0, 0.12), cz(kulaG(0.05, 8, 6), SKORA, 0.25, 0.47, 0.14));
+  if (prawa) c.push(st(cz(kaps(0.05, 0.2), k, 0.225, 0.58, 0.05, -0.55, 0, 0.12), 1, 0.68, -0.4), st(cz(kulaG(0.05, 8, 6), SKORA, 0.25, 0.47, 0.14), 1, 0.68, -0.4));
   return c;
 }
 // zbieracz bez prawej ręki: ręka z narzędziem to osobna część, która się rusza (ramie3D)
@@ -142,7 +159,7 @@ function jazda(strona, zwierze, zbroja) {
     cz(kulaG(0.06, 6, 4), jasna, 0, 0.86 * s, -0.5 * s),
     cz(cyl(0.2, 0.24, 0.08, 12), k, 0, 1.02 * s, -0.05),
   ];
-  for (const sx of [-0.13, 0.13]) for (const sz of [-0.32, 0.32]) c.push(cz(cyl(0.048 * s, 0.04 * s, 0.56 * s, 8), nogi, sx * s, 0.3 * s, sz * s), cz(cyl(0.052 * s, 0.052 * s, 0.06, 8), '#2a2a2a', sx * s, 0.03, sz * s));
+  for (const sx of [-0.13, 0.13]) for (const sz of [-0.32, 0.32]) { const zn = sx * sz > 0 ? 1 : -1; c.push(st(cz(cyl(0.048 * s, 0.04 * s, 0.56 * s, 8), nogi, sx * s, 0.3 * s, sz * s), 1, 0.58 * s, zn, sz * s), st(cz(cyl(0.052 * s, 0.052 * s, 0.06, 8), '#2a2a2a', sx * s, 0.03, sz * s), 1, 0.58 * s, zn, sz * s)); }
   if (los) c.push(cz(kulaG(0.05, 6, 4), sierc, 0, 1.05 * s, 0.7 * s, 0, 0, 0, 1, 1.6, 1));
   const yr = 1.35 * s, zr = 0.6 * s;
   if (los) for (const sx of [-1, 1]) c.push(cz(cyl(0.025, 0.025, 0.3), '#d9c7a3', sx * 0.15, yr, zr, 0, 0, sx * 0.9), cz(kulaG(0.2, 8, 6), '#d9c7a3', sx * 0.36, yr + 0.15, zr - 0.02, 0, 0, sx * 0.25, 1, 0.18, 0.65));
@@ -167,14 +184,14 @@ export const katapulta = cache(strona => {
   const c = [cz(box(0.9, 0.15, 1.5), DREWNO, 0, 0.35, 0), cz(box(0.12, 0.8, 0.12), BRAZ, -0.3, 0.8, -0.1), cz(box(0.12, 0.8, 0.12), BRAZ, 0.3, 0.8, -0.1),
     cz(box(0.7, 0.1, 0.1), BRAZ, 0, 1.15, -0.1), cz(box(0.1, 0.1, 1.3), '#9a6a3a', 0, 0.75, 0.15, -0.5, 0, 0), cz(cyl(0.22, 0.18, 0.15, 10), BRAZ, 0, 1.08, 0.72),
     cz(kula(0.17, 8), '#a8c8ff', 0, 1.22, 0.72), cz(kula(0.07, 6), '#3a4bb0', 0.08, 1.3, 0.78), cz(box(0.92, 0.1, 0.3), k, 0, 0.5, -0.6)];
-  for (const sx of [-0.5, 0.5]) for (const sz of [-0.5, 0.5]) c.push(cz(cyl(0.2, 0.2, 0.1, 10), CIEMNE, sx, 0.2, sz, 0, 0, Math.PI / 2));
+  for (const sx of [-0.5, 0.5]) for (const sz of [-0.5, 0.5]) c.push(st(cz(cyl(0.2, 0.2, 0.1, 10), CIEMNE, sx, 0.2, sz, 0, 0, Math.PI / 2), 3, 0.2, 1, sz), st(cz(box(0.11, 0.36, 0.05), '#6b4527', sx, 0.2, sz), 3, 0.2, 1, sz));
   return polacz(c);
 });
 export const taran = cache(strona => {
   const k = KOLORY_STRON[strona];
   const c = [cz(box(0.9, 0.12, 1.6), DREWNO, 0, 0.35, 0), cz(dach4(0.95, 0.7), k, 0, 1.05, 0, 0, Math.PI / 4, 0, 1, 1, 1.75),
     cz(cyl(0.13, 0.13, 1.9, 8), BRAZ, 0, 0.6, 0.15, Math.PI / 2, 0, 0), cz(cyl(0.17, 0.13, 0.25, 8), METAL, 0, 0.6, 1.15, Math.PI / 2, 0, 0)];
-  for (const sx of [-0.5, 0.5]) for (const sz of [-0.5, 0.5]) c.push(cz(cyl(0.2, 0.2, 0.1, 10), CIEMNE, sx, 0.2, sz, 0, 0, Math.PI / 2));
+  for (const sx of [-0.5, 0.5]) for (const sz of [-0.5, 0.5]) c.push(st(cz(cyl(0.2, 0.2, 0.1, 10), CIEMNE, sx, 0.2, sz, 0, 0, Math.PI / 2), 3, 0.2, 1, sz), st(cz(box(0.11, 0.36, 0.05), '#6b4527', sx, 0.2, sz), 3, 0.2, 1, sz));
   for (const sx of [-0.4, 0.4]) for (const sz of [-0.7, 0.7]) c.push(cz(box(0.08, 0.7, 0.08), BRAZ, sx, 0.7, sz));
   return polacz(c);
 });
@@ -187,14 +204,15 @@ export const woz = cache(strona => {
     cz(new THREE.CylinderGeometry(0.375, 0.375, 0.05, 12, 1, false, Math.PI / 2, Math.PI), '#f3efe6', 0, 0.68, -0.08, Math.PI / 2, 0, 0),
     cz(cyl(0.12, 0.1, 0.12, 8), SLOMA, -0.15, 0.53, 0.0), cz(kula(0.09, 6), '#3a4bb0', -0.15, 0.59, 0.0, 0, 0, 0, 1, 0.5, 1), cz(cyl(0.12, 0.1, 0.12, 8), SLOMA, 0.15, 0.53, 0.0), cz(kula(0.09, 6), '#3a4bb0', 0.15, 0.59, 0.0, 0, 0, 0, 1, 0.5, 1),
     cz(box(0.04, 0.04, 0.75), DRZ2, -0.22, 0.45, 0.45), cz(box(0.04, 0.04, 0.75), DRZ2, 0.22, 0.45, 0.45)];
-  for (const sx of [-0.42, 0.42]) c.push(cz(cyl(0.21, 0.21, 0.06, 12), '#5a3518', sx, 0.21, -0.38, 0, 0, Math.PI / 2), cz(cyl(0.06, 0.06, 0.08, 8), METAL, sx, 0.21, -0.38, 0, 0, Math.PI / 2));
+  for (const sx of [-0.42, 0.42]) c.push(st(cz(cyl(0.21, 0.21, 0.06, 12), '#5a3518', sx, 0.21, -0.38, 0, 0, Math.PI / 2), 3, 0.21, 1, -0.38), st(cz(cyl(0.06, 0.06, 0.08, 8), METAL, sx, 0.21, -0.38, 0, 0, Math.PI / 2), 3, 0.21, 1, -0.38),
+    st(cz(box(0.07, 0.38, 0.05), '#3a2414', sx, 0.21, -0.38), 3, 0.21, 1, -0.38));
   // renifer
   const R = '#8d7a64', RJ = '#efe7da', z0 = 0.62;
   c.push(cz(kaps(0.15, 0.32, 10), R, 0, 0.55, z0, Math.PI / 2, 0, 0), cz(kaps(0.07, 0.2, 8), RJ, 0, 0.72, z0 + 0.25, -0.6, 0, 0),
     cz(kulaG(0.1, 10, 8), R, 0, 0.85, z0 + 0.38, 0, 0, 0, 0.85, 0.9, 1.3), cz(kulaG(0.045, 6, 4), '#2a2a2a', 0, 0.82, z0 + 0.52),
     cz(kulaG(0.018, 6, 4), OCZY, -0.06, 0.89, z0 + 0.44), cz(kulaG(0.018, 6, 4), OCZY, 0.06, 0.89, z0 + 0.44));
   for (const sx of [-1, 1]) c.push(cz(cyl(0.015, 0.015, 0.3, 4), '#d9c7a3', sx * 0.08, 1.02, z0 + 0.33, -0.3, 0, sx * 0.5), cz(cyl(0.012, 0.012, 0.15, 4), '#d9c7a3', sx * 0.15, 1.12, z0 + 0.4, 0.6, 0, sx * 0.3));
-  for (const sx of [-0.08, 0.08]) for (const sz of [-0.2, 0.2]) c.push(cz(cyl(0.03, 0.026, 0.42, 6), '#6b5a48', sx, 0.21, z0 + sz));
+  for (const sx of [-0.08, 0.08]) for (const sz of [-0.2, 0.2]) c.push(st(cz(cyl(0.03, 0.026, 0.42, 6), '#6b5a48', sx, 0.21, z0 + sz), 1, 0.42, sx * sz > 0 ? 1 : -1, z0 + sz));
   c.push(cz(box(0.3, 0.05, 0.08), k, 0, 0.7, z0 + 0.08));
   return polacz(c);
 });
@@ -568,7 +586,7 @@ const BUD = {
 export const budynek = cache((typ, strona) => polacz(BUD[typ](KOLORY_STRON[strona], CIEMNIEJ[strona])));
 // stosik rzeczy na plecach zbieracza: n sztuk (jagody w koszyczkach, polana, kamienie, ruda)
 export const stos = cache((sur, n) => {
-  const c = [], kol = { kamien: [KAMIEN, KAMIEN2], zelazo: ['#c4622d', '#7b5a4a'] }[sur];
+  const c = [], kol = { kamien: [KAMIEN, KAMIEN2], zelazo: ['#c4622d', '#7b5a4a'], zloto: ['#f2c94c', '#ffe066'] }[sur] || [KAMIEN, KAMIEN2];
   for (let i = 0; i < n; i++) {
     const rz = Math.floor(i / 2), x = (i % 2 ? 0.09 : -0.09) * (n === 1 ? 0 : 1), y = rz * 0.13;
     if (sur === 'jagody') c.push(cz(cyl(0.085, 0.07, 0.1, 8), SLOMA, x, y, 0), cz(kula(0.07, 6), '#3a4bb0', x, y + 0.04, 0, 0, 0, 0, 1, 0.5, 1));
@@ -600,7 +618,7 @@ export const drzewo = cache((gat = 'swierk') => {
     c.push(cz(cyl(0.07, 0.11, 0.6, 6), '#6e4a2c', 0, 0.3, 0));
     for (const [r, h, y, k] of [[0.5, 1.0, 0.85, '#7fae4c'], [0.4, 0.9, 1.35, '#8bba55'], [0.28, 0.8, 1.85, '#98c45f'], [0.16, 0.5, 2.25, '#a3cc68']]) c.push(cz(stozek(r, h, 7), k, 0, y, 0));
   }
-  return polacz(c);
+  return polacz(c, { wiatr: 0.035 });
 });
 // ozdoby krajobrazu (nie zasłaniają drogi, są tylko do patrzenia)
 export const OZDOBY = ['trawa', 'trawa2', 'kwiatyB', 'kwiatyZ', 'kwiatyF', 'paproc', 'muchomor', 'borowik', 'kamyki', 'kloda', 'krzaczek', 'jagodnik'];
@@ -638,13 +656,14 @@ export const ozdoba = cache(rodzaj => {
     c.push(cz(kula(0.14, 6), '#4c8f3e', 0, 0.08, 0, 0, 0, 0, 1.3, 0.55, 1.1));
     for (const [x, z] of [[0.08, 0.06], [-0.07, 0.05], [0.02, -0.08]]) c.push(cz(kula(0.025, 4), '#c2263a', x, 0.13, z));
   }
-  return polacz(c);
+  const wiatr = { trawa: 0.25, trawa2: 0.25, kwiatyB: 0.3, kwiatyZ: 0.3, kwiatyF: 0.3, paproc: 0.2, krzaczek: 0.08, jagodnik: 0.1 }[rodzaj];
+  return polacz(c, wiatr ? { wiatr, wszystko: true } : {});
 });
 export const krzak = cache(() => {
   const c = [cz(kula(0.45, 7), '#2f7d3a', 0, 0.35, 0, 0, 0, 0, 1, 0.8, 1), cz(kula(0.3, 6), '#3b9446', 0.25, 0.5, 0.1)];
   const r = [[0.3, 0.45, 0.25], [-0.25, 0.5, 0.2], [0.05, 0.62, -0.25], [-0.3, 0.32, -0.2], [0.35, 0.3, -0.15], [0.0, 0.7, 0.1]];
   for (const [x, y, z] of r) c.push(cz(kula(0.08, 5), '#3a4bb0', x, y, z, 0, 0, 0, 0.8, 1.3, 0.8));
-  return polacz(c);
+  return polacz(c, { wiatr: 0.06, wszystko: true });
 });
 export const skala = cache(rodzaj => {
   const k1 = rodzaj === 'ruda' ? '#7b5a4a' : rodzaj === 'zloto' ? '#e8b923' : KAMIEN, k2 = rodzaj === 'ruda' ? '#4d4a4f' : rodzaj === 'zloto' ? '#8f8a80' : KAMIEN2;

@@ -5,6 +5,30 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 11 (20.11.2026)
+
+**Dodane**
+- Faktury rysowane przez kartę graficzną (bez dużych plików): słoje na balach i deskach, źdźbła na strzesze,
+  rzędy gontów, cegły z jasnymi fugami, chropowaty kamień, liście w koronach drzew. Przy samej ziemi
+  budynki, ludzie i drzewa są trochę ciemniejsi, więc lepiej „stoją”.
+- Ruch: ludzie przebierają nogami i machają rękami, renifery i łosie idą kłusem, koła wozów, taranów
+  i katapult się kręcą, drzewa, krzaki, trawa i kwiaty kołyszą się na wietrze.
+- Efekty:
+  - dym z kominów chatek i kuźni, iskry nad ogniem w kuźni,
+  - uszkodzony budynek dymi, a mocno uszkodzony się pali,
+  - zawalenie budynku: chmura pyłu i lecące odłamki,
+  - kurz spod nóg, iskry przy uderzeniach, wióry spod siekiery, odłamki i iskry spod kilofa,
+  - przewrócone drzewo sypie liśćmi, złoty błysk przy kursie wozu, fajerwerki przy nowej erze.
+- Krajobraz za mapą: zalesione wzgórza, góry ze śniegiem, trzy kamczackie wulkany z dymem i jezioro.
+  Przy oddalaniu kamera się pochyla i widać horyzont.
+- Cienie chmur sunące po ziemi i klucze ptaków krążące nad doliną.
+
+**Zmienione**
+- Trawa z bliska jest ostra (drobna faktura źdźbeł), a nie rozmyta.
+
+**Naprawione**
+- Gdy zbieracz niósł złoto, gra próbowała narysować stosik złota na plecach i przestawała się rysować.
+
 ## Wersja 10 (20.11.2026)
 
 **Dodane**

@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL } from './dane.js';
 
-const WERSJA = 10;
+const WERSJA = 11;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 10, opis: 'Tryby żołnierzy (Obrona, Agresja, Szał), ruiny po zburzonych budynkach, żołnierze nie utykają już przy rogach budynków. Do tego wszystko z wersji 9.' },
+  { nr: 11, opis: 'Grafika na maksa: faktury, chodzenie nogami, wiatr, dym, ogień, iskry, wióry, góry i wulkany za mapą, jezioro, chmury, ptaki. Do tego wszystko z wersji 10.' },
+  { nr: 10, opis: 'Tryby żołnierzy (Obrona, Agresja, Szał), ruiny po zburzonych budynkach, żołnierze nie utykają już przy rogach budynków. Do tego wszystko z wersji 9.', adres: 'wersje/10/' },
   { nr: 9, opis: 'Dużo więcej kamienia, złoto, Jarmark z handlem i wozy kupieckie z reniferami (im dalej, tym więcej złota). Do tego wszystko z wersji 8.', adres: 'wersje/9/' },
   { nr: 8, opis: 'Mury i bramy (palisada → cegła → stal), zaznaczanie ramką po przytrzymaniu palca, obracanie mapy dwoma palcami. Do tego wszystko z wersji 7.', adres: 'wersje/8/' },
   { nr: 7, opis: 'Rozbudowa ambon: Wieża z cegły i Twierdza Jagodowa; ambony strzelają też w budynki wroga. Do tego wszystko z wersji 6.', adres: 'wersje/7/' },
@@ -81,13 +82,13 @@ const zyje = e => e && E.get(e.id) === e && e.hp > 0;
 
 // ================= grafika =================
 const scena = new THREE.Scene();
-scena.fog = new THREE.Fog('#d4ebf5', 75, 150);
+scena.fog = new THREE.Fog('#d4ebf5', 90, 330);
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 $('scena').appendChild(renderer.domElement);
 const plotno = renderer.domElement;
-const kamera = new THREE.PerspectiveCamera(40, 1, 0.5, 300);
+const kamera = new THREE.PerspectiveCamera(40, 1, 0.5, 600);
 const kam = { x: 30, z: 30, d: 30, kat: Math.PI / 4 };
 scena.add(new THREE.HemisphereLight('#f4f8ff', '#6b8f4e', 1.05));
 // niebo: od jasnego przy ziemi do błękitu u góry
@@ -101,6 +102,61 @@ const slonce = new THREE.DirectionalLight('#fff4dc', 1.7);
 slonce.castShadow = true; slonce.shadow.mapSize.set(2048, 2048); slonce.shadow.bias = -0.0005;
 scena.add(slonce, slonce.target);
 const MAT = new THREE.MeshLambertMaterial({ vertexColors: true });
+// faktury i ruch liczone przez kartę graficzną: słoje drewna, strzecha, gont, cegły, kamień, liście;
+// nogi i ręce ludzi i zwierząt, koła wozów, drzewa i trawa na wietrze
+const SZUM_GLSL = `
+float h21(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+float szum(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(h21(i), h21(i + vec2(1.0, 0.0)), f.x), mix(h21(i + vec2(0.0, 1.0)), h21(i + vec2(1.0, 1.0)), f.x), f.y); }`;
+MAT.onBeforeCompile = sh => {
+  sh.uniforms.uCzas = { value: 0 }; sh.uniforms.uFaza = { value: 0 }; sh.uniforms.uAmp = { value: 0 }; sh.uniforms.uKolo = { value: 0 };
+  MAT.userData.sh = sh;
+  sh.vertexShader = sh.vertexShader
+    .replace('#include <common>', `#include <common>
+attribute float wzor; attribute vec4 staw;
+uniform float uCzas; uniform float uFaza; uniform float uAmp; uniform float uKolo;
+varying float vWzor; varying vec3 vWPos; varying vec3 vWNorm;`)
+    .replace('#include <begin_vertex>', `#include <begin_vertex>
+if (staw.x > 0.5 && staw.x < 1.5) {
+  float a = sin(uFaza) * 0.6 * uAmp * staw.z; float yy = transformed.y - staw.y, zz = transformed.z - staw.w;
+  transformed.y = staw.y + yy * cos(a) - zz * sin(a); transformed.z = staw.w + yy * sin(a) + zz * cos(a);
+} else if (staw.x > 1.5 && staw.x < 2.5) {
+  float ph = 0.0;
+  #ifdef USE_INSTANCING
+  ph = instanceMatrix[3].x * 0.7 + instanceMatrix[3].z * 0.45;
+  #endif
+  float wys = max(0.0, transformed.y - 0.25);
+  transformed.x += sin(uCzas * 1.7 + ph) * staw.z * wys; transformed.z += cos(uCzas * 1.3 + ph * 1.3) * staw.z * 0.6 * wys;
+} else if (staw.x > 2.5) {
+  float a = uKolo; float yy = transformed.y - staw.y, zz = transformed.z - staw.w;
+  transformed.y = staw.y + yy * cos(a) - zz * sin(a); transformed.z = staw.w + yy * sin(a) + zz * cos(a);
+}`)
+    .replace('#include <project_vertex>', `#include <project_vertex>
+vec4 wp4 = vec4(transformed, 1.0); vec3 wn = objectNormal;
+#ifdef USE_INSTANCING
+wp4 = instanceMatrix * wp4; wn = mat3(instanceMatrix) * wn;
+#endif
+wp4 = modelMatrix * wp4; vWPos = wp4.xyz; vWNorm = normalize(mat3(modelMatrix) * wn); vWzor = wzor;`);
+  sh.fragmentShader = sh.fragmentShader
+    .replace('#include <common>', `#include <common>
+varying float vWzor; varying vec3 vWPos; varying vec3 vWNorm;` + SZUM_GLSL)
+    .replace('#include <color_fragment>', `#include <color_fragment>
+{
+  vec3 an = abs(vWNorm); vec3 p = vWPos; float m = 1.0;
+  vec2 uv = an.y > max(an.x, an.z) ? p.xz : (an.x > an.z ? p.zy : p.xy);
+  float w = vWzor;
+  if (w > 0.5 && w < 1.5) { float n = szum(vec2(uv.x * 2.0, uv.y * 16.0)); m = 0.84 + 0.2 * n + 0.07 * sin(uv.y * 70.0 + n * 7.0) + 0.05 * sin(uv.x * 90.0 + n * 3.0); }
+  else if (w > 1.5 && w < 2.5) { float n = szum(vec2(p.x * 26.0 + p.z * 26.0, p.y * 5.0)); float n2 = szum(vec2(p.x * 7.0, p.z * 7.0)); m = 0.74 + 0.32 * n + 0.1 * n2; }
+  else if (w > 2.5 && w < 3.5) { float r = floor(p.z * 6.0 + p.y * 6.0); vec2 f = fract(vec2((p.x + p.z * 0.0) * 4.0 + mod(r, 2.0) * 0.5, p.z * 6.0 + p.y * 6.0)); m = 0.82 + 0.18 * smoothstep(0.0, 0.18, f.y) * smoothstep(0.0, 0.06, f.x) + 0.1 * h21(vec2(floor(f.x + p.x * 4.0), r)); }
+  else if (w > 3.5 && w < 4.5) { float r = floor(p.y * 9.0); vec2 f = fract(vec2(uv.x * 4.5 + mod(r, 2.0) * 0.5, p.y * 9.0)); float zap = (f.y < 0.12 || f.x < 0.05) ? 1.35 : 0.92 + 0.14 * h21(vec2(floor(uv.x * 4.5 + mod(r, 2.0) * 0.5), r)); m = zap; }
+  else if (w > 4.5 && w < 5.5) { m = 0.78 + 0.28 * szum(uv * 3.0) * (0.7 + 0.3 * szum(uv * 11.0)); }
+  else if (w > 5.5) { m = 0.8 + 0.34 * szum(vec2(p.x + p.z, p.y) * 7.0) * (0.75 + 0.25 * szum(p.xz * 3.0)); }
+  // przy samej ziemi trochę ciemniej: budynki, ludzie i drzewa lepiej „stoją”
+  m *= mix(0.74, 1.0, smoothstep(0.0, 0.45, p.y));
+  diffuseColor.rgb *= m;
+}`);
+};
+MAT.customProgramCacheKey = () => 'haskap-faktury-1';
 const MAT_RING = [new THREE.MeshBasicMaterial({ color: '#4cff7a', transparent: true, opacity: 0.9, depthWrite: false }), new THREE.MeshBasicMaterial({ color: '#ff5a4a', transparent: true, opacity: 0.9, depthWrite: false })];
 const MAT_PLAC = new THREE.MeshLambertMaterial({ color: '#b0814f' });
 const MAT_ZNACZNIK = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.9, depthWrite: false });
@@ -570,6 +626,8 @@ function nowaJednostka(strona, typ, x, z, id) {
   const max = maxHpJ(strona, typ);
   const u = { id: id || S.nextId++, strona, typ, d, x, z, ry: strona ? 0.8 : -2.4, hp: max, max, zad: null, sciezka: null, niesie: { sur: null, ile: 0 }, cd: 0, skan: Math.random() * 0.5, t: Math.random() * 10 };
   u.mesh = new THREE.Mesh(MOD.JEDNOSTKI3D[typ](strona), MAT);
+  u.faza = Math.random() * 6; u.amp = 0; u.kolo = 0;
+  u.mesh.onBeforeRender = () => { const sh = MAT.userData.sh; if (!sh) return; sh.uniforms.uFaza.value = u.faza; sh.uniforms.uAmp.value = u.amp; sh.uniforms.uKolo.value = u.kolo; MAT.uniformsNeedUpdate = true; };
   u.mesh.position.set(x, 0, z); scena.add(u.mesh);
   JED.push(u); E.set(u.id, u);
   return u;
@@ -720,7 +778,7 @@ function handel(u, dt) {
     if (z.faza === 'naTarg') {
       const zysk = zyskKursu(j, dom);
       S.zas[u.strona].zloto += zysk; S.stat[u.strona].zebrane += zysk;
-      if (u.strona === STRONA_GRACZA && !S.aiGracz) napis(j.x, 2.6, j.z, '+' + zysk + ' 🪙', '#ffd84a');
+      if (u.strona === STRONA_GRACZA && !S.aiGracz) { napis(j.x, 2.6, j.z, '+' + zysk + ' 🪙', '#ffd84a'); EF.zloto(j.x, 1.5, j.z); }
       z.faza = 'doDomu'; z.dom = 0;
     } else z.faza = 'naTarg';
     u.sciezka = null; return;
@@ -796,7 +854,7 @@ function zadaj(cel, ile, od) {
 }
 function uderz(u, c) {
   if (u.d.zasieg) { rzut(u, c, atakJ(u)); dzwiek('rzut'); }
-  else { zadaj(c, obrazenia(u, c, atakJ(u)), u); if (naEkranie(u)) dzwiek('uderz'); }
+  else { zadaj(c, obrazenia(u, c, atakJ(u)), u); if (naEkranie(u)) { dzwiek('uderz'); EF.iskry((u.x + c.x) / 2, 0.7, (u.z + c.z) / 2, jestBudynkiem(c) ? 3 : 5, jestBudynkiem(c) ? '#e0c08a' : '#ffd84a'); } }
 }
 const KAMYK = MOD.kamyk();
 function rzut(od, cel, atak) {
@@ -821,6 +879,7 @@ function zniszczBudynek(b, wlasnaReka = false) {
   for (let j = b.j0; j < b.j0 + b.w; j++) for (let i = b.i0; i < b.i0 + b.w; i++) { const c = kom2(i, j); if (naKom[c] === b.id) { blok[c] = 0; naKom[c] = 0; bramaStr[c] = -1; } }
   if (b.plac) b.mesh.remove(b.plac);
   UMIERA.push({ mesh: b.mesh, t: 0, j: false });
+  if (naEkranie(b)) EF.zawalenie(b);
   if (naEkranie(b)) dzwiek('zniszcz');
   if (!wlasnaReka) {
     S.stat[wrog(b.strona)].zburzone++;
@@ -1144,7 +1203,7 @@ function aktualizujBudynek(b, dt) {
     } else if (q.rodzaj === 'era') {
       S.era[b.strona]++;
       if (!S.aiGracz || b.strona === KOMPUTER) {
-        if (b.strona === STRONA_GRACZA) { baner(`Era ${S.era[b.strona]}: ${ERY[S.era[b.strona]]}`, 'Nowe budynki, wojsko i ulepszenia!'); dzwiek('era'); }
+        if (b.strona === STRONA_GRACZA) { baner(`Era ${S.era[b.strona]}: ${ERY[S.era[b.strona]]}`, 'Nowe budynki, wojsko i ulepszenia!'); dzwiek('era'); EF.fajerwerki(b.x, b.z); }
         else if (!S.aiGracz) toast(`🔴 Komputer wszedł w erę ${S.era[b.strona]}: ${ERY[S.era[b.strona]]}`);
       }
     }
@@ -1345,6 +1404,121 @@ function ai(strona, dt) {
   }
 }
 
+// ================= efekty: dym, ogień, kurz, iskry, wióry =================
+const MAKS_CZ = 2400;
+function systemCzastek(addytywny) {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(MAKS_CZ * 3), 3));
+  g.setAttribute('aKolor', new THREE.Float32BufferAttribute(new Float32Array(MAKS_CZ * 3), 3));
+  g.setAttribute('aRozm', new THREE.Float32BufferAttribute(new Float32Array(MAKS_CZ), 1));
+  g.setAttribute('aAlfa', new THREE.Float32BufferAttribute(new Float32Array(MAKS_CZ), 1));
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { uSkala: { value: 600 } }, transparent: true, depthWrite: false, blending: addytywny ? THREE.AdditiveBlending : THREE.NormalBlending,
+    vertexShader: `attribute vec3 aKolor; attribute float aRozm; attribute float aAlfa; uniform float uSkala; varying vec3 vK; varying float vA;
+      void main() { vK = aKolor; vA = aAlfa; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = aRozm * uSkala / max(0.1, -mv.z); gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `varying vec3 vK; varying float vA; void main() { vec2 c = gl_PointCoord - 0.5; float d = length(c); if (d > 0.5) discard; gl_FragColor = vec4(vK, vA * smoothstep(0.5, 0.12, d)); }`,
+  });
+  const pts = new THREE.Points(g, mat); pts.frustumCulled = false; pts.renderOrder = 5;
+  return { pts, g, n: 0, x: new Float32Array(MAKS_CZ * 3), v: new Float32Array(MAKS_CZ * 3), t: new Float32Array(MAKS_CZ), T: new Float32Array(MAKS_CZ),
+    r0: new Float32Array(MAKS_CZ), r1: new Float32Array(MAKS_CZ), a0: new Float32Array(MAKS_CZ), k: new Float32Array(MAKS_CZ * 3), gr: new Float32Array(MAKS_CZ) };
+}
+const CZ_NORM = systemCzastek(false), CZ_SWIAT = systemCzastek(true);
+const KOL = new THREE.Color();
+// jedna cząstka: miejsce, prędkość, czas życia, rozmiar od-do, przezroczystość, kolor, grawitacja
+function czastka(sys, x, y, z, vx, vy, vz, T, r0, r1, a0, kolor, gr = 0) {
+  if (symulacja || sys.n >= MAKS_CZ) return;
+  const i = sys.n++; KOL.set(kolor);
+  sys.x[i * 3] = x; sys.x[i * 3 + 1] = y; sys.x[i * 3 + 2] = z; sys.v[i * 3] = vx; sys.v[i * 3 + 1] = vy; sys.v[i * 3 + 2] = vz;
+  sys.t[i] = 0; sys.T[i] = T; sys.r0[i] = r0; sys.r1[i] = r1; sys.a0[i] = a0; sys.k[i * 3] = KOL.r; sys.k[i * 3 + 1] = KOL.g; sys.k[i * 3 + 2] = KOL.b; sys.gr[i] = gr;
+}
+function aktualizujCzastki(sys, dt) {
+  const P = sys.g.attributes.position.array, K = sys.g.attributes.aKolor.array, R = sys.g.attributes.aRozm.array, A = sys.g.attributes.aAlfa.array;
+  for (let i = 0; i < sys.n; i++) {
+    sys.t[i] += dt;
+    if (sys.t[i] >= sys.T[i]) { // zamiana z ostatnią
+      const j = --sys.n; if (i !== j) { for (const tab of [sys.x, sys.v, sys.k]) for (let q = 0; q < 3; q++) tab[i * 3 + q] = tab[j * 3 + q]; for (const tab of [sys.t, sys.T, sys.r0, sys.r1, sys.a0, sys.gr]) tab[i] = tab[j]; }
+      i--; continue;
+    }
+    sys.v[i * 3 + 1] -= sys.gr[i] * dt;
+    for (let q = 0; q < 3; q++) sys.x[i * 3 + q] += sys.v[i * 3 + q] * dt;
+    if (sys.gr[i] > 0 && sys.x[i * 3 + 1] < 0.03) { sys.x[i * 3 + 1] = 0.03; sys.v[i * 3] *= 0.5; sys.v[i * 3 + 2] *= 0.5; sys.v[i * 3 + 1] = 0; }
+  }
+  for (let i = 0; i < sys.n; i++) {
+    const f = sys.t[i] / sys.T[i];
+    P[i * 3] = sys.x[i * 3]; P[i * 3 + 1] = sys.x[i * 3 + 1]; P[i * 3 + 2] = sys.x[i * 3 + 2];
+    K[i * 3] = sys.k[i * 3]; K[i * 3 + 1] = sys.k[i * 3 + 1]; K[i * 3 + 2] = sys.k[i * 3 + 2];
+    R[i] = sys.r0[i] + (sys.r1[i] - sys.r0[i]) * f; A[i] = sys.a0[i] * Math.min(1, f * 6) * (1 - f);
+  }
+  sys.g.setDrawRange(0, sys.n);
+  for (const n of ['position', 'aKolor', 'aRozm', 'aAlfa']) sys.g.attributes[n].needsUpdate = true;
+}
+const lo = (a, b) => a + Math.random() * (b - a);
+const EF = {
+  dym(x, y, z, ciemny = false, s = 1) { czastka(CZ_NORM, x + lo(-0.1, 0.1), y, z + lo(-0.1, 0.1), lo(-0.15, 0.15) + 0.25, lo(0.5, 0.9), lo(-0.15, 0.15), lo(2.5, 4), 0.35 * s, 1.6 * s, ciemny ? 0.55 : 0.35, ciemny ? '#3d3a38' : '#d8d8d8'); },
+  ogien(x, y, z) { for (let i = 0; i < 2; i++) czastka(CZ_SWIAT, x + lo(-0.25, 0.25), y, z + lo(-0.25, 0.25), lo(-0.1, 0.1), lo(0.9, 1.7), lo(-0.1, 0.1), lo(0.3, 0.6), 0.32, 0.06, 0.95, ['#ff6a10', '#ff9a2a', '#ffd04a'][Math.floor(Math.random() * 3)]); },
+  iskry(x, y, z, n = 6, kol = '#ffd84a') { for (let i = 0; i < n; i++) czastka(CZ_SWIAT, x, y, z, lo(-1.6, 1.6), lo(0.8, 2.4), lo(-1.6, 1.6), lo(0.25, 0.5), 0.14, 0.05, 1, kol, 6); },
+  kurz(x, z, n = 2, s = 1) { for (let i = 0; i < n; i++) czastka(CZ_NORM, x + lo(-0.15, 0.15), 0.08, z + lo(-0.15, 0.15), lo(-0.3, 0.3), lo(0.1, 0.35), lo(-0.3, 0.3), lo(0.5, 0.9), 0.2 * s, 0.55 * s, 0.35, '#b39a74'); },
+  wiory(x, y, z, kol, n = 4) { for (let i = 0; i < n; i++) czastka(CZ_NORM, x, y, z, lo(-1.2, 1.2), lo(1, 2.2), lo(-1.2, 1.2), lo(0.5, 0.8), 0.12, 0.08, 1, kol, 7); },
+  zawalenie(b) {
+    const w = b.w;
+    for (let i = 0; i < 26 + w * 10; i++) czastka(CZ_NORM, b.x + lo(-w / 2, w / 2), lo(0.1, 1.2), b.z + lo(-w / 2, w / 2), lo(-1, 1), lo(0.3, 1.4), lo(-1, 1), lo(1.4, 2.6), 0.6, 2.2, 0.55, Math.random() < 0.5 ? '#8f7f6a' : '#6b6259');
+    for (let i = 0; i < 10 + w * 4; i++) czastka(CZ_NORM, b.x + lo(-w / 2, w / 2), lo(0.4, 1.4), b.z + lo(-w / 2, w / 2), lo(-2.5, 2.5), lo(1.5, 4), lo(-2.5, 2.5), lo(0.9, 1.4), 0.2, 0.18, 1, Math.random() < 0.5 ? '#5a3518' : '#7d838c', 9);
+  },
+  zloto(x, y, z) { for (let i = 0; i < 14; i++) czastka(CZ_SWIAT, x + lo(-0.6, 0.6), y + lo(0, 0.6), z + lo(-0.6, 0.6), lo(-0.4, 0.4), lo(0.6, 1.6), lo(-0.4, 0.4), lo(0.7, 1.2), 0.22, 0.05, 1, Math.random() < 0.5 ? '#ffd84a' : '#fff3a8'); },
+  fajerwerki(x, z) { for (let k = 0; k < 4; k++) { const y = lo(5, 8), cx = x + lo(-2, 2), czz = z + lo(-2, 2), kol = ['#ff5a4a', '#ffd84a', '#7fb2ff', '#7dff9a'][k]; for (let i = 0; i < 28; i++) { const a = lo(0, 6.283), b = lo(-1, 1), v = lo(2.5, 3.5); czastka(CZ_SWIAT, cx, y, czz, Math.cos(a) * Math.sqrt(1 - b * b) * v, b * v, Math.sin(a) * Math.sqrt(1 - b * b) * v, lo(0.9, 1.4), 0.25, 0.05, 1, kol, 2.5); } } },
+  liscie(x, z) { for (let i = 0; i < 14; i++) czastka(CZ_NORM, x + lo(-0.8, 0.8), lo(0.8, 2), z + lo(-0.8, 0.8), lo(-0.8, 0.8), lo(0.2, 0.8), lo(-0.8, 0.8), lo(1.2, 2), 0.14, 0.1, 1, Math.random() < 0.5 ? '#4a8f3a' : '#7fae4c', 1.5); EF.kurz(x, z, 6, 2); },
+};
+// skąd leci dym z komina (budynki gracza i komputera są obrócone o pół obrotu)
+const KOMINY = { dom: [[-0.38, 1.6, -0.3]], kuznia: [[0.75, 2.1, -0.95]], ratusz: [] };
+let efT = 0;
+function emitujEfekty(dt) {
+  efT += dt; const czesto = efT > 0.12; if (czesto) efT = 0;
+  if (!czesto) return;
+  for (const b of BUD) {
+    if (!naEkranie(b)) continue;
+    const obr = b.strona === KOMPUTER ? -1 : 1;
+    if (b.gotowy) for (const [ox, oy, oz] of KOMINY[b.typ] || []) if (Math.random() < 0.35) EF.dym(b.x + ox * obr, oy, b.z + oz * obr, false, 0.8);
+    if (b.typ === 'kuznia' && b.gotowy && Math.random() < 0.25) EF.iskry(b.x + 0.55 * obr, 0.55, b.z - 0.6 * obr, 2, '#ffb347');
+    const z = b.hp / b.max;
+    if (b.gotowy && z < 0.6 && Math.random() < 0.5) EF.dym(b.x + lo(-b.w / 3, b.w / 3), wysokoscBud(b) * 0.7, b.z + lo(-b.w / 3, b.w / 3), true, 1 + b.w * 0.15);
+    if (b.gotowy && z < 0.35) for (let i = 0; i < 2; i++) EF.ogien(b.x + lo(-b.w / 3, b.w / 3), wysokoscBud(b) * lo(0.4, 0.8), b.z + lo(-b.w / 3, b.w / 3));
+  }
+  // kurz spod nóg (tylko u kilku widocznych, żeby telefon nie zwolnił)
+  let ile = 0;
+  for (const u of JED) { if (!u.idzie || ile > 25 || Math.random() > 0.35 || !naEkranie(u)) continue; ile++; EF.kurz(u.x, u.z, 1, u.d.linia === 'renifer' || u.d.kupiec ? 1.6 : 1); }
+  // dym z wulkanów
+  for (const [vx, vz, vh] of WULKANY) if (Math.random() < 0.5) czastka(CZ_NORM, vx + lo(-2, 2), vh - 2, vz + lo(-2, 2), lo(0.5, 1.5), lo(1.5, 2.5), lo(-0.5, 0.5), lo(10, 16), 6, 22, 0.35, '#9a9a9a');
+}
+
+// ================= cienie chmur i ptaki =================
+let CHMURY = null, PTAKI = [];
+function zbudujNiebo() {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 512; const c = cv.getContext('2d');
+  for (let i = 0; i < 26; i++) { const x = Math.random() * 512, y = Math.random() * 512, r = 30 + Math.random() * 70, g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(0,0,0,0.5)'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; for (const dx of [-512, 0, 512]) for (const dy of [-512, 0, 512]) c.fillRect(x - r + dx, y - r + dy, r * 2, r * 2); }
+  const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1.3, 1.3);
+  CHMURY = new THREE.Mesh(new THREE.PlaneGeometry(140, 140).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0.22, depthWrite: false, color: '#000000' }));
+  CHMURY.position.y = 0.025; CHMURY.renderOrder = 1; scena.add(CHMURY);
+  const gk = new THREE.BoxGeometry(0.45, 0.03, 0.14), mk = new THREE.MeshBasicMaterial({ color: '#2b2b33' });
+  for (let s = 0; s < 3; s++) {
+    const cx = lo(-30, 30), cz = lo(-30, 30), r = lo(14, 26), wys = lo(11, 16), szyb = lo(0.12, 0.2) * (Math.random() < 0.5 ? 1 : -1);
+    for (let i = 0; i < 5; i++) {
+      const p = new THREE.Group(), l = new THREE.Mesh(gk, mk), pr = new THREE.Mesh(gk, mk);
+      l.position.x = -0.2; pr.position.x = 0.2; p.add(l, pr); p.add(new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.07, 0.28), mk));
+      scena.add(p); PTAKI.push({ p, l, pr, cx, cz, r: r + (i % 2) * 1.2, wys: wys + i * 0.3, szyb, kat: lo(0, 6.283) - i * 0.06, f: lo(0, 6) });
+    }
+  }
+}
+function ruszNiebo(dt, t) {
+  if (!CHMURY) zbudujNiebo();
+  CHMURY.material.map.offset.x += dt * 0.004; CHMURY.material.map.offset.y += dt * 0.0025;
+  for (const b of PTAKI) {
+    b.kat += b.szyb * dt; const x = b.cx + Math.cos(b.kat) * b.r, z = b.cz + Math.sin(b.kat) * b.r;
+    b.p.position.set(x, b.wys + Math.sin(t * 0.7 + b.f) * 0.4, z); b.p.rotation.y = -b.kat + (b.szyb > 0 ? 0 : Math.PI);
+    const mach = Math.sin(t * 9 + b.f) * 0.6; b.l.rotation.z = mach; b.pr.rotation.z = -mach;
+  }
+  if (dalej && dalej.userData.woda) dalej.userData.woda.material.color.setHSL(0.57, 0.6, 0.55 + Math.sin(t * 0.6) * 0.02);
+}
+
 // ================= krok gry =================
 let symulacja = false;
 function krokGry(dt) {
@@ -1357,7 +1531,7 @@ function krokGry(dt) {
     const p = POC[i]; p.t += dt;
     if (zyje(p.cel)) { p.ox = p.cel.x; p.oz = p.cel.z; }
     if (p.t >= p.T) {
-      if (zyje(p.cel)) zadaj(p.cel, obrazenia(p.od, p.cel, p.atak), zyje(p.od) ? p.od : null);
+      if (zyje(p.cel)) { zadaj(p.cel, obrazenia(p.od, p.cel, p.atak), zyje(p.od) ? p.od : null); if (naEkranie(p.cel)) EF.kurz(p.ox, p.oz, 3, 0.8); }
       scena.remove(p.mesh); POC.splice(i, 1);
     }
   }
@@ -1411,10 +1585,75 @@ function nowaGra(trudnosc) {
   zapiszGre();
 }
 function zbudujZiemie() {
-  ziemia = new THREE.Mesh(new THREE.PlaneGeometry(N, N).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ map: malujZiemie(S.seed) }));
+  const mz = new THREE.MeshLambertMaterial({ map: malujZiemie(S.seed) });
+  // ostra trawa z bliska: drobna faktura powtarzana wiele razy na mapie
+  mz.onBeforeCompile = sh => {
+    sh.uniforms.tDetal = { value: teksturaDetalu() };
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D tDetal;')
+      .replace('#include <map_fragment>', '#include <map_fragment>\n{ vec3 dd = texture2D(tDetal, vMapUv * 46.0).rgb; diffuseColor.rgb *= 0.72 + 0.56 * dd; }');
+  };
+  ziemia = new THREE.Mesh(new THREE.PlaneGeometry(N, N).rotateX(-Math.PI / 2), mz);
   ziemia.receiveShadow = true; scena.add(ziemia);
-  dalej = new THREE.Mesh(new THREE.PlaneGeometry(600, 600).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: '#5f9e4a' }));
-  dalej.position.y = -0.05; scena.add(dalej);
+  dalej = zbudujOkolice(S.seed); scena.add(dalej);
+}
+let DETAL = null;
+function teksturaDetalu() {
+  if (DETAL) return DETAL;
+  const R = 256, cv = document.createElement('canvas'); cv.width = cv.height = R; const c = cv.getContext('2d');
+  c.fillStyle = 'rgb(128,128,128)'; c.fillRect(0, 0, R, R);
+  for (let i = 0; i < 2600; i++) {
+    const x = Math.random() * R, y = Math.random() * R, h = 4 + Math.random() * 9, a = (Math.random() - 0.5) * 0.7, v = Math.random() < 0.5 ? 70 + Math.random() * 40 : 160 + Math.random() * 60;
+    c.strokeStyle = `rgb(${v},${v},${v})`; c.lineWidth = 1 + Math.random(); c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.sin(a) * h, y - Math.cos(a) * h); c.stroke();
+  }
+  DETAL = new THREE.CanvasTexture(cv); DETAL.wrapS = DETAL.wrapT = THREE.RepeatWrapping; DETAL.anisotropy = 8;
+  return DETAL;
+}
+// okolica za mapą: zalesione wzgórza, góry ze śniegiem, wulkany z dymem i jezioro
+let WULKANY = [];
+function zbudujOkolice(seed) {
+  const grupa = new THREE.Group(), r = rng(seed * 3 + 1), zi = seed % 991;
+  const S2 = 440, SEG = 150, geo = new THREE.PlaneGeometry(S2, S2, SEG, SEG).rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position, kol = [], c = new THREE.Color();
+  // jezioro po jednej stronie (za brzegiem mapy), wulkany daleko
+  const jez = { x: 30 + r() * 30, z: -95 - r() * 25, r: 34 };
+  WULKANY = [[-150 + r() * 40, -170 + r() * 30, 52], [160 + r() * 30, -120 + r() * 50, 44], [-60 + r() * 40, 175 + r() * 20, 38]];
+  const wys = (x, z) => {
+    const d = Math.max(Math.abs(x), Math.abs(z)) - 50;
+    if (d < 0) return -0.06;
+    let h = (szumMapy(x * 0.03, z * 0.03, zi) * 0.7 + szumMapy(x * 0.09, z * 0.09, zi + 5) * 0.3) * Math.min(1, d / 22) * (8 + d * 0.32);
+    for (const [vx, vz, vh] of WULKANY) { const dv = Math.hypot(x - vx, z - vz); if (dv < vh * 1.6) h = Math.max(h, vh * Math.max(0, 1 - dv / (vh * 1.6)) ** 1.25 - (dv < 4 ? 3 : 0)); }
+    const dj = Math.hypot(x - jez.x, z - jez.z); if (dj < jez.r) h = Math.min(h, -1.2 * (1 - dj / jez.r) - 0.1);
+    return h;
+  };
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i), h = wys(x, z); pos.setY(i, h);
+    if (h < 0.05) c.set(Math.max(Math.abs(x), Math.abs(z)) < 52 ? '#5f9e4a' : '#c9b98a');
+    else if (h < 5) c.set('#5d9a44').lerp(new THREE.Color('#3f7a35'), h / 5);
+    else if (h < 16) c.set('#3f7a35').lerp(new THREE.Color('#7d7a6e'), (h - 5) / 11);
+    else if (h < 26) c.set('#7d7a6e').lerp(new THREE.Color('#9d978a'), (h - 16) / 10);
+    else c.set('#f4f7fb');
+    kol.push(c.r, c.g, c.b);
+  }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(kol, 3)); geo.computeVertexNormals();
+  const ziemiaDalej = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }));
+  ziemiaDalej.position.y = -0.02; ziemiaDalej.receiveShadow = false; grupa.add(ziemiaDalej);
+  // woda
+  const woda = new THREE.Mesh(new THREE.CircleGeometry(jez.r + 2, 48).rotateX(-Math.PI / 2), new THREE.MeshPhongMaterial({ color: '#4a9fd8', specular: '#ffffff', shininess: 90, transparent: true, opacity: 0.88 }));
+  woda.position.set(jez.x, -0.25, jez.z); grupa.add(woda); grupa.userData.woda = woda;
+  // las na wzgórzach (świerki i sosny, bez cieni)
+  const L = [], m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+  for (let k = 0; k < 4000 && L.length < 1400; k++) {
+    const x = (r() - 0.5) * 300, z = (r() - 0.5) * 300; if (Math.max(Math.abs(x), Math.abs(z)) < 51) continue;
+    const h = wys(x, z); if (h < 0.3 || h > 14 || szumMapy(x * 0.05, z * 0.05, zi + 9) < 0.35) continue;
+    L.push([x, h, z, 1.1 + r() * 1.4, r() * 6.283, r() < 0.7 ? 'swierk' : 'sosna']);
+  }
+  for (const gat of ['swierk', 'sosna']) {
+    const lista = L.filter(t => t[5] === gat); if (!lista.length) continue;
+    const im = new THREE.InstancedMesh(MOD.drzewo(gat), MAT, lista.length);
+    lista.forEach(([x, h, z, s, a], i) => { q.setFromAxisAngle(up, a); sc.set(s, s, s); p.set(x, h - 0.1, z); im.setMatrixAt(i, m4.compose(p, q, sc)); });
+    im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); grupa.add(im);
+  }
+  return grupa;
 }
 function zadDoZapisu(z) {
   if (!z) return null;
@@ -1480,7 +1719,9 @@ function wczytajGre(o) {
 const EL = 0.98; // nachylenie kamery
 function ustawKamere() {
   kam.x = Math.max(-46, Math.min(46, kam.x)); kam.z = Math.max(-46, Math.min(46, kam.z)); kam.d = Math.max(13, Math.min(62, kam.d));
-  const h = Math.sin(EL) * kam.d, p = Math.cos(EL) * kam.d;
+  // przy oddalaniu kamera się pochyla: widać horyzont z górami i wulkanami
+  const el = EL - 0.42 * Math.max(0, Math.min(1, (kam.d - 30) / 32));
+  const h = Math.sin(el) * kam.d, p = Math.cos(el) * kam.d;
   kamera.position.set(kam.x + Math.sin(kam.kat) * p, h, kam.z + Math.cos(kam.kat) * p); kamera.lookAt(kam.x, 0, kam.z); kamera.updateMatrixWorld();
   slonce.position.set(kam.x - 14, 34, kam.z - 4); slonce.target.position.set(kam.x, 0, kam.z);
   const sc = slonce.shadow.camera, r = Math.min(38, kam.d * 0.85);
@@ -1533,8 +1774,8 @@ function ruszReka(u, dt) {
   if (u.koszBok) u.koszBok.visible = kosz;
   let rx = 0, rz = 0;
   if (u.pracuje) {
-    if (narz === 'siekiera') { const p = (u.t * 1.5) % 1; rx = p < 0.22 ? lerp(-2.4, -0.25, p / 0.22) : lerp(-0.25, -2.4, (p - 0.22) / 0.78); rz = -0.45; }
-    else if (narz === 'kilof') { const p = (u.t * 1.2) % 1; rx = p < 0.2 ? lerp(-2.8, 0.05, p / 0.2) : lerp(0.05, -2.8, (p - 0.2) / 0.8); }
+    if (narz === 'siekiera') { const p = (u.t * 1.5) % 1; rx = p < 0.22 ? lerp(-2.4, -0.25, p / 0.22) : lerp(-0.25, -2.4, (p - 0.22) / 0.78); rz = -0.45; if (u.pp < 0.22 && p >= 0.22 && naEkranie(u)) EF.wiory(u.x + Math.sin(u.ry) * 0.5, 0.6, u.z + Math.cos(u.ry) * 0.5, '#e0c08a'); u.pp = p; }
+    else if (narz === 'kilof') { const p = (u.t * 1.2) % 1; rx = p < 0.2 ? lerp(-2.8, 0.05, p / 0.2) : lerp(0.05, -2.8, (p - 0.2) / 0.8); if (u.pp < 0.2 && p >= 0.2 && naEkranie(u)) { const k = u.zad && u.zad.sur === 'zloto' ? '#ffd84a' : u.zad && u.zad.sur === 'zelazo' ? '#c4622d' : '#b3ada3'; EF.wiory(u.x + Math.sin(u.ry) * 0.55, 0.3, u.z + Math.cos(u.ry) * 0.55, k, 5); EF.iskry(u.x + Math.sin(u.ry) * 0.55, 0.3, u.z + Math.cos(u.ry) * 0.55, 2); } u.pp = p; }
     else if (narz === 'mlotek') { const p = (u.t * 2.4) % 1; rx = p < 0.3 ? lerp(-1.9, -0.55, p / 0.3) : lerp(-0.55, -1.9, (p - 0.3) / 0.7); }
     else if (narz === 'zrywa') {
       // ręka sięga do krzaka i wraca do koszyka przy boku
@@ -1563,6 +1804,10 @@ function rysuj(dt) {
     if (u.pracuje && u.d.wojsko && !u.d.zasieg) { const f = (u.d.odstep - u.cd) / 0.3; if (f >= 0 && f <= 1) wypad = Math.sin(f * Math.PI) * (u.d.tylkoBudynki ? 0.3 : 0.16); }
     m.position.set(u.x + Math.sin(m.rotation.y) * wypad, u.idzie && !u.d.kupiec ? Math.abs(Math.sin(u.t * 11)) * 0.05 : 0, u.z + Math.cos(m.rotation.y) * wypad);
     if (u.typ === 'osadnik') ruszReka(u, dt);
+    // krok: nogi i ręce chodzą w rytm szybkości, koła wozów się kręcą
+    const v = u.d.szybkosc;
+    if (u.idzie) { u.faza += dt * v * (u.d.linia === 'renifer' || u.d.kupiec ? 4.2 : 6.5); u.kolo -= dt * v / 0.21; }
+    u.amp += ((u.idzie ? 1 : 0) - u.amp) * Math.min(1, dt * 8);
     // co niesie osadnik
     if (u.typ === 'osadnik') {
       // stosik na plecach: jedna sztuka na każde 3 niesione (najwyżej 8), więc po ulepszeniu plecaka stos jest wyższy
@@ -1583,7 +1828,7 @@ function rysuj(dt) {
   for (const e of wybrane) { const p = pierscien(e); if (!jestBudynkiem(e) && e.strona == null) p.position.set(e.x, 0.05, e.z); p.visible = true; }
   for (let k = GRUZY.length - 1; k >= 0; k--) { const g = GRUZY[k]; g.t += dt; if (g.t > 240) { g.mesh.position.y -= dt * 0.05; if (g.t > 246) { scena.remove(g.mesh); GRUZY.splice(k, 1); } } }
   for (const sc of SCIETE.values()) {
-    if (sc.t < 1) sc.t = Math.min(1, sc.t + dt / 0.9);
+    if (sc.t < 1) { sc.t = Math.min(1, sc.t + dt / 0.9); if (sc.t >= 1 && !sc.upadlo) { sc.upadlo = true; const ry = sc.g.rotation.y; EF.liscie(sc.z0.x + Math.sin(ry) * 1.3, sc.z0.z + Math.cos(ry) * 1.3); } }
     sc.drz.rotation.x = 1.5 * sc.t * sc.t;
     sc.drz.scale.setScalar(0.35 + 0.65 * Math.max(0, sc.z0.ile / sc.z0.start));
   }
@@ -1599,6 +1844,12 @@ function rysuj(dt) {
   }
   if (znacznik && znacznik.visible) { znacznik.userData.t -= dt; const t = znacznik.userData.t; znacznik.scale.setScalar(1 + (0.7 - t) * 1.2); znacznik.material.opacity = Math.max(0, t / 0.7); if (t <= 0) znacznik.visible = false; }
   if (ping) { ping.t -= dt; if (ping.t <= 0) ping = null; }
+  const sh = MAT.userData.sh; if (sh) { sh.uniforms.uCzas.value = czasRys; sh.uniforms.uAmp.value = 0; MAT.uniformsNeedUpdate = true; }
+  if (!symulacja && S) { emitujEfekty(dt); ruszNiebo(dt, czasRys); }
+  if (!CZ_NORM.pts.parent) scena.add(CZ_NORM.pts, CZ_SWIAT.pts);
+  const sk = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(kamera.fov / 2)));
+  CZ_NORM.pts.material.uniforms.uSkala.value = sk; CZ_SWIAT.pts.material.uniforms.uSkala.value = sk;
+  aktualizujCzastki(CZ_NORM, dt); aktualizujCzastki(CZ_SWIAT, dt);
   renderer.render(scena, kamera);
   rysujNakladke();
 }
