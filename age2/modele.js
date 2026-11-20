@@ -69,16 +69,56 @@ export const procarz = cache(strona => {
   const k = KOLORY_STRON[strona], d = CIEMNIEJ[strona];
   return polacz([...czlowiek(k, d, 'kaptur'), cz(cyl(0.012, 0.012, 0.5), BRAZ, 0.28, 0.85, 0.05, 0, 0, 0.4), cz(kula(0.06, 6), KAMIEN, 0.38, 1.08, 0.05), cz(box(0.16, 0.2, 0.1), BRAZ, -0.12, 0.5, -0.18)]);
 });
-export const jezdziec = cache(strona => {
-  const k = KOLORY_STRON[strona], d = CIEMNIEJ[strona], kon = '#8a5a34';
+export const tarczownik = cache(strona => {
+  const k = KOLORY_STRON[strona], d = CIEMNIEJ[strona];
+  return polacz([...czlowiek(k, d, 'helm'), cz(cyl(0.035, 0.035, 0.55), METAL, 0.3, 0.75, 0.12, 0.6, 0, 0), cz(box(0.07, 0.6, 0.45), d, -0.29, 0.6, 0.06), cz(cyl(0.08, 0.08, 0.08, 8), METAL, -0.34, 0.6, 0.06, 0, 0, Math.PI / 2)]);
+});
+export const obronca = cache(strona => {
+  const k = KOLORY_STRON[strona], d = CIEMNIEJ[strona];
+  return polacz([...czlowiek(METAL, d, 'helm'), cz(box(0.5, 0.18, 0.3), k, 0, 0.55, 0), cz(stozek(0.06, 0.25, 6), k, 0, 1.25, 0),
+    cz(box(0.05, 0.75, 0.09), METAL, 0.3, 0.95, 0.14, 0.5, 0, 0), cz(box(0.2, 0.05, 0.08), BRAZ, 0.3, 0.62, 0.0, 0.5, 0, 0),
+    cz(box(0.07, 0.62, 0.48), d, -0.29, 0.6, 0.06), cz(kula(0.1, 6), '#3a4bb0', -0.34, 0.65, 0.06)]);
+});
+export const pikinier = cache(strona => {
+  const k = KOLORY_STRON[strona], d = CIEMNIEJ[strona];
+  return polacz([...czlowiek(k, d, 'helm'), cz(cyl(0.025, 0.025, 2.0), BRAZ, 0.27, 1.05, 0.05), cz(stozek(0.06, 0.28, 6), METAL, 0.27, 2.17, 0.05), cz(box(0.06, 0.45, 0.32), d, -0.27, 0.6, 0.05)]);
+});
+export const procarz2 = cache(strona => {
+  const k = KOLORY_STRON[strona], d = CIEMNIEJ[strona];
+  return polacz([...czlowiek(k, d, 'kaptur'), cz(cyl(0.012, 0.012, 0.5), BRAZ, 0.28, 0.85, 0.05, 0, 0, 0.4), cz(kula(0.065, 6), '#3d4148', 0.38, 1.08, 0.05), cz(box(0.18, 0.22, 0.1), '#555b63', -0.12, 0.5, -0.18), cz(box(0.5, 0.06, 0.06), METAL, 0, 0.75, 0.13)]);
+});
+export const kusznik = cache(strona => {
+  const k = KOLORY_STRON[strona], d = CIEMNIEJ[strona];
+  return polacz([...czlowiek(k, d, 'helm'), cz(box(0.06, 0.06, 0.6), BRAZ, 0.22, 0.75, 0.25), cz(box(0.6, 0.04, 0.04), METAL, 0.22, 0.75, 0.48), cz(box(0.16, 0.36, 0.1), BRAZ, -0.12, 0.6, -0.2)]);
+});
+// jeźdźcy: renifer (lżejszy, rozgałęzione poroże) albo łoś (większy, łopaty poroża)
+function jazda(strona, zwierze, zbroja) {
+  const k = KOLORY_STRON[strona], d = CIEMNIEJ[strona];
+  const los = zwierze === 'los', s = los ? 1.18 : 1, sierc = los ? '#5a3b25' : '#8d7a64', jasna = los ? '#7a5638' : '#efe7da', nogi = los ? '#3e2716' : '#6b5a48';
   const c = [
-    cz(box(0.42, 0.42, 1.0), kon, 0, 0.72, 0), cz(box(0.22, 0.5, 0.25), kon, 0, 1.0, 0.48, -0.5, 0, 0), cz(box(0.2, 0.2, 0.42), kon, 0, 1.22, 0.7),
-    cz(box(0.36, 0.5, 0.12), '#5d3a20', 0, 0.25, 0.36), cz(box(0.36, 0.5, 0.12), '#5d3a20', 0, 0.25, -0.36),
-    cz(box(0.46, 0.12, 0.5), k, 0, 0.98, -0.05), cz(box(0.06, 0.3, 0.06), '#3a2414', 0, 0.8, -0.55, 0.6, 0, 0),
-    cz(cyl(0.16, 0.2, 0.42), k, 0, 1.3, -0.08), cz(kula(0.14), SKORA, 0, 1.62, -0.08), cz(kula(0.155, 8), METAL, 0, 1.66, -0.08, 0, 0, 0, 1, 0.75, 1),
-    cz(cyl(0.025, 0.025, 1.5), BRAZ, 0.26, 1.35, 0.25, Math.PI / 2 - 0.15, 0, 0), cz(stozek(0.045, 0.16, 6), METAL, 0.26, 1.46, 1.0, Math.PI / 2 - 0.15, 0, 0),
-    cz(box(0.04, 0.35, 0.25), d, -0.24, 1.3, -0.05),
+    cz(box(0.42 * s, 0.42 * s, 1.0 * s), sierc, 0, 0.72 * s, 0), cz(box(0.26 * s, 0.5 * s, 0.26 * s), jasna, 0, 1.0 * s, 0.48 * s, -0.5, 0, 0), cz(box(0.2 * s, 0.22 * s, 0.44 * s), sierc, 0, 1.22 * s, 0.72 * s),
+    cz(box(0.36 * s, 0.5 * s, 0.12), nogi, 0, 0.25 * s, 0.36 * s), cz(box(0.36 * s, 0.5 * s, 0.12), nogi, 0, 0.25 * s, -0.36 * s),
+    cz(box(0.46 * s, 0.12, 0.5), k, 0, 0.98 * s, -0.05), cz(box(0.12, 0.12, 0.12), jasna, 0, 0.85 * s, -0.55 * s),
   ];
+  const yr = 1.36 * s, zr = 0.62 * s;
+  if (los) for (const sx of [-1, 1]) c.push(cz(cyl(0.025, 0.025, 0.3), '#d9c7a3', sx * 0.15, yr, zr, 0, 0, sx * 0.9), cz(box(0.34, 0.04, 0.22), '#d9c7a3', sx * 0.36, yr + 0.15, zr - 0.02, 0, 0, sx * 0.25));
+  else for (const sx of [-1, 1]) c.push(cz(cyl(0.02, 0.02, 0.45), '#d9c7a3', sx * 0.12, yr + 0.15, zr - 0.05, -0.3, 0, sx * 0.5), cz(cyl(0.015, 0.015, 0.22), '#d9c7a3', sx * 0.22, yr + 0.3, zr + 0.06, 0.6, 0, sx * 0.3), cz(cyl(0.015, 0.015, 0.2), '#d9c7a3', sx * 0.27, yr + 0.36, zr - 0.12, -0.6, 0, sx * 0.6));
+  const ry = 1.3 * s - 1.3;
+  c.push(cz(cyl(0.16, 0.2, 0.42), zbroja ? METAL : k, 0, 1.3 + ry, -0.08), cz(kula(0.14), SKORA, 0, 1.62 + ry, -0.08));
+  if (zbroja) c.push(cz(kula(0.155, 8), METAL, 0, 1.66 + ry, -0.08, 0, 0, 0, 1, 0.75, 1), cz(box(0.04, 0.35, 0.25), d, -0.24, 1.3 + ry, -0.05),
+    cz(cyl(0.025, 0.025, 1.5), BRAZ, 0.26, 1.35 + ry, 0.25, Math.PI / 2 - 0.15, 0, 0), cz(stozek(0.045, 0.16, 6), METAL, 0.26, 1.46 + ry, 1.0, Math.PI / 2 - 0.15, 0, 0));
+  else c.push(cz(kula(0.16, 8), d, 0, 1.66 + ry, -0.1, 0, 0, 0, 1, 0.8, 1), cz(cyl(0.02, 0.02, 0.7), BRAZ, 0.24, 1.35 + ry, 0.15, 1.0, 0, 0));
+  return polacz(c);
+}
+export const zwiadowca = cache(strona => jazda(strona, 'renifer', false));
+export const jezdziec = cache(strona => jazda(strona, 'renifer', true));
+export const rycerz = cache(strona => jazda(strona, 'los', true));
+export const katapulta = cache(strona => {
+  const k = KOLORY_STRON[strona];
+  const c = [cz(box(0.9, 0.15, 1.5), DREWNO, 0, 0.35, 0), cz(box(0.12, 0.8, 0.12), BRAZ, -0.3, 0.8, -0.1), cz(box(0.12, 0.8, 0.12), BRAZ, 0.3, 0.8, -0.1),
+    cz(box(0.7, 0.1, 0.1), BRAZ, 0, 1.15, -0.1), cz(box(0.1, 0.1, 1.3), '#9a6a3a', 0, 0.75, 0.15, -0.5, 0, 0), cz(cyl(0.22, 0.18, 0.15, 10), BRAZ, 0, 1.08, 0.72),
+    cz(kula(0.17, 8), '#a8c8ff', 0, 1.22, 0.72), cz(kula(0.07, 6), '#3a4bb0', 0.08, 1.3, 0.78), cz(box(0.92, 0.1, 0.3), k, 0, 0.5, -0.6)];
+  for (const sx of [-0.5, 0.5]) for (const sz of [-0.5, 0.5]) c.push(cz(cyl(0.2, 0.2, 0.1, 10), CIEMNE, sx, 0.2, sz, 0, 0, Math.PI / 2));
   return polacz(c);
 });
 export const taran = cache(strona => {
@@ -89,7 +129,7 @@ export const taran = cache(strona => {
   for (const sx of [-0.4, 0.4]) for (const sz of [-0.7, 0.7]) c.push(cz(box(0.08, 0.7, 0.08), BRAZ, sx, 0.7, sz));
   return polacz(c);
 });
-export const JEDNOSTKI3D = { osadnik, wojownik, wlocznik, procarz, jezdziec, taran };
+export const JEDNOSTKI3D = { osadnik, wojownik, tarczownik, obronca, wlocznik, pikinier, procarz, procarz2, kusznik, zwiadowca, jezdziec, rycerz, taran, katapulta };
 
 // ---------- budynki (środek modelu = środek budynku, podłoga na y = 0) ----------
 function flaga(k, x, y, z) { return [cz(cyl(0.03, 0.03, 1.0), BRAZ, x, y + 0.5, z), cz(box(0.45, 0.28, 0.03), k, x + 0.24, y + 0.85, z)]; }
@@ -123,6 +163,12 @@ const BUD = {
     return [cz(box(1.8, 1.1, 1.4), '#a08a6e', -0.4, 0.55, -0.4), cz(dach4(1.4, 0.8), k, -0.4, 1.5, -0.4, 0, Math.PI / 4, 0, 1.25, 1, 1),
       cz(box(0.9, 0.35, 0.6), BRAZ, 0.8, 0.45, 0.9), cz(cyl(0.12, 0.12, 0.08, 8), CIEMNE, 0.45, 0.18, 0.9, 0, 0, Math.PI / 2), cz(cyl(0.12, 0.12, 0.08, 8), CIEMNE, 1.15, 0.18, 0.9, 0, 0, Math.PI / 2),
       cz(kula(0.15, 5), KAMIEN, 0.65, 0.7, 0.9), cz(kula(0.14, 5), '#f2c94c', 0.95, 0.7, 0.85), cz(box(0.5, 0.6, 0.05), CIEMNE, -0.4, 0.3, 0.31)];
+  },
+  kopalnia(k, d) {
+    return [cz(box(1.4, 1.0, 1.2), '#7d6a5a', -0.6, 0.5, -0.6), cz(dach4(1.1, 0.7), k, -0.6, 1.35, -0.6, 0, Math.PI / 4, 0, 1.2, 1, 1),
+      cz(box(1.0, 1.0, 0.25), CIEMNE, 0.6, 0.5, -0.9), cz(box(1.2, 0.15, 0.4), BRAZ, 0.6, 1.05, -0.85), cz(box(0.15, 1.0, 0.15), BRAZ, 0.05, 0.5, -0.75), cz(box(0.15, 1.0, 0.15), BRAZ, 1.15, 0.5, -0.75),
+      cz(box(0.08, 0.04, 1.6), METAL, 0.45, 0.03, 0.4), cz(box(0.08, 0.04, 1.6), METAL, 0.75, 0.03, 0.4), cz(box(0.5, 0.3, 0.6), '#555b63', 0.6, 0.3, 0.7),
+      cz(kula(0.12, 5), '#c4622d', 0.5, 0.5, 0.7), cz(kula(0.11, 5), '#7b5a4a', 0.72, 0.5, 0.62)];
   },
   pole(k, d) {
     const c = [cz(box(2.9, 0.06, 2.9), '#8b5a30', 0, 0.03, 0)];
@@ -172,9 +218,9 @@ export const krzak = cache(() => {
   return polacz(c);
 });
 export const skala = cache(rodzaj => {
-  const k1 = rodzaj === 'zloto' ? '#e8b923' : KAMIEN, k2 = rodzaj === 'zloto' ? '#c7951a' : KAMIEN2;
+  const k1 = rodzaj === 'ruda' ? '#7b5a4a' : KAMIEN, k2 = rodzaj === 'ruda' ? '#4d4a4f' : KAMIEN2;
   const c = [cz(new THREE.DodecahedronGeometry(0.45), k2, 0, 0.25, 0, 0, 0, 0, 1, 0.7, 1), cz(new THREE.DodecahedronGeometry(0.3), k1, 0.2, 0.45, 0.1, 0.4, 0.3, 0), cz(new THREE.DodecahedronGeometry(0.22), k1, -0.25, 0.2, 0.2)];
-  if (rodzaj === 'zloto') c.push(cz(new THREE.OctahedronGeometry(0.1), '#fff3a8', -0.05, 0.55, 0.25), cz(new THREE.OctahedronGeometry(0.08), '#fff3a8', 0.3, 0.3, -0.25));
+  if (rodzaj === 'ruda') c.push(cz(new THREE.OctahedronGeometry(0.11), '#c4622d', -0.05, 0.55, 0.25), cz(new THREE.OctahedronGeometry(0.09), '#d9773a', 0.3, 0.3, -0.25), cz(new THREE.OctahedronGeometry(0.07), '#c4622d', -0.3, 0.42, -0.1));
   return polacz(c);
 });
 export const kamyk = cache(() => polacz([cz(kula(0.09, 5), KAMIEN2)]));

@@ -105,12 +105,19 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   Gracz dowodzi osadnikami (dotknij osadnika, potem krzaka, drzewa, skały, budynku albo wroga); obok rośnie osada komputera.
   Przegrywa ten, kto straci wszystkie ratusze. Biblioteka 3D z `survival/three.module.min.js`, zapis `age-of-haskap-2`.
 - Liczby do strojenia są w `age2/dane.js`: jednostki, budynki, ery, ulepszenia, tempo zbierania i poziomy trudności (`TRUDNOSC`).
+  Nasza mapa ulepszeń (zatwierdzona przez właściciela, wprowadzana kawałkami): 4 ery (Sadzonka, Kwitnienie, Owocowanie,
+  Wielkie Zbiory), żelazo zamiast złota, linie wojska z awansami (`linia`, `st`, `awans` w `JEDNOSTKI`). Nazwy wewnętrzne
+  zostały z wersji 1 (`ratusz` = Dworek Jagodowy, `koszary` = Strażnica Krzaka, `stajnia` = Zagroda reniferów, `szopa` = Kamieniołom).
+  Następne kawałki: przetwórnie (sortownia, chłodnia i mroźnia, tłocznia, smażalnia, liofilizatornia, jarmark), owce,
+  huta i transport (muły, tory), Zielarnia i Akademia Ogrodnika, mury i Ambony z cegły, Gawra z niedźwiedziem.
   Modele 3D (sklejone bryły z kolorami) w `age2/modele.js`, reszta w `age2/gra.js` (przeciwnik komputerowy: funkcja `ai`).
 - Mapa ma 96 × 96 kratek i jest taka sama dla obu stron (połowa gracza odbita na drugą stronę, `generujMape`).
 - Test bez klikania: `window.__haskap` (`krok(sekundy)`, `komputerKontraKomputer(trudnosc)` = komputer gra też za gracza).
   Po zmianach w liczbach albo w `ai` puść kilka gier komputer kontra komputer: gra ma się kończyć (zwykle 25–45 minut) bez błędów,
   a gracz, który nic nie robi, na łatwym poziomie przegrywa dopiero po około 25 minutach.
 - Nowa wersja: podnieś `WERSJA` w `age2/gra.js`, dopisz sekcję w `age2/ZMIANY.md` (te same zasady co wyżej).
+  Poprzednią wersję zapisz jako kopię: `python narzedzia/age2-wersja.py NUMER SKROT_COMMITA` i dopisz ją w `WERSJE`
+  z `adres: 'wersje/NUMER/'` (kopie mają zapis `age-of-haskap-2-wNUMER`).
 
 ## Lista naszych gier
 

@@ -5,6 +5,40 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 2 (20.11.2026)
+
+Pierwszy kawałek naszej własnej mapy ulepszeń, inspirowanej jagodą kamczacką.
+
+**Dodane**
+- Wybór wersji przy starcie; wersja 1 zostaje jako osobna kopia z własnym zapisem.
+- 4 ery, które rosną jak krzak haskapu: 🌱 Sadzonka, 🌸 Kwitnienie, 🫐 Owocowanie, 🧺 Wielkie Zbiory.
+- Żelazo ⛓️ zamiast złota: rdzawe skały z rudą i Kopalnia rudy żelaza (od ery 2).
+- Awanse wojska: gdy zrobisz awans, cała linia awansuje (także ci, co już walczą).
+  - Strażnica Krzaka: Kijarz → Tarczownik → Obrońca Sadu oraz Włócznik z leszczyny → Pikinier.
+  - Strzelnica: Procarz → Procarz z żelaznymi kulkami → Kusznik.
+  - Zagroda reniferów: Zwiadowca na reniferze → Jeździec na reniferze → Rycerz na łosiu.
+  - Warsztat: Taran i (w erze 4) Katapulta, która rzuca zamrożonymi kulami z jagód.
+- Ulepszenia:
+  - Dworek: Rękawice zbieracza, Wiklinowy kosz → Taczka → Wózek jagodowy.
+  - Spichlerz (plantacje): Ściółka → Nawadnianie → Odmiany mrozoodporne.
+  - Tartak: Deski → Żelazna siekiera → Piła ramowa. Kamieniołom: Kilof → Żelazny kilof.
+  - Kuźnia, po 3 stopnie: broń (drewniana, żelazna, stalowa), zbroja (wiklinowa, skórzana, kolczuga),
+    pociski (gładkie kamyki, żelazne kulki, stalowe groty; działają też na Ambony).
+
+**Zmienione**
+- Nowe nazwy: Ratusz → Dworek Jagodowy, osadnik → zbieracz, koszary → Strażnica Krzaka,
+  stajnia → Zagroda reniferów, wieża → Ambona, szopa górników → Kamieniołom, pole → Plantacja haskapu.
+- Komputer lepiej dzieli pracę (mniej ludzi tam, gdzie zapasu jest dużo) i na łatwym poziomie
+  nie wysyła całego wojska naraz.
+- Zapisana gra z wersji 1 wczytuje się dalej (złoto zamienia się w żelazo).
+
+**Usunięte**
+- Stare ulepszenia z wersji 1 (koszyki, siekiery, kilofy, taczki, pługi, grube mury): zastąpiła je nowa mapa ulepszeń.
+  Grube mury wrócą w Akademii Ogrodnika.
+
+**Do sprawdzenia**
+- Gra na telefonie: czy łatwo trafić w postacie i przyciski.
+
 ## Wersja 1 (20.11.2026)
 
 **Dodane**
