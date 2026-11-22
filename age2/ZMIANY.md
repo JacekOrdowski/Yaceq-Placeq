@@ -5,6 +5,19 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 20 (22.11.2026)
+
+**Zmienione**
+- Palisadę (i późniejszy mur z cegieł albo ze stalą) można stawiać po skosie, pod dowolnym kątem do brzegów mapy,
+  nie tylko równolegle albo prostopadle. Przeciągasz palcem linię jak dotąd, a odcinki układają się w równą,
+  ciągłą ścianę wzdłuż tej linii (wcześniej skośny mur wyglądał jak schodki z oddzielnych kawałków).
+- Mur postawiony w pionie (wzdłuż drugiego brzegu mapy) jest teraz obrócony jak trzeba, także w starych zapisach.
+- Brama postawiona obok skośnego muru obraca się tak jak ten mur.
+
+**Do sprawdzenia**
+- Skośny mur dalej zatrzymuje wrogów jak zwykły (zajmuje kratki schodkami, tylko wygląda gładko).
+  Warto zobaczyć w prawdziwej grze, czy nikt się przez niego nie przeciska.
+
 ## Wersja 19 (20.11.2026)
 
 **Zmienione**

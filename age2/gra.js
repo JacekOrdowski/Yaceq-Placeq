@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL } from './dane.js';
 
-const WERSJA = 19;
+const WERSJA = 20;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 19, opis: 'Naprawione przybliżanie po dużym oddaleniu: każde przybliżenie wyraźnie pokazuje mniej mapy. Do tego wszystko z wersji 18.' },
+  { nr: 20, opis: 'Palisadę i mur można stawiać po skosie, pod dowolnym kątem (równa, ciągła ściana). Do tego wszystko z wersji 19.' },
+  { nr: 19, opis: 'Naprawione przybliżanie po dużym oddaleniu: każde przybliżenie wyraźnie pokazuje mniej mapy. Do tego wszystko z wersji 18.', adres: 'wersje/19/' },
   { nr: 18, opis: 'Gdy nic nie jest wybrane, okienko na dole zwija się do cienkiego paska (więcej widać mapy). Do tego wszystko z wersji 17.', adres: 'wersje/18/' },
   { nr: 17, opis: 'Przyciski w okienku na dole nie chowają się już, gdy coś czeka w kolejce (okienko rośnie). Do tego wszystko z wersji 16.', adres: 'wersje/17/' },
   { nr: 16, opis: 'Kamerę można oddalić tak, że widać całą mapę; dokładniejszy obrys widoku na małej mapce; krzyżyk 3 razy większy. Do tego wszystko z wersji 15.', adres: 'wersje/16/' },
@@ -1182,7 +1183,23 @@ function miejsceWolne(typ, i0, j0, margines = 0) {
   return true;
 }
 const GEO_PLAC = {};
-function nowyBudynek(strona, typ, i0, j0, gotowy = false, id, poziom = 1) {
+// wygląd muru i bramy: [x, z, kąt, długość] — odcinek leży na linii przeciągniętej palcem (także po skosie),
+// choć zajmuje swoją kratkę; stare zapisy i bramy zgadują kierunek od sąsiadów
+function ulozMur(b, wyg) {
+  if (!wyg) return;
+  b.wyg = wyg; b.mesh.position.set(wyg[0], 0, wyg[1]); b.mesh.rotation.y = wyg[2]; b.mesh.scale.x = wyg[3];
+}
+function zgadnijWyglad(b) {
+  const sas = (di, dj) => { const o = E.get(naKom[kom2(b.i0 + di, b.j0 + dj)]); return o && o !== b && o.strona === b.strona && o.d && o.d.mur ? o : null; };
+  if (b.d.brama) for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) {
+    const o = sas(di, dj); if (!o || !o.wyg) continue;
+    const ux = Math.cos(o.wyg[2]), uz = -Math.sin(o.wyg[2]), t = (b.x - o.wyg[0]) * ux + (b.z - o.wyg[1]) * uz;
+    return [o.wyg[0] + ux * t, o.wyg[1] + uz * t, o.wyg[2], 1];
+  }
+  if ((sas(0, 1) || sas(0, -1)) && !sas(1, 0) && !sas(-1, 0)) return [b.x, b.z, Math.PI / 2, 1];
+  return null;
+}
+function nowyBudynek(strona, typ, i0, j0, gotowy = false, id, poziom = 1, wyg = null) {
   const d = BUDYNKI[typ], w = d.w, max = maxHpBud(strona, typ, poziom);
   const b = { id: id || S.nextId++, strona, typ, d, i0, j0, w, poziom, x: i0 - POL + w / 2, z: j0 - POL + w / 2, max, hp: gotowy ? max : Math.max(1, max * 0.05), postep: gotowy ? 1 : 0, gotowy, kolejka: [], cd: 0, zbiorka: null, rolnik: 0 };
   for (let j = j0; j < j0 + w; j++) for (let i = i0; i < i0 + w; i++) { const c = kom2(i, j); blok[c] = d.pole ? 4 : d.brama ? 5 : 2; naKom[c] = b.id; if (d.brama) bramaStr[c] = strona; }
@@ -1192,6 +1209,7 @@ function nowyBudynek(strona, typ, i0, j0, gotowy = false, id, poziom = 1) {
   ukryjOzdoby(i0, j0, w); usunGruzy(i0, j0, w);
   if (!d.pole && !d.mur && !d.brama) { const k = new THREE.Mesh(GEO_KLEP[w] || (GEO_KLEP[w] = new THREE.PlaneGeometry(w + 1.1, w + 1.1).rotateX(-Math.PI / 2)), MAT_KLEP); k.position.y = 0.012; k.renderOrder = 1; k.receiveShadow = true; b.mesh.add(k); }
   if (strona === KOMPUTER) b.mesh.rotation.y = Math.PI; // drzwi w stronę środka mapy
+  if (d.mur || d.brama) ulozMur(b, wyg || (d.brama ? zgadnijWyglad(b) : null));
   if (!gotowy) {
     b.mesh.scale.y = 0.12;
     const g = GEO_PLAC[w] || (GEO_PLAC[w] = new THREE.PlaneGeometry(w - 0.1, w - 0.1).rotateX(-Math.PI / 2));
@@ -1799,7 +1817,7 @@ function zadDoZapisu(z) {
 function stanDoZapisu() {
   const o = { ...S };
   o.zasoby = []; for (const z0 of ZAS.values()) if (z0.ile !== z0.start) o.zasoby.push([z0.id, Math.round(z0.ile * 10) / 10]);
-  o.bud = BUD.map(b => [b.id, b.strona, b.typ, b.i0, b.j0, Math.round(b.hp), Math.round(b.postep * 1000) / 1000, b.kolejka.map(q => [q.rodzaj, q.typ, Math.round(q.t * 10) / 10, q.czas, q.koszt]), b.zbiorka, b.rolnik || 0, b.poziom || 1]);
+  o.bud = BUD.map(b => [b.id, b.strona, b.typ, b.i0, b.j0, Math.round(b.hp), Math.round(b.postep * 1000) / 1000, b.kolejka.map(q => [q.rodzaj, q.typ, Math.round(q.t * 10) / 10, q.czas, q.koszt]), b.zbiorka, b.rolnik || 0, b.poziom || 1, b.wyg ? b.wyg.map(v => Math.round(v * 1000) / 1000) : 0]);
   o.jed = JED.map(u => [u.id, u.strona, u.typ, Math.round(u.x * 100) / 100, Math.round(u.z * 100) / 100, Math.round(u.hp * 10) / 10, u.niesie.sur, Math.round(u.niesie.ile * 10) / 10, zadDoZapisu(u.zad), u.postawa || 'agresja']);
   o.kamera = [kam.x, kam.z, kam.d, kam.kat];
   return o;
@@ -1831,12 +1849,14 @@ function wczytajGre(o) {
   S.usuniete = [...o.usuniete];
   for (const [id, ile] of o.zasoby) { const z0 = ZAS.get(id); if (z0) { z0.ile = ile; if (ile < z0.start) zetnij(z0, z0.x, z0.z, true); } }
   sprzatnijListy();
-  for (const [id, strona, typ, i0, j0, hp, postep, kolejka, zbiorka, rolnik, poziom] of o.bud) {
-    const b = nowyBudynek(strona, typ, i0, j0, postep >= 1, id, poziom || 1);
+  for (const [id, strona, typ, i0, j0, hp, postep, kolejka, zbiorka, rolnik, poziom, wyg] of o.bud) {
+    const b = nowyBudynek(strona, typ, i0, j0, postep >= 1, id, poziom || 1, wyg || null);
     b.hp = hp; b.postep = postep; b.zbiorka = zbiorka; b.rolnik = rolnik;
     b.kolejka = kolejka.map(([rodzaj, t, czasT, czas, koszt]) => ({ rodzaj, typ: t, t: czasT, czas, koszt }));
     if (!b.gotowy) b.mesh.scale.y = 0.12 + 0.88 * postep;
   }
+  // zapis sprzed skośnych murów: mury w pionie obracamy według sąsiadów
+  for (const b of BUD) if (b.d.mur && !b.wyg) ulozMur(b, zgadnijWyglad(b));
   // stary zapis: nowe złoża, które wypadły pod budynkami, znikają
   for (const z0 of [...ZAS.values()]) if (z0.dodatkowe && naKom[z0.c] !== z0.id) { ZAS.delete(z0.id); E.delete(z0.id); z0.ile = 0; const im = INST[z0.klucz]; if (im) { im.setMatrixAt(z0.inst, ZERO); im.instanceMatrix.needsUpdate = true; } }
   sprzatnijListy();
@@ -2309,8 +2329,13 @@ function ustawMur(ax, az, bx, bz, podglad = false) {
   const A = [Math.floor(ax + POL), Math.floor(az + POL)], B = [Math.floor(bx + POL), Math.floor(bz + POL)];
   tryb.A = A; tryb.B = B; tryb.podglad = podglad;
   tryb.odcinki = linia(A[0], A[1], B[0], B[1]).map(([i, j]) => ({ i, j, ok: miejsceWolne('mur', i, j) }));
+  // odcinki rozkładamy równo na prostej od pierwszej do ostatniej kratki, obrócone wzdłuż niej (mur może iść po skosie)
+  const n0 = tryb.odcinki.length, p = tryb.odcinki[0], q = tryb.odcinki[n0 - 1], dx = q.i - p.i, dz = q.j - p.j;
+  const kat = n0 > 1 ? Math.atan2(-dz, dx) : 0, dl = n0 > 1 ? Math.hypot(dx, dz) / (n0 - 1) : 1;
+  tryb.odcinki.forEach((o, k) => { const t = n0 > 1 ? k / (n0 - 1) : 0; o.wyg = [p.i - POL + 0.5 + dx * t, p.j - POL + 0.5 + dz * t, kat, dl]; });
   const m = new THREE.Matrix4(), kz = new THREE.Color('#9dffb0'), kc = new THREE.Color('#ff7a6a');
-  tryb.odcinki.forEach((o, k) => { m.makeTranslation(o.i - POL + 0.5, 0, o.j - POL + 0.5); tryb.duch.setMatrixAt(k, m); tryb.duch.setColorAt(k, o.ok ? kz : kc); });
+  const OB = new THREE.Quaternion(), OS = new THREE.Vector3(), OP = new THREE.Vector3(), OY = new THREE.Vector3(0, 1, 0);
+  tryb.odcinki.forEach((o, k) => { OP.set(o.wyg[0], 0, o.wyg[1]); OB.setFromAxisAngle(OY, kat); OS.set(dl, 1, 1); m.compose(OP, OB, OS); tryb.duch.setMatrixAt(k, m); tryb.duch.setColorAt(k, o.ok ? kz : kc); });
   tryb.duch.count = tryb.odcinki.length; tryb.duch.instanceMatrix.needsUpdate = true; if (tryb.duch.instanceColor) tryb.duch.instanceColor.needsUpdate = true;
   const n = tryb.odcinki.filter(o => o.ok).length, koszt = n * BUDYNKI.mur.koszt.drewno;
   tryb.ok = n > 0 && !podglad && S.zas[0].drewno >= BUDYNKI.mur.koszt.drewno;
@@ -2361,7 +2386,7 @@ $('st-tak').onclick = () => {
   const typ = tryb.typ;
   if (tryb.mur) {
     const nowe = [];
-    for (const o of tryb.odcinki) if (o.ok && miejsceWolne('mur', o.i, o.j) && zaplac(STRONA_GRACZA, BUDYNKI.mur.koszt)) nowe.push(nowyBudynek(STRONA_GRACZA, 'mur', o.i, o.j));
+    for (const o of tryb.odcinki) if (o.ok && miejsceWolne('mur', o.i, o.j) && zaplac(STRONA_GRACZA, BUDYNKI.mur.koszt)) nowe.push(nowyBudynek(STRONA_GRACZA, 'mur', o.i, o.j, false, undefined, 1, o.wyg));
     if (!nowe.length) { toast('Za mało drewna'); dzwiek('blad'); return; }
     if (nowe.length < tryb.odcinki.filter(o => o.ok).length) toast('Starczyło drewna na ' + nowe.length + ' odcinków');
     const bud = wybrane.filter(u => u.typ === 'osadnik');
@@ -2674,7 +2699,7 @@ rozmiar(); rysujLogo();
 // test bez klikania (w konsoli przeglądarki): window.__haskap
 window.__haskap = {
   get S() { return S; }, get JED() { return JED; }, get BUD() { return BUD; }, get ZAS() { return ZAS; }, kam, muz, muzykaKrok, walka(ile = 0) { walkaT = S.czas - ile; },
-  nowaGra, krokGry, zapiszGre, wczytajGre, stanDoZapisu, ai, dodajDoKolejki, nowyBudynek, nowaJednostka, miejsceWolne, zaznacz, klik, wskaz, rozkaz,
+  nowaGra, krokGry, zapiszGre, wczytajGre, stanDoZapisu, ai, dodajDoKolejki, nowyBudynek, nowaJednostka, miejsceWolne, zaznacz, klik, wskaz, rozkaz, zacznijStawianie, przesunDucha,
   // komputer gra też za gracza: sprawdzenie, czy gra się kończy i nic się nie psuje
   komputerKontraKomputer(trudnoscGracza = 'sredni') { S.aiGracz = true; S.trudnoscGracza = trudnoscGracza; },
   krok(sek, dt = 0.1, rysujTez = false) { symulacja = !rysujTez; try { for (let t = 0; t < sek && !S.wynik; t += dt) krokGry(dt); } finally { symulacja = false; } if (rysujTez) rysuj(0.016); return S.wynik; },
