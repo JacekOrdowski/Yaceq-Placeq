@@ -24,6 +24,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 - Komputer nie stawia bram i nie szkoli rzemieślników (jego gra się nie zmieniła).
 - Stare bramy z wcześniejszych zapisów zostają wąskie (1 kratka).
 
+Zapis w repozytorium: `a2a75f7`
+
 ## Wersja 20 (22.11.2026)
 
 **Zmienione**
