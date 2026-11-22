@@ -51,7 +51,12 @@ export const JEDNOSTKI = {
   // Jarmark: wóz kupiecki z reniferem jeździ sam między Jarmarkiem a twoim spichlerzem (albo Dworkiem) i przywozi złoto
   woz: { nazwa: 'Wóz kupiecki', emoji: '🛒', hp: 70, atak: 0, pancerz: 0, zasieg: 0, odstep: 99, szybkosc: 2.6, r: 0.55, wzrok: 4, kupiec: true,
     koszt: { drewno: 100, jagody: 50 }, czas: 20, era: 2, z: 'jarmark', opis: 'Wozi towar do spichlerza i z powrotem: im dalej, tym więcej złota' },
+  // Kuźnia: rzemieślnik sam szuka uszkodzonych budynków i naprawia je za twoje surowce (NAPRAWA niżej)
+  rzemieslnik: { nazwa: 'Rzemieślnik', emoji: '🔨', hp: 35, atak: 2, pancerz: 1, zasieg: 0, odstep: 1.5, szybkosc: 2.1, r: 0.32, wzrok: 5, naprawia: true,
+    koszt: { jagody: 60, zelazo: 20 }, czas: 15, era: 2, z: 'kuznia', opis: 'Sam naprawia uszkodzone budynki za twoje surowce' },
 };
+// naprawa przez rzemieślnika: pełna naprawa kosztuje połowę ceny budynku i trwa dwa razy dłużej niż jego budowa
+export const NAPRAWA = { koszt: 0.5, wolniej: 2 };
 
 // w: rozmiar w kratkach (budynek zajmuje w × w); ludnosc: o ile więcej mieszkańców; skup: jakie surowce przyjmuje
 // strzela: budynek sam strzela do wrogów; pole: można po nim chodzić, zbieracz zbiera na nim jagody bez końca
@@ -68,10 +73,10 @@ export const BUDYNKI = {
   koszary: { nazwa: 'Strażnica Krzaka', emoji: '🛡️', w: 3, hp: 700, koszt: { drewno: 150 }, czas: 30, era: 1, opis: 'Szkoli kijarzy i włóczników' },
   strzelnica: { nazwa: 'Strzelnica', emoji: '🎯', w: 3, hp: 600, koszt: { drewno: 175 }, czas: 30, era: 2, wymaga: 'koszary', opis: 'Proca i kusza: szkoli strzelców' },
   stajnia: { nazwa: 'Zagroda reniferów', emoji: '🦌', w: 3, hp: 600, koszt: { drewno: 175 }, czas: 30, era: 2, wymaga: 'koszary', opis: 'Szkoli jeźdźców na reniferach i łosiach' },
-  kuznia: { nazwa: 'Kuźnia', emoji: '⚒️', w: 3, hp: 600, koszt: { drewno: 150 }, czas: 30, era: 2, opis: 'Ulepsza broń, zbroje i pociski' },
+  kuznia: { nazwa: 'Kuźnia', emoji: '⚒️', w: 3, hp: 600, koszt: { drewno: 150 }, czas: 30, era: 2, opis: 'Ulepsza broń, zbroje i pociski, szkoli rzemieślników' },
   wieza: { nazwa: 'Ambona', emoji: '🗼', w: 2, hp: 800, koszt: { drewno: 50, kamien: 125 }, czas: 40, era: 2, strzela: { atak: 5, zasieg: 7.5, odstep: 1.6 }, opis: 'Sama strzela do wrogów' },
   mur: { nazwa: 'Palisada', emoji: '🪵', w: 1, hp: 250, koszt: { drewno: 5 }, czas: 4, era: 1, mur: true, opis: 'Ściana z pali: przeciągnij palcem linię muru' },
-  brama: { nazwa: 'Brama', emoji: '🚪', w: 1, hp: 400, koszt: { drewno: 30 }, czas: 12, era: 1, brama: true, opis: 'Twoi ludzie przechodzą, wrogowie nie' },
+  brama: { nazwa: 'Brama', emoji: '🚪', w: 1, hp: 400, koszt: { drewno: 45 }, czas: 12, era: 1, brama: true, opis: 'Szeroka na 3 kratki; otwarta przepuszcza twoich, wrogów nigdy' },
   warsztat: { nazwa: 'Warsztat', emoji: '🛠️', w: 3, hp: 600, koszt: { drewno: 200 }, czas: 35, era: 3, wymaga: 'kuznia', opis: 'Buduje tarany i katapulty' },
 };
 // rozbudowa ambony (w samej ambonie): każdy stopień ma więcej życia, strzela dalej, mocniej i częściej

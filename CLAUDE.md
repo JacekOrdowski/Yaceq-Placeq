@@ -124,6 +124,8 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
 - Grafika: faktury i ruch (nogi, koła, wiatr) liczy karta graficzna (`MAT.onBeforeCompile` w `age2/gra.js`, atrybuty `wzor` i `staw`
   z `polacz` w `age2/modele.js`); efekty (dym, ogień, iskry) to `EF` i `emitujEfekty`, okolica za mapą to `zbudujOkolice`.
 - Nowa wersja: podnieś `WERSJA` w `age2/gra.js`, dopisz sekcję w `age2/ZMIANY.md` (te same zasady co wyżej).
+  Mury: każdy odcinek ma wygląd `wyg` = [x, z, kąt, długość] (mur po skosie zajmuje kratki schodkami, a rysuje się gładko).
+  Brama ma 3 kratki (`KIER_BRAMY`, `b.kom`), można ją zamknąć (`ustawBrame`). Rzemieślnik (`naprawia: true`) sam naprawia budynki (`NAPRAWA` w `dane.js`).
   Poprzednią wersję zapisz jako kopię: `python narzedzia/age2-wersja.py NUMER SKROT_COMMITA` i dopisz ją w `WERSJE`
   z `adres: 'wersje/NUMER/'` (kopie mają zapis `age-of-haskap-2-wNUMER`).
 

@@ -216,7 +216,15 @@ export const woz = cache(strona => {
   c.push(cz(box(0.3, 0.05, 0.08), k, 0, 0.7, z0 + 0.08));
   return polacz(c);
 });
-export const JEDNOSTKI3D = { osadnik, wojownik, tarczownik, obronca, wlocznik, pikinier, procarz, procarz2, kusznik, zwiadowca, jezdziec, rycerz, taran, katapulta, woz };
+// rzemieślnik: kaptur, skórzany fartuch, pas z narzędziami; prawa ręka z młotkiem to osobna część (jak u zbieracza)
+export const rzemieslnik = cache(strona => {
+  const k = KOLORY_STRON[strona], d = CIEMNIEJ[strona], SKORA_F = '#7a5030';
+  return polacz([...czlowiek(k, d, 'kaptur', false, WLOSY[3]),
+    cz(box(0.26, 0.36, 0.03), SKORA_F, 0, 0.42, 0.2), cz(box(0.2, 0.12, 0.03), SKORA_F, 0, 0.66, 0.17),
+    cz(box(0.07, 0.09, 0.05), '#5e3d22', -0.17, 0.42, 0.13), cz(cyl(0.015, 0.015, 0.16, 5), '#555b63', -0.17, 0.5, 0.13),
+    cz(box(0.09, 0.08, 0.05), '#5e3d22', 0.15, 0.42, 0.15), cz(box(0.05, 0.13, 0.03), METAL, 0.15, 0.5, 0.15)]);
+});
+export const JEDNOSTKI3D = { rzemieslnik, osadnik, wojownik, tarczownik, obronca, wlocznik, pikinier, procarz, procarz2, kusznik, zwiadowca, jezdziec, rycerz, taran, katapulta, woz };
 
 // ---------- budynki w stylu słowiańskim (nasze projekty; środek modelu = środek budynku, podłoga na y = 0) ----------
 // kolor gracza widać na kalenicach, okiennicach i chorągiewkach; dachy są ze strzechy albo z gontu
@@ -298,6 +306,45 @@ function kamienie(x, z, n, s = 1, k1 = KAMIEN, k2 = KAMIEN2) {
   return c;
 }
 
+// brama na 3 kratki: dwa filary, belka (albo łuk z cegły) i dwa skrzydła wrót; otwarte skrzydła są obrócone do środka osady
+function brama3D(poziom, zamk, k) {
+  const c = [], CEG = '#b5553a', CEG2 = '#9c4630', STAL = '#4a4f57', WROTA = '#8a5530', OKUCIA = '#5a3518';
+  if (poziom === 1) {
+    for (const sx of [-1, 1]) {
+      c.push(cz(cyl(0.16, 0.18, 2.0, 8), BAL, sx * 1.33, 1.0, 0), cz(stozek(0.16, 0.3, 8), BAL2, sx * 1.33, 2.15, 0));
+      c.push(cz(cyl(0.11, 0.12, 1.55, 6), BAL2, sx * 1.33, 0.78, 0.2), cz(cyl(0.11, 0.12, 1.55, 6), BAL2, sx * 1.33, 0.78, -0.2));
+    }
+    c.push(cz(box(3.0, 0.18, 0.3), '#6b4527', 0, 1.78, 0), cz(box(2.4, 0.12, 0.32), k, 0, 1.6, 0));
+    // daszek nad przejściem
+    c.push(cz(box(1.7, 0.08, 0.7), GONT, 0, 2.02, 0.17, 0.45, 0, 0), cz(box(1.7, 0.08, 0.7), GONT, 0, 2.02, -0.17, -0.45, 0, 0), cz(box(1.8, 0.07, 0.07), BAL2, 0, 2.18, 0));
+  } else {
+    for (const sx of [-1, 1]) {
+      c.push(cz(box(0.46, 0.22, 1.0), KAMIEN2, sx * 1.27, 0.11, 0));
+      for (let i = 0; i < 7; i++) c.push(cz(box(0.4, 0.26, 0.94), i % 2 ? CEG : CEG2, sx * 1.27, 0.35 + i * 0.26, 0));
+      c.push(cz(box(0.48, 0.1, 1.0), KAMIEN, sx * 1.27, 2.17, 0), cz(box(0.2, 0.22, 0.2), CEG, sx * 1.27 - 0.12, 2.33, -0.3), cz(box(0.2, 0.22, 0.2), CEG, sx * 1.27 + 0.12, 2.33, 0.3));
+    }
+    c.push(cz(box(2.1, 0.36, 0.94), CEG, 0, 1.92, 0), cz(box(2.2, 0.08, 1.0), KAMIEN, 0, 2.14, 0), cz(box(1.4, 0.16, 0.96), k, 0, 1.85, 0));
+    for (const x of [-0.7, 0, 0.7]) c.push(cz(box(0.24, 0.2, 0.24), CEG, x, 2.28, 0));
+    if (poziom === 3) {
+      for (const sx of [-1, 1]) for (const y of [0.6, 1.3]) c.push(cz(box(0.44, 0.06, 0.98), STAL, sx * 1.27, y, 0));
+      c.push(cz(box(2.12, 0.06, 0.98), STAL, 0, 1.76, 0), cz(box(2.12, 0.06, 0.98), STAL, 0, 2.06, 0));
+      for (const x of [-0.9, -0.3, 0.3, 0.9]) c.push(cz(kula(0.035, 4), METAL, x, 1.92, 0.48), cz(kula(0.035, 4), METAL, x, 1.92, -0.48));
+    }
+  }
+  // skrzydła wrót: zawias przy filarze, każde ma 1,1 szerokości
+  const zaw = poziom === 1 ? 1.17 : 1.05, sz = zaw - 0.02, h = poziom === 1 ? 1.45 : 1.65;
+  for (const sx of [-1, 1]) {
+    const czesci = [cz(box(sz, h, 0.1), WROTA, 0, h / 2 + 0.05, 0)];
+    for (let i = 1; i < 4; i++) czesci.push(cz(box(0.025, h, 0.11), OKUCIA, -sz / 2 + i * sz / 4, h / 2 + 0.05, 0));
+    czesci.push(cz(box(sz, 0.08, 0.12), poziom === 3 ? STAL : OKUCIA, 0, 0.35, 0), cz(box(sz, 0.08, 0.12), poziom === 3 ? STAL : OKUCIA, 0, h - 0.2, 0));
+    czesci.push(cz(box(Math.hypot(sz, h - 0.6) - 0.05, 0.07, 0.12), OKUCIA, 0, h / 2 + 0.05, 0, 0, 0, sx * Math.atan2(h - 0.6, sz)));
+    czesci.push(cz(box(sz * 0.8, 0.1, 0.12), k, 0, h * 0.62, 0));
+    // środek skrzydła względem zawiasu: zamknięte leży w linii bramy, otwarte obrócone o 90° (do +z)
+    const ry = zamk ? 0 : sx * Math.PI / 2 * 0.92, ox = -sx * sz / 2;
+    c.push(...obroc(czesci.map(p => { p.m.premultiply(new THREE.Matrix4().makeTranslation(sx * zaw + ox, 0, 0)); return p; }), ry, sx * zaw, 0));
+  }
+  return c;
+}
 const BUD = {
   // Dworek Jagodowy: dwór z bali na kamiennej podmurówce, ganek na słupach, wysoki dach z gontu, dzwonniczka
   ratusz(k, d) {
@@ -526,24 +573,13 @@ const BUD = {
     for (const [x, z] of [[-0.49, -0.3], [-0.49, 0.3], [0.49, -0.3], [0.49, 0.3], [-0.3, 0.49], [0.3, 0.49], [-0.3, -0.49], [0.3, -0.49]]) c.push(cz(kula(0.03, 4), METAL, x, 0.86, z));
     return c;
   },
-  // brama drewniana: dwa słupy, wrota z pasem w kolorze gracza, daszek
-  brama(k, d) {
-    return [cz(cyl(0.1, 0.12, 1.4, 6), BAL, -0.4, 0.7, 0), cz(cyl(0.1, 0.12, 1.4, 6), BAL, 0.4, 0.7, 0),
-      cz(box(0.7, 0.95, 0.08), '#8a5530', 0, 0.5, 0), cz(box(0.04, 0.95, 0.09), '#5a3518', 0, 0.5, 0), cz(box(0.7, 0.1, 0.09), k, 0, 0.75, 0), cz(box(0.7, 0.06, 0.09), '#5a3518', 0, 0.3, 0),
-      ...dach(0, 0, 1.4, 1.0, 0.35, 0.3, GONT, k, 0, BAL, false)];
-  },
-  brama2(k, d) {
-    const CEG = '#b5553a';
-    return [cz(box(0.26, 1.5, 0.9), CEG, -0.37, 0.75, 0), cz(box(0.26, 1.5, 0.9), CEG, 0.37, 0.75, 0), cz(box(1.0, 0.3, 0.9), CEG, 0, 1.35, 0),
-      cz(box(0.48, 1.0, 0.07), '#8a5530', 0, 0.5, 0), cz(box(0.48, 0.1, 0.08), k, 0, 0.72, 0), cz(box(1.02, 0.08, 0.92), KAMIEN, 0, 1.54, 0),
-      cz(box(0.24, 0.2, 0.24), CEG, -0.37, 1.68, 0), cz(box(0.24, 0.2, 0.24), CEG, 0.37, 1.68, 0)];
-  },
-  brama3(k, d) {
-    const c = BUD.brama2(k, d), STAL = '#4a4f57';
-    c.push(cz(box(0.5, 0.06, 0.09), STAL, 0, 0.3, 0.01), cz(box(0.5, 0.06, 0.09), STAL, 0, 0.9, 0.01), cz(box(1.0, 0.06, 0.92), STAL, 0, 1.22, 0));
-    for (const x of [-0.15, 0, 0.15]) c.push(cz(kula(0.025, 4), METAL, x, 0.6, 0.05));
-    return c;
-  },
+  // bramy na 3 kratki (od x = -1.5 do 1.5): drewniana, ceglana, okuta stalą; wersje z „Z” są zamknięte
+  brama(k, d) { return brama3D(1, false, k); },
+  bramaZ(k, d) { return brama3D(1, true, k); },
+  brama2(k, d) { return brama3D(2, false, k); },
+  brama2Z(k, d) { return brama3D(2, true, k); },
+  brama3(k, d) { return brama3D(3, false, k); },
+  brama3Z(k, d) { return brama3D(3, true, k); },
   // Jarmark Jagodowy: trzy kramy z pasiastymi daszkami, kosze z jagodami, słoje z dżemem, beczki, waga, sznur z chorągiewkami
   jarmark(k, d) {
     const c = [cz(box(2.8, 0.06, 2.8), '#c9a77a', 0, 0.03, 0)];

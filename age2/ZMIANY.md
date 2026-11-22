@@ -5,6 +5,25 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 21 (22.11.2026)
+
+**Dodane**
+- Brama jest szeroka na 3 kratki (wcześniej 1). Przy stawianiu sama obraca się wzdłuż najbliższego muru
+  (także skośnego), a przyciskiem 🔄 można ją obrócić ręcznie. Można ją postawić na swoim murze: te kawałki muru
+  znikają (wraca połowa ich ceny). Kosztuje 45 drewna zamiast 30.
+- Bramę można zamknąć i otworzyć (przycisk w okienku bramy). Otwarta przepuszcza twoich, zamknięta nikogo.
+  Wrogów nie przepuszcza nigdy. Widać, czy skrzydła wrót są otwarte, czy zamknięte.
+- Rzemieślnik (🔨, w Kuźni, od ery 2; 60 jagód i 20 żelaza). Sam szuka uszkodzonych budynków i je naprawia
+  za twoje surowce: pełna naprawa kosztuje połowę ceny budynku i trwa dwa razy dłużej niż jego budowa.
+  Płaci na bieżąco; gdy surowców brakuje, przerywa i mówi o tym. Dotknięcie budynku wysyła go do naprawy właśnie tego.
+
+**Zmienione**
+- Ramka zaznaczenia bramy obejmuje całą bramę.
+
+**Do sprawdzenia**
+- Komputer nie stawia bram i nie szkoli rzemieślników (jego gra się nie zmieniła).
+- Stare bramy z wcześniejszych zapisów zostają wąskie (1 kratka).
+
 ## Wersja 20 (22.11.2026)
 
 **Zmienione**
