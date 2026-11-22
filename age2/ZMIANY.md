@@ -18,6 +18,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 - Skośny mur dalej zatrzymuje wrogów jak zwykły (zajmuje kratki schodkami, tylko wygląda gładko).
   Warto zobaczyć w prawdziwej grze, czy nikt się przez niego nie przeciska.
 
+Zapis w repozytorium: `a2c24b3`
+
 ## Wersja 19 (20.11.2026)
 
 **Zmienione**
