@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA } from './dane.js';
 
-const WERSJA = 22;
+const WERSJA = 23;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 22, opis: 'Odświeżone budynki: większe, z różnymi dachami i znakami rozpoznawczymi (wieża Dworku, koło kopalni, renifer w Zagrodzie). Do tego wszystko z wersji 21.' },
+  { nr: 23, opis: 'W budynkach widać tylko ulepszenia, które można zrobić teraz; następne pojawiają się po poprzednich. Do tego wszystko z wersji 22.' },
+  { nr: 22, opis: 'Odświeżone budynki: większe, z różnymi dachami i znakami rozpoznawczymi (wieża Dworku, koło kopalni, renifer w Zagrodzie). Do tego wszystko z wersji 21.', adres: 'wersje/22/' },
   { nr: 21, opis: 'Szeroka brama na 3 kratki, którą można zamknąć i otworzyć; rzemieślnicy z Kuźni sami naprawiają budynki. Do tego wszystko z wersji 20.', adres: 'wersje/21/' },
   { nr: 20, opis: 'Palisadę i mur można stawiać po skosie, pod dowolnym kątem (równa, ciągła ściana). Do tego wszystko z wersji 19.', adres: 'wersje/20/' },
   { nr: 19, opis: 'Naprawione przybliżanie po dużym oddaleniu: każde przybliżenie wyraźnie pokazuje mniej mapy. Do tego wszystko z wersji 18.', adres: 'wersje/19/' },
@@ -2570,7 +2571,8 @@ function odswiezPanel(wymus = false) {
         if (br !== 'w trakcie') a += `<button class="akcja era${br ? ' zablok' : ''}" data-a="rozb" data-koszt='${JSON.stringify(nast.koszt)}'><span class="ak-ik">${nast.emoji}</span><b>Rozbuduj: ${nast.nazwa}</b><small>${br || nast.opis}</small><span class="ak-koszt">${kosztHTML(nast.koszt)}</span></button>`;
       }
       for (const [id, d] of Object.entries(ULEPSZENIA)) if (d.z === b.typ) {
-        const br = brakUlepszenia(0, id); if (br === 'gotowe' || br === 'w trakcie') continue;
+        // pokazujemy tylko ulepszenia, które można zrobić teraz: następne w kolejce (np. drugi plecak) pojawia się dopiero po poprzednim, późniejsze ery dopiero w swojej erze
+        const br = brakUlepszenia(0, id); if (br === 'gotowe' || br === 'w trakcie' || br && br.startsWith('🔒')) continue;
         a += `<button class="akcja${br ? ' zablok' : ''}" data-a="ul:${id}" data-koszt='${JSON.stringify(d.koszt)}'><span class="ak-ik">${d.emoji}</span><b>${d.nazwa}</b><small>${br || d.opis}</small><span class="ak-koszt">${kosztHTML(d.koszt)}</span></button>`;
       }
       if (b.kolejka.length) {
