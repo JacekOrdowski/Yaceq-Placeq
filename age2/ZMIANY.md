@@ -5,6 +5,28 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 29 (23.11.2026)
+
+**Dodane**
+- 14 nowych ulepszeń. Rodzaje wzięte z gier o erach (umocnienia, wieże, handel, szkolenie wojska, machiny),
+  ale nazwy i liczby są nasze. Liczby do strojenia są w `EFEKTY` w `dane.js`.
+  - Dworek: 🏰 Umocniony Dworek (era 2: Dworki +25% życia, strzelają 2 razy mocniej i o 2 kratki dalej),
+    🧱 Murarze (era 2: budynki +15% życia), 📐 Mistrzowie budowy (era 3, po Murarzach: jeszcze +15% życia i budowa o 25% szybsza).
+  - Ambona (ulepsza wszystkie ambony naraz): 🏯 Blanki (era 2: ambony i Dworki strzelają o 25% mocniej),
+    🫕 Wrzący syrop jagodowy (era 3, po Blankach: wróg tuż przy ambonie dostaje 2 razy więcej), 🔭 Lunety (era 3: strzelają o 1,5 kratki dalej).
+  - Kuźnia: 🔥 Płonące pociski (era 3: strzelcy i ambony niszczą budynki 2 razy szybciej).
+  - Strażnica Krzaka: 📯 Pobór (era 2: całe wojsko szkoli się o 25% szybciej).
+  - Warsztat: 🔧 Inżynierowie (era 3: katapulty +25% ataku).
+  - Zagroda reniferów: 🦌 Zaprzęg reniferów (era 3: katapulty i wozy kupieckie o 20% szybsze).
+  - Jarmark: 🪙 Bite monety (era 2: wozy przywożą o 20% więcej złota), ⚖️ Uczciwe wagi (era 3: kupno o 10% taniej, sprzedaż daje więcej),
+    💰 Poborcy podatków (era 3: każdy Dworek sam przynosi złoto, 1 sztuka co 2 sekundy).
+  - Kamieniołom: 🕳️ Szyb z drabinami (era 3, po Żelaznym kilofie: kamień, ruda żelaza i złoto o 20% szybciej).
+- Komputer też robi nowe ulepszenia.
+
+**Do sprawdzenia**
+- Bitwy komputer na komputer trwały 54–58 minut (komputery zrobiły od 7 do 14 nowych ulepszeń);
+  gracz, który nic nie robi, na łatwym przegrywa po 28–35 minutach.
+
 ## Wersja 28 (23.11.2026)
 
 **Dodane**

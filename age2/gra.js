@@ -4,12 +4,13 @@
 import * as THREE from '../survival/three.module.min.js';
 import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
-  ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY } from './dane.js';
+  ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY } from './dane.js';
 
-const WERSJA = 28;
+const WERSJA = 29;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 28, opis: 'Prawdziwe wysokie góry ze śniegiem na szczytach w Jotunheim i nowa wielkość mapy Mega (384 × 384, 2 razy większa niż Średnia). Do tego wszystko z wersji 27.' },
+  { nr: 29, opis: '14 nowych ulepszeń: Umocniony Dworek, Murarze, Mistrzowie budowy, Blanki, Wrzący syrop, Lunety, Płonące pociski, Pobór, Inżynierowie, Zaprzęg reniferów, Bite monety, Uczciwe wagi, Poborcy podatków, Szyb z drabinami. Do tego wszystko z wersji 28.' },
+  { nr: 28, opis: 'Prawdziwe wysokie góry ze śniegiem na szczytach w Jotunheim i nowa wielkość mapy Mega (384 × 384, 2 razy większa niż Średnia). Do tego wszystko z wersji 27.', adres: 'wersje/28/' },
   { nr: 27, opis: 'Nowa mapa Jotunheim: zimowa kraina olbrzymów z ośnieżonymi górami, fiordami, lasami świerkowymi i kamieniami z runami. Do tego wszystko z wersji 26.', adres: 'wersje/27/' },
   { nr: 26, opis: '8 rodzajów map do wyboru: Dolina, Wielkie Jezioro, Rzeka z brodami, Skalne Przełęcze, Gęsta Puszcza, Mroźna Tundra, Oaza, Bagna (albo losowa). Do tego wszystko z wersji 25.', adres: 'wersje/26/' },
   { nr: 25, opis: 'Brama na 4 kratki; postawiona przy murze sama wskakuje w jego linię, a mur w tym miejscu znika. Do tego wszystko z wersji 24.', adres: 'wersje/25/' },
@@ -1067,7 +1068,7 @@ function nowaJednostka(strona, typ, x, z, id) {
   JED.push(u); E.set(u.id, u);
   return u;
 }
-function predkosc(u) { const ul = S.ul[u.strona]; return u.d.szybkosc * (u.typ === 'osadnik' ? (ul.taczka ? 1.1 : 1) * (ul.wozek ? 1.1 : 1) : 1); }
+function predkosc(u) { const ul = S.ul[u.strona]; return u.d.szybkosc * (u.typ === 'osadnik' ? (ul.taczka ? 1.1 : 1) * (ul.wozek ? 1.1 : 1) : 1) * (ul.zaprzeg && (u.d.oblezenie || u.d.kupiec) ? EFEKTY.zaprzeg : 1); }
 function udzwig(u) { const ul = S.ul[u.strona]; return UDZWIG + (ul.kosz ? 3 : 0) + (ul.taczka ? 4 : 0) + (ul.wozek ? 5 : 0) + (ul.plecak1 ? 2 : 0) + (ul.plecak2 ? 3 : 0) + (ul.plecak3 ? 4 : 0); }
 function maxHpJ(strona, typ) { return JEDNOSTKI[typ].hp + (typ === 'osadnik' && S.ul[strona].rekawice ? 15 : 0); }
 // strzelcy (bez katapulty) korzystają z ulepszeń pocisków
@@ -1081,6 +1082,7 @@ function tempoZbierania(u, rodzaj) {
   if (rodzaj === 'drewno') t *= (ul.deski ? 1.15 : 1) * (ul.siekiera_z ? 1.2 : 1) * (ul.pila ? 1.2 : 1);
   if (rodzaj === 'kamien') t *= (ul.kilof ? 1.2 : 1) * (ul.kilof_z ? 1.2 : 1);
   if (rodzaj === 'zelazo' || rodzaj === 'zloto') t *= ul.kilof_z ? 1.2 : 1;
+  if (ul.szyb && (rodzaj === 'kamien' || rodzaj === 'zelazo' || rodzaj === 'zloto')) t *= EFEKTY.szyb;
   if (u.strona !== STRONA_GRACZA || S.aiGracz) t *= TRUDNOSC[trudnoscStrony(u.strona)].zbieranie;
   return t;
 }
@@ -1088,6 +1090,7 @@ function atakJ(u) {
   const ul = S.ul[u.strona]; let a = u.d.atak;
   if (u.d.wojsko && !u.d.zasieg && !u.d.tylkoBudynki) a += (ul.bron1 ? 1 : 0) + (ul.bron2 ? 1 : 0) + (ul.bron3 ? 2 : 0);
   if (strzelec(u.d)) a += poziomPociskow(u.strona);
+  if (u.d.oblezenie && ul.inzynierowie) a *= EFEKTY.inzynierowie;
   return a;
 }
 function zasiegJ(u) { return u.d.zasieg ? u.d.zasieg + (strzelec(u.d) ? zasiegPociskow(u.strona) : 0) : 0; }
@@ -1095,7 +1098,10 @@ function pancerzJ(u) { const ul = S.ul[u.strona]; return u.d.pancerz + (u.d.wojs
 const poziomMuru = strona => 1 + (S.ul[strona].mur_cegla ? 1 : 0) + (S.ul[strona].mur_stal ? 1 : 0);
 function maxHpBud(strona, typ, poziom = 1) {
   if (typ === 'mur' || typ === 'brama') { const p = MUR_POZIOMY[poziomMuru(strona)]; return typ === 'mur' ? p.hpMur : p.hpBrama; }
-  return typ === 'wieza' ? WIEZA_POZIOMY[poziom].hp : BUDYNKI[typ].hp;
+  // Murarze, Mistrzowie budowy i Umocniony Dworek dają budynkom więcej życia
+  const ul = S && S.ul && S.ul[strona] || {};
+  const m = (1 + (ul.murarze ? EFEKTY.murarze : 0) + (ul.budowniczowie ? EFEKTY.budowniczowie : 0)) * (typ === 'ratusz' && ul.umocnienie ? EFEKTY.umocnienieZycie : 1);
+  return Math.round((typ === 'wieza' ? WIEZA_POZIOMY[poziom].hp : BUDYNKI[typ].hp) * m);
 }
 const nazwaBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].nazwa : b.d.mur || b.d.brama ? MUR_POZIOMY[poziomMuru(b.strona)][b.typ] : b.d.nazwa;
 const emojiBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].emoji : (b.d.mur || b.d.brama) && poziomMuru(b.strona) > 1 ? '🧱' : b.d.emoji;
@@ -1105,8 +1111,10 @@ function modelBud(typ, poziom, strona, zamk = false) {
 }
 // strzelanie budynku: ambona zależy od poziomu i ulepszeń pocisków
 function strzalBud(b) {
-  if (b.typ === 'wieza') { const p = WIEZA_POZIOMY[b.poziom || 1]; return { atak: p.atak + poziomPociskow(b.strona), zasieg: p.zasieg + zasiegPociskow(b.strona), odstep: p.odstep }; }
-  return { atak: b.d.strzela.atak + (S.ul[b.strona].pociski1 ? 1 : 0), zasieg: b.d.strzela.zasieg, odstep: b.d.strzela.odstep };
+  const ul = S.ul[b.strona], mn = ul.blanki ? EFEKTY.blanki : 1, dal = ul.lunety ? EFEKTY.lunety : 0;
+  if (b.typ === 'wieza') { const p = WIEZA_POZIOMY[b.poziom || 1]; return { atak: (p.atak + poziomPociskow(b.strona)) * mn, zasieg: p.zasieg + zasiegPociskow(b.strona) + dal, odstep: p.odstep }; }
+  const um = b.typ === 'ratusz' && ul.umocnienie;
+  return { atak: (b.d.strzela.atak + (ul.pociski1 ? 1 : 0)) * mn * (um ? EFEKTY.umocnienieAtak : 1), zasieg: b.d.strzela.zasieg + dal + (um ? EFEKTY.umocnienieZasieg : 0), odstep: b.d.strzela.odstep };
 }
 function brakRozbudowy(b) {
   const nast = WIEZA_POZIOMY[(b.poziom || 1) + 1];
@@ -1202,7 +1210,7 @@ function domHandlu(strona, j) {
   return naj;
 }
 // liczy się droga wozu (od brzegu do brzegu budynków), nie odległość środków
-const zyskKursu = (j, dom) => Math.max(1, Math.round(HANDEL.zyskWozu(Math.max(0, dyst(j, dom) - (j.w + dom.w) / 2 - 0.5))));
+const zyskKursu = (j, dom) => Math.max(1, Math.round(HANDEL.zyskWozu(Math.max(0, dyst(j, dom) - (j.w + dom.w) / 2 - 0.5)) * (S.ul[j.strona].monety ? EFEKTY.monety : 1)));
 function handel(u, dt) {
   const z = u.zad, j = E.get(z.jid);
   if (!j || j.hp <= 0 || !j.gotowy) { u.zad = null; return; }
@@ -1264,7 +1272,9 @@ function obrazenia(atakujacy, cel, atak) {
     if (atakujacy.d && atakujacy.d.tylkoBudynki) return atak;
     if (atakujacy.d && atakujacy.d.oblezenie) return atak * 2;
     // ambona strzela do budynków mocniej niż zwykli strzelcy
-    return Math.max(1, atak * (atakujacy.d && atakujacy.d.zasieg ? 0.15 : atakujacy.d && atakujacy.typ === 'wieza' ? 0.6 : atakujacy.d && atakujacy.d.w ? 0.2 : 0.45));
+    // Płonące pociski: strzelcy i ambony niszczą budynki szybciej
+    const ogien = atakujacy.d && (atakujacy.d.zasieg || atakujacy.typ === 'wieza') && S.ul[atakujacy.strona] && S.ul[atakujacy.strona].ogniste ? EFEKTY.ogniste : 1;
+    return Math.max(1, ogien * atak * (atakujacy.d && atakujacy.d.zasieg ? 0.15 : atakujacy.d && atakujacy.typ === 'wieza' ? 0.6 : atakujacy.d && atakujacy.d.w ? 0.2 : 0.45));
   }
   const bonus = (atakujacy.d && atakujacy.d.przeciw && cel.d.linia && atakujacy.d.przeciw[cel.d.linia]) || 1;
   const dystans = !atakujacy.d || atakujacy.d.zasieg || atakujacy.d.w;
@@ -1443,7 +1453,7 @@ function buduj(u, dt) {
   if (b.gotowy) { poBudowie(u, b); return; }
   if (dystDoProst(u.x, u.z, b) < 0.8) {
     u.sciezka = null; u.pracuje = true; u.ry = Math.atan2(b.x - u.x, b.z - u.z);
-    const przyrost = dt / b.d.czas;
+    const przyrost = dt / b.d.czas * (S.ul[b.strona].budowniczowie ? EFEKTY.budowa : 1);
     b.postep = Math.min(1, b.postep + przyrost); b.hp = Math.min(b.max, b.hp + b.max * przyrost);
     if (b.postep >= 1) ukonczBudynek(b);
     return;
@@ -1698,7 +1708,9 @@ function aktualizujBudynek(b, dt) {
       for (const e of JED) { if (!wrogowie(b.strona, e.strona)) continue; const d = Math.hypot(e.x - b.x, e.z - b.z); if (d < nd) { nd = d; naj = e; } }
       // ambona: gdy w zasięgu nie ma ludzi, strzela w budynki wroga (także w place budowy)
       if (!naj && b.typ === 'wieza') { let nb = st.zasieg; for (const o of BUD) { if (!wrogowie(b.strona, o.strona)) continue; const d = dystDoProst(b.x, b.z, o); if (d < nb) { nb = d; naj = o; } } }
-      if (naj) { rzut(b, naj, st.atak); b.cd = st.odstep; odglos('zamach', b.x, b.z, 0.4); } else b.cd = 0.4;
+      // Wrzący syrop: wróg tuż przy ambonie dostaje więcej
+      const wrz = naj && !jestBudynkiem(naj) && b.typ === 'wieza' && S.ul[b.strona].wrzatek && nd < EFEKTY.wrzatekDyst + b.w / 2 ? EFEKTY.wrzatek : 1;
+      if (naj) { rzut(b, naj, st.atak * wrz); b.cd = st.odstep; odglos('zamach', b.x, b.z, 0.4); } else b.cd = 0.4;
     }
   }
   const q = b.kolejka[0]; if (!q) return;
@@ -1713,7 +1725,7 @@ function aktualizujBudynek(b, dt) {
     if (b.strona === STRONA_GRACZA && !S.aiGracz) dzwiek('gotowe');
     return;
   }
-  q.t += dt;
+  q.t += dt * (q.rodzaj === 'j' && JEDNOSTKI[q.typ].wojsko && S.ul[b.strona].pobor ? EFEKTY.pobor : 1);
   if (q.t >= q.czas && q.rodzaj !== 'j') {
     b.kolejka.shift();
     if (q.rodzaj === 'u') {
@@ -1723,6 +1735,10 @@ function aktualizujBudynek(b, dt) {
       if (q.typ === 'mur_cegla' || q.typ === 'mur_stal') for (const o of BUD) if (o.strona === b.strona && (o.d.mur || o.d.brama)) {
         const ubyl = o.max - o.hp; o.max = maxHpBud(o.strona, o.typ); o.hp = Math.max(1, o.max - ubyl);
         o.mesh.geometry = MOD.budynek(modelBud(o.typ, 1, o.strona, o.zamk), o.strona);
+      }
+      // więcej życia budynków: rany zostają (plac budowy rośnie w tej samej proporcji)
+      if (q.typ === 'murarze' || q.typ === 'budowniczowie' || q.typ === 'umocnienie') for (const o of BUD) if (o.strona === b.strona && !o.d.mur && !o.d.brama) {
+        const nm = maxHpBud(o.strona, o.typ, o.poziom || 1); o.hp = o.gotowy ? Math.max(1, nm - (o.max - o.hp)) : o.hp * nm / o.max; o.max = nm;
       }
       if (q.typ === 'rekawice') for (const u of JED) if (u.strona === b.strona && u.typ === 'osadnik') { u.max = maxHpJ(u.strona, 'osadnik'); u.hp += 15; }
       if (b.strona === STRONA_GRACZA && !S.aiGracz) { toast(ULEPSZENIA[q.typ].emoji + ' Ulepszone: ' + ULEPSZENIA[q.typ].nazwa); dzwiek('buduj'); odglos('ulepszenie'); }
@@ -1744,8 +1760,8 @@ function aktualizujBudynek(b, dt) {
 
 // ================= handel na Jarmarku =================
 function ceny(strona) { if (!S.ceny) S.ceny = []; return S.ceny[strona] || (S.ceny[strona] = { ...HANDEL.ceny }); }
-const cenaKupna = (strona, s) => Math.round(ceny(strona)[s]);
-const cenaSprzedazy = (strona, s) => Math.max(5, Math.round(ceny(strona)[s] * HANDEL.sprzedaz));
+const cenaKupna = (strona, s) => Math.round(ceny(strona)[s] * (S.ul[strona].wagi ? EFEKTY.wagiKupno : 1));
+const cenaSprzedazy = (strona, s) => Math.max(5, Math.round(ceny(strona)[s] * (S.ul[strona].wagi ? EFEKTY.wagiSprzedaz : HANDEL.sprzedaz)));
 function handluj(strona, s, kupno) {
   if (!BUD.some(b => b.strona === strona && b.typ === 'jarmark' && b.gotowy)) return 'Najpierw zbuduj Jarmark';
   const z = S.zas[strona], c = ceny(strona);
@@ -1754,6 +1770,13 @@ function handluj(strona, s, kupno) {
   return null;
 }
 // ceny powoli wracają do zwykłych
+// Poborcy podatków: każdy Dworek sam przynosi złoto
+function podatki(dt) {
+  for (let s = 0; s < ileStron(); s++) if (S.ul[s] && S.ul[s].poborcy) {
+    const ile = BUD.filter(b => b.strona === s && b.typ === 'ratusz' && b.gotowy).length * EFEKTY.podatek * dt;
+    S.zas[s].zloto += ile; S.stat[s].zebrane += ile;
+  }
+}
 function cenyWracaja(dt) { for (let s = 0; s < ileStron(); s++) { const c = ceny(s); for (const k in c) c[k] += (HANDEL.ceny[k] - c[k]) * Math.min(1, dt * 0.004); } }
 
 // ================= przeciwnik komputerowy =================
@@ -1935,7 +1958,9 @@ function ai(strona, dt) {
   if (oszczedza && !ratusz.kolejka.length && !brakEry(strona) && stac(strona, nastEra.koszt)) dodajDoKolejki(ratusz, 'era');
   // 9. ulepszenia
   for (const id of ['kosz', 'plecak1', 'rekawice', 'deski', 'sciolka', 'kilof', 'taczka', 'siekiera_z', 'kilof_z', 'bron1', 'zbroja1', 'pociski1', 'aw_tarczownik', 'aw_procarz2', 'nawadnianie',
-    'wozek', 'pila', 'bron2', 'zbroja2', 'pociski2', 'aw_obronca', 'plecak2', 'aw_pikinier', 'aw_kusznik', 'plecak3', 'aw_jezdziec', 'mrozoodporne', 'bron3', 'zbroja3', 'pociski3', 'aw_rycerz']) {
+    'pobor', 'blanki', 'murarze', 'monety', 'umocnienie',
+    'wozek', 'pila', 'bron2', 'zbroja2', 'pociski2', 'aw_obronca', 'plecak2', 'aw_pikinier', 'aw_kusznik', 'szyb', 'ogniste', 'budowniczowie', 'inzynierowie', 'lunety', 'wrzatek',
+    'plecak3', 'aw_jezdziec', 'mrozoodporne', 'zaprzeg', 'poborcy', 'wagi', 'bron3', 'zbroja3', 'pociski3', 'aw_rycerz']) {
     const d = ULEPSZENIA[id], b = moje.find(o => o.typ === d.z && o.gotowy && !o.kolejka.length);
     if (b && !brakUlepszenia(strona, id) && stacR(d.koszt) && (osadnicy.length >= celOs - 6 || era > 1)) { dodajDoKolejki(b, 'u', id); break; }
   }
@@ -2092,7 +2117,7 @@ function krokGry(dt) {
       scena.remove(p.mesh); POC.splice(i, 1);
     }
   }
-  cenyWracaja(dt);
+  cenyWracaja(dt); podatki(dt);
   for (let s = 1; s < ileStron(); s++) if (!(S.odpadli && S.odpadli[s])) ai(s, dt);
   if (S.aiGracz) ai(STRONA_GRACZA, dt);
   if ((S.sprzatanie = (S.sprzatanie || 0) + dt) > 20) { S.sprzatanie = 0; sprzatnijListy(); }

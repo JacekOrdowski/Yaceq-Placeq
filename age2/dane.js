@@ -57,6 +57,9 @@ export const JEDNOSTKI = {
 };
 // naprawa przez rzemieślnika: pełna naprawa kosztuje połowę ceny budynku i trwa dwa razy dłużej niż jego budowa
 export const NAPRAWA = { koszt: 0.5, wolniej: 2 };
+// liczby nowszych ulepszeń (rodzaje jak w znanych grach o erach, nazwy i liczby nasze)
+export const EFEKTY = { murarze: 0.15, budowniczowie: 0.15, budowa: 1.25, umocnienieZycie: 1.25, umocnienieAtak: 2, umocnienieZasieg: 2, blanki: 1.25,
+  wrzatek: 2, wrzatekDyst: 3, lunety: 1.5, ogniste: 2, pobor: 1.25, inzynierowie: 1.25, zaprzeg: 1.2, monety: 1.2, wagiKupno: 0.9, wagiSprzedaz: 0.75, podatek: 0.5, szyb: 1.2 };
 
 // rodzaje map do wyboru przy nowej grze (nazwy i wygląd nasze); motyw = kolory ziemi, gatunki drzew i ozdoby;
 // lasy = ile lasów w porównaniu z Doliną
@@ -142,6 +145,7 @@ export const ULEPSZENIA = {
   kilof: { nazwa: 'Kilof', emoji: '⛏️', z: 'szopa', era: 1, koszt: { jagody: 100, drewno: 75 }, czas: 20, opis: 'Kamień zbiera się o 20% szybciej' },
   mur_cegla: { nazwa: 'Mur z cegieł', emoji: '🧱', z: 'szopa', era: 3, koszt: { kamien: 200, drewno: 100 }, czas: 45, opis: 'Wszystkie palisady i bramy stają się murem z cegieł' },
   mur_stal: { nazwa: 'Mur ze stalowymi sztabami', emoji: '⛓️', z: 'szopa', era: 4, wymaga: 'mur_cegla', koszt: { kamien: 300, zelazo: 150 }, czas: 60, opis: 'Mury i bramy wzmocnione stalą: najmocniejsze' },
+  szyb: { nazwa: 'Szyb z drabinami', emoji: '🕳️', z: 'szopa', era: 3, wymaga: 'kilof_z', koszt: { jagody: 250, drewno: 150, zelazo: 75 }, czas: 40, opis: 'Kamień, ruda żelaza i złoto: jeszcze o 20% szybciej' },
   kilof_z: { nazwa: 'Żelazny kilof', emoji: '⛏️', z: 'szopa', era: 2, wymaga: 'kilof', koszt: { jagody: 150, zelazo: 50 }, czas: 30, opis: 'Kamień, ruda żelaza i złoto o 20% szybciej' },
   // Kuźnia: broń, zbroje, pociski (po 3 stopnie)
   bron1: { nazwa: 'Drewniana broń', emoji: '🪵', z: 'kuznia', era: 2, koszt: { jagody: 150 }, czas: 30, opis: 'Wojsko walczące wręcz: +1 do ataku' },
@@ -153,6 +157,24 @@ export const ULEPSZENIA = {
   pociski1: { nazwa: 'Gładkie kamyki', emoji: '🪨', z: 'kuznia', era: 2, koszt: { jagody: 100, drewno: 50 }, czas: 30, opis: 'Strzelcy, Ambony i Dworek: +1 do ataku' },
   pociski2: { nazwa: 'Żelazne kulki', emoji: '⚫', z: 'kuznia', era: 3, wymaga: 'pociski1', koszt: { jagody: 150, zelazo: 75 }, czas: 40, opis: 'Strzelcy i Ambony: +1 do ataku i dalej' },
   pociski3: { nazwa: 'Stalowe groty', emoji: '🏹', z: 'kuznia', era: 4, wymaga: 'pociski2', koszt: { jagody: 250, zelazo: 100, zloto: 100 }, czas: 50, opis: 'Strzelcy i Ambony: +1 do ataku i jeszcze dalej' },
+  // Dworek: umocnienia i budowanie
+  umocnienie: { nazwa: 'Umocniony Dworek', emoji: '🏰', z: 'ratusz', era: 2, koszt: { drewno: 200, kamien: 200 }, czas: 40, opis: 'Dworki: +25% życia, strzelają 2 razy mocniej i o 2 kratki dalej' },
+  murarze: { nazwa: 'Murarze', emoji: '🧱', z: 'ratusz', era: 2, koszt: { jagody: 150, kamien: 100 }, czas: 30, opis: 'Wszystkie budynki (bez murów): +15% życia' },
+  budowniczowie: { nazwa: 'Mistrzowie budowy', emoji: '📐', z: 'ratusz', era: 3, wymaga: 'murarze', koszt: { jagody: 250, kamien: 150, zelazo: 50 }, czas: 40, opis: 'Budynki: jeszcze +15% życia i stawiają się o 25% szybciej' },
+  // Ambona (ulepsza wszystkie ambony naraz)
+  blanki: { nazwa: 'Blanki', emoji: '🏯', z: 'wieza', era: 2, koszt: { drewno: 100, kamien: 100 }, czas: 30, opis: 'Ambony i Dworki strzelają o 25% mocniej' },
+  wrzatek: { nazwa: 'Wrzący syrop jagodowy', emoji: '🫕', z: 'wieza', era: 3, wymaga: 'blanki', koszt: { jagody: 200, drewno: 150 }, czas: 35, opis: 'Wrogowie tuż przy Ambonie (do 3 kratek) dostają 2 razy więcej' },
+  lunety: { nazwa: 'Lunety', emoji: '🔭', z: 'wieza', era: 3, koszt: { drewno: 150, kamien: 100, zelazo: 25 }, czas: 35, opis: 'Ambony i Dworki strzelają o 1,5 kratki dalej' },
+  // Kuźnia: pociski na budynki
+  ogniste: { nazwa: 'Płonące pociski', emoji: '🔥', z: 'kuznia', era: 3, koszt: { jagody: 200, drewno: 150 }, czas: 40, opis: 'Strzelcy i Ambony niszczą budynki 2 razy szybciej' },
+  // szkolenie wojska i machiny
+  pobor: { nazwa: 'Pobór', emoji: '📯', z: 'koszary', era: 2, koszt: { jagody: 150, zelazo: 50 }, czas: 30, opis: 'Wojsko we wszystkich budynkach szkoli się o 25% szybciej' },
+  inzynierowie: { nazwa: 'Inżynierowie', emoji: '🔧', z: 'warsztat', era: 3, koszt: { jagody: 200, drewno: 200, zelazo: 50 }, czas: 40, opis: 'Katapulty: +25% ataku' },
+  zaprzeg: { nazwa: 'Zaprzęg reniferów', emoji: '🦌', z: 'stajnia', era: 3, koszt: { jagody: 200, drewno: 100 }, czas: 35, opis: 'Katapulty i wozy kupieckie jeżdżą o 20% szybciej' },
+  // Jarmark: handel
+  monety: { nazwa: 'Bite monety', emoji: '🪙', z: 'jarmark', era: 2, koszt: { jagody: 150, drewno: 100 }, czas: 30, opis: 'Wozy kupieckie przywożą o 20% więcej złota' },
+  wagi: { nazwa: 'Uczciwe wagi', emoji: '⚖️', z: 'jarmark', era: 3, koszt: { jagody: 200, drewno: 100, zloto: 50 }, czas: 35, opis: 'Na Jarmarku kupujesz o 10% taniej i dostajesz więcej za sprzedaż' },
+  poborcy: { nazwa: 'Poborcy podatków', emoji: '💰', z: 'jarmark', era: 3, koszt: { jagody: 250, drewno: 150 }, czas: 40, opis: 'Każdy Dworek sam przynosi złoto (1 sztuka co 2 sekundy)' },
   // awanse wojska
   aw_tarczownik: { nazwa: 'Awans: Tarczownik', emoji: '🛡️', z: 'koszary', era: 2, koszt: { jagody: 150, zelazo: 50 }, czas: 30, awans: 'tarczownik', opis: 'Wszyscy kijarze dostają tarcze' },
   aw_obronca: { nazwa: 'Awans: Obrońca Sadu', emoji: '⚔️', z: 'koszary', era: 3, wymaga: 'aw_tarczownik', koszt: { jagody: 250, zelazo: 150 }, czas: 40, awans: 'obronca', opis: 'Tarczownicy stają się Obrońcami Sadu' },
