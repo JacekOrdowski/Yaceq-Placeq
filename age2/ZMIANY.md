@@ -12,6 +12,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
   z łyka, Taczka po Wiklinowym koszu) pojawiają się dopiero po zrobieniu poprzedniego, a ulepszenia z późniejszych er
   dopiero w swojej erze. Na przykład Dworek w 1. erze pokazuje 3 ulepszenia zamiast 7.
 
+Zapis w repozytorium: `1980ec0`
+
 ## Wersja 22 (23.11.2026)
 
 **Zmienione**
