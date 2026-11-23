@@ -5,6 +5,26 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 24 (23.11.2026)
+
+**Dodane**
+- Nowa gra ma okienko z wyborem:
+  - Rodzaj mapy: na razie tylko Dolina (inne rodzaje przyjdą później).
+  - Wielkość mapy: Mała (144 × 144 kratki), Średnia (192 × 192, jak dotąd) albo Duża (240 × 240).
+  - Ilu przeciwników: od 1 do 3 komputerów, każdy ze swoim poziomem trudności (łatwy, średni, trudny).
+  - Kto z kim walczy (przy 2 i 3 komputerach): każdy na każdego albo komputery razem przeciwko tobie.
+- Gra zapamiętuje ostatnio wybrane opcje.
+- Każda osada ma swój kolor: ty niebieski, komputery czerwony, żółty i fioletowy. Każda zaczyna w swoim rogu mapy.
+  Przy 2 i 3 komputerach każdy róg mapy wygląda tak samo, więc nikt nie ma lepszego startu.
+- Gdy upadnie Dworek jednego z komputerów, gra o tym mówi, a reszta walczy dalej. Wygrywasz, gdy upadną
+  wszystkie wrogie Dworki.
+- Komputery w trybie każdy na każdego atakują różne osady: częściej te bliżej, nie zawsze ciebie.
+
+**Do sprawdzenia**
+- Przy 3 komputerach na dużej mapie po kilkudziesięciu minutach chodzi po mapie nawet 250 postaci.
+  Sprawdź, czy telefon daje radę.
+- Gry zapisane wcześniej (1 komputer, średnia mapa) wczytują się tak jak dotąd, na tej samej mapie.
+
 ## Wersja 23 (23.11.2026)
 
 **Zmienione**

@@ -51,8 +51,8 @@ const stozek = (r, h, s = 8) => new THREE.ConeGeometry(r, h, s);
 const dach4 = (r, h) => new THREE.ConeGeometry(r, h, 4);
 
 const SKORA = '#f1c193', BRAZ = '#7a4a26', DREWNO = '#b9864f', CIEMNE = '#4b3020', KAMIEN = '#9aa0a8', KAMIEN2 = '#7d838c', METAL = '#c9ced6', SLOMA = '#e3c56a';
-export const KOLORY_STRON = ['#2f6fd6', '#d8382f'];
-const CIEMNIEJ = ['#214f9c', '#9c2620'];
+export const KOLORY_STRON = ['#2f6fd6', '#d8382f', '#e0a020', '#8e4fd0'];
+const CIEMNIEJ = ['#214f9c', '#9c2620', '#a8740f', '#62309c'];
 
 function cache(f) { const m = new Map(); return (...a) => { const k = a.join('|'); if (!m.has(k)) m.set(k, f(...a)); return m.get(k); }; }
 

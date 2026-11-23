@@ -136,6 +136,16 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .przelacz button { min-width: 64px; padding: 8px 12px; border-radius: 14px; background: #e9eef6; font-weight: 900; }
 .przelacz button.wl { background: #c9f7d5; }
 .drobne { margin-top: 12px; font-size: 13px; color: var(--ink-soft); font-weight: 800; }
+.opcja { margin-top: 12px; text-align: left; }
+.opcja > b { display: block; font-size: 15px; font-weight: 900; margin-bottom: 6px; }
+.wybory { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.wyb { flex: 1 1 0; min-width: 64px; padding: 10px 6px; border-radius: 14px; background: #eef4fb; box-shadow: 0 3px 0 #c9d3e2; font-weight: 900; font-size: 15px; color: var(--ink); }
+.wyb.wybrany { background: #fff4d6; box-shadow: 0 3px 0 #e8cf8f; }
+.wyb[disabled] { flex: 0 0 auto; padding: 10px 14px; opacity: 1; }
+.n-komp { margin-top: 6px; }
+.n-komp > span { display: block; font-size: 14px; font-weight: 900; margin-bottom: 4px; }
+.wkrotce { display: block; margin-top: 6px; font-size: 12px; font-weight: 800; color: var(--ink-soft); }
+.wybory .wkrotce { display: inline; margin-top: 0; }
 .trudnosc { display: flex; gap: 12px; align-items: center; text-align: left; width: 100%; padding: 12px; margin-top: 10px; border-radius: 18px; background: #eef4fb; box-shadow: 0 4px 0 #c9d3e2; }
 .trudnosc.wybrany { background: #fff4d6; box-shadow: 0 4px 0 #e8cf8f; }
 .trudnosc .ik { font-size: 32px; }
@@ -214,11 +224,14 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 
 <div class="okno" id="o-nowa" hidden>
   <div class="karta">
-    <h2>Jak trudno?</h2>
-    <p>Komputer ma taką samą dolinę jak ty, tylko po drugiej stronie.</p>
-    <button class="trudnosc" data-trudnosc="latwy"><span class="ik">🙂</span><span><b>Łatwy</b><small>Komputer zbiera wolniej i atakuje dopiero po 12 minutach</small></span></button>
-    <button class="trudnosc" data-trudnosc="sredni"><span class="ik">😐</span><span><b>Średni</b><small>Pierwszy atak po 8 minutach</small></span></button>
-    <button class="trudnosc" data-trudnosc="trudny"><span class="ik">😠</span><span><b>Trudny</b><small>Komputer jest szybki i atakuje po 6 minutach</small></span></button>
+    <h2>Nowa gra</h2>
+    <p>Każdy zaczyna w swoim rogu takiej samej doliny.</p>
+    <div class="opcja"><b>Rodzaj mapy</b><div class="wybory"><button class="wyb wybrany" disabled>🌲 Dolina</button><span class="wkrotce">inne rodzaje map wkrótce</span></div></div>
+    <div class="opcja"><b>Wielkość mapy</b><div class="wybory" id="n-rozmiar"><button class="wyb" data-v="144">Mała</button><button class="wyb" data-v="192">Średnia</button><button class="wyb" data-v="240">Duża</button></div></div>
+    <div class="opcja"><b>Ilu przeciwników?</b><div class="wybory" id="n-ile"><button class="wyb" data-v="1">1</button><button class="wyb" data-v="2">2</button><button class="wyb" data-v="3">3</button></div></div>
+    <div class="opcja"><b>Jak trudni?</b><div id="n-komputery"></div><small class="wkrotce" id="n-trud-opis"></small></div>
+    <div class="opcja" id="n-sojusz-w"><b>Kto z kim walczy?</b><div class="wybory" id="n-sojusz"><button class="wyb" data-v="kazdy">⚔️ Każdy na każdego</button><button class="wyb" data-v="razem">🤝 Komputery razem na ciebie</button></div></div>
+    <button class="przycisk" id="n-start">Zaczynamy!</button>
     <button class="przycisk drugi" id="n-wroc">Wróć</button>
   </div>
 </div>

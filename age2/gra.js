@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA } from './dane.js';
 
-const WERSJA = 23;
+const WERSJA = 24;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 23, opis: 'W budynkach widać tylko ulepszenia, które można zrobić teraz; następne pojawiają się po poprzednich. Do tego wszystko z wersji 22.' },
+  { nr: 24, opis: 'Nowa gra z wyborem: wielkość mapy, od 1 do 3 komputerów (każdy ze swoim poziomem), każdy na każdego albo komputery razem. Do tego wszystko z wersji 23.' },
+  { nr: 23, opis: 'W budynkach widać tylko ulepszenia, które można zrobić teraz; następne pojawiają się po poprzednich. Do tego wszystko z wersji 22.', adres: 'wersje/23/' },
   { nr: 22, opis: 'Odświeżone budynki: większe, z różnymi dachami i znakami rozpoznawczymi (wieża Dworku, koło kopalni, renifer w Zagrodzie). Do tego wszystko z wersji 21.', adres: 'wersje/22/' },
   { nr: 21, opis: 'Szeroka brama na 3 kratki, którą można zamknąć i otworzyć; rzemieślnicy z Kuźni sami naprawiają budynki. Do tego wszystko z wersji 20.', adres: 'wersje/21/' },
   { nr: 20, opis: 'Palisadę i mur można stawiać po skosie, pod dowolnym kątem (równa, ciągła ściana). Do tego wszystko z wersji 19.', adres: 'wersje/20/' },
@@ -37,15 +38,22 @@ const KLUCZ = 'age-of-haskap-2';
 const $ = id => document.getElementById(id);
 const losowo = (a, b) => a + Math.random() * (b - a);
 
-// mapa 192 × 192 kratki (do wersji 13: 96 × 96); Dworki stoją w (BAZA, BAZA) i (−BAZA, −BAZA)
-const N = 192, POL = N / 2, BAZA = 60;
+// mapa N × N kratek (do wyboru przy nowej grze: 144, 192 albo 240; do wersji 13: 96); Dworki stoją w rogach (±BAZA, ±BAZA)
+const N_MAKS = 240, ROZMIARY = [144, 192, 240];
+let N = 192, POL = N / 2, BAZA = 60;
+function ustawMape(n) {
+  N = ROZMIARY.includes(n) ? n : 192; POL = N / 2; BAZA = Math.round(N * 60 / 192);
+  MK = (MINI / 2) / (POL * Math.SQRT2);
+  // chmury i ptaki są zrobione pod wielkość mapy: przy innej wielkości robimy je od nowa
+  if (CHMURY && CHMURY.userData.n !== N) { scena.remove(CHMURY); for (const b of PTAKI) scena.remove(b.p); CHMURY = null; PTAKI = []; }
+}
 
 // ================= ustawienia i zapis =================
 function wczytaj() {
   const z = { muzyka: true, dzwieki: true, trudnosc: 'latwy', wygrane: {}, gra: null };
   try { const s = JSON.parse(localStorage.getItem(KLUCZ)); if (s && typeof s === 'object') Object.assign(z, s); } catch (e) { /* brak zapisu */ }
   // gra zaczęta na małej mapie (do wersji 13) dokańcza się w kopii wersji 13, która ma swój zapis
-  if (z.gra && (z.gra.mapa || 96) !== N) {
+  if (z.gra && (z.gra.mapa || 96) === 96) {
     try { if (!localStorage.getItem('age-of-haskap-2-w13')) localStorage.setItem('age-of-haskap-2-w13', JSON.stringify(z)); } catch (e) { /* pełna pamięć */ }
     z.gra = null; z.malaMapa = true;
   }
@@ -55,12 +63,12 @@ const zapis = wczytaj();
 function zapiszDysk() { try { localStorage.setItem(KLUCZ, JSON.stringify(zapis)); } catch (e) { /* pełna pamięć albo tryb prywatny */ } }
 
 // ================= mapa: kratki =================
-const blok = new Uint8Array(N * N);   // 0 wolne, 1 zasób (drzewo, krzak, skała), 2 budynek, 4 pole (można chodzić, nie można budować)
-const naKom = new Int32Array(N * N);  // id zasobu albo budynku w tej kratce
+const blok = new Uint8Array(N_MAKS * N_MAKS);   // 0 wolne, 1 zasób (drzewo, krzak, skała), 2 budynek, 4 pole (można chodzić, nie można budować)
+const naKom = new Int32Array(N_MAKS * N_MAKS);  // id zasobu albo budynku w tej kratce
 const kom = (x, z) => { const i = Math.floor(x + POL), j = Math.floor(z + POL); return i < 0 || j < 0 || i >= N || j >= N ? -1 : j * N + i; };
 const kom2 = (i, j) => (i < 0 || j < 0 || i >= N || j >= N ? -1 : j * N + i);
 const srodekKom = c => [(c % N) - POL + 0.5, Math.floor(c / N) - POL + 0.5];
-const bramaStr = new Int8Array(N * N).fill(-1); // właściciel bramy w kratce
+const bramaStr = new Int8Array(N_MAKS * N_MAKS).fill(-1); // właściciel bramy w kratce
 let RUCH = -1; // czyi ludzie teraz chodzą (przez swoje bramy przechodzą, przez cudze nie)
 const wolnaKom = c => c >= 0 && (blok[c] === 0 || blok[c] === 4 || blok[c] === 5 && bramaStr[c] === RUCH);
 const wolneXZ = (x, z) => wolnaKom(kom(x, z));
@@ -89,8 +97,16 @@ let pauza = true;
 let tryb = null;              // stawianie budynku: { typ, i0, j0, ok, duch, plama }
 let trybObszar = false;       // zaznaczanie ramką
 
+// strona 0 to gracz, strony 1–3 to komputery (KOMPUTER = pierwszy z nich)
 const STRONA_GRACZA = 0, KOMPUTER = 1;
-const wrog = s => 1 - s;
+const ileStron = () => (S && S.strony) || 2;
+// wrogowie: każdy na każdego albo komputery w jednej drużynie (S.druzyna)
+const wrogowie = (a, b) => a !== b && !(S && S.druzyna && S.druzyna[a] === S.druzyna[b]);
+const trudnoscStrony = s => s === STRONA_GRACZA ? S.trudnoscGracza : (S.trudnosci && S.trudnosci[s]) || S.trudnosc;
+// Dworki w rogach mapy: gracz (+, +), pierwszy komputer naprzeciwko, następni w pozostałych rogach
+const ROGI = [[1, 1], [-1, -1], [1, -1], [-1, 1]];
+const bazaStrony = s => [ROGI[s][0] * BAZA, ROGI[s][1] * BAZA];
+const NAZWY_STRON = ['niebieska', 'czerwona', 'żółta', 'fioletowa'], ZNAK_STRON = ['🔵', '🔴', '🟡', '🟣'], KOLORY_MINI = ['#7fb2ff', '#ff6a5a', '#ffd84a', '#c48aff'];
 const dyst = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 function dystDoProst(x, z, b) {
   const h = b.w / 2, dx = Math.max(b.x - h - x, 0, x - b.x - h), dz = Math.max(b.z - h - z, 0, z - b.z - h);
@@ -213,15 +229,15 @@ function malujZiemie(seed) {
   }
   // 3. wydeptane ścieżki od Dworków do środka mapy (lekko kręte)
   c.lineCap = 'round'; c.lineJoin = 'round';
-  for (const zn of [1, -1]) {
-    const pkt = [];
-    for (let t = 0; t <= 1.0001; t += 0.025) { const b = BAZA * (1 - t), w = Math.sin(t * 9 + zn) * 3 * Math.sin(t * Math.PI); pkt.push([zn * (b + w), zn * (b - w)]); }
+  for (let s = 0; s < ileStron(); s++) {
+    const [sx, sz] = ROGI[s], zn = s === 1 ? -1 : s === 0 ? 1 : s, pkt = [];
+    for (let t = 0; t <= 1.0001; t += 0.025) { const b = BAZA * (1 - t), w = Math.sin(t * 9 + zn) * 3 * Math.sin(t * Math.PI); pkt.push([sx * (b + w), sz * (b - w)]); }
     for (const [szer, kol] of [[1.9, 'rgba(160,128,84,0.35)'], [1.2, 'rgba(178,146,100,0.5)'], [0.5, 'rgba(196,166,120,0.45)']]) {
       c.strokeStyle = kol; c.lineWidth = szer * sk; c.beginPath(); pkt.forEach(([x, z], i) => i ? c.lineTo(P(x), P(z)) : c.moveTo(P(x), P(z))); c.stroke();
     }
   }
   // 4. place przy Dworkach
-  for (const [x, z] of [[BAZA, BAZA], [-BAZA, -BAZA]]) { plama(P(x), P(z), 7.5 * sk, 'rgba(190,156,108,0.65)'); plama(P(x), P(z), 4.5 * sk, 'rgba(196,164,116,0.5)'); }
+  for (let s = 0; s < ileStron(); s++) { const [x, z] = bazaStrony(s); plama(P(x), P(z), 7.5 * sk, 'rgba(190,156,108,0.65)'); plama(P(x), P(z), 4.5 * sk, 'rgba(196,164,116,0.5)'); }
   // 5. drobne szczegóły: źdźbła trawy, kwiatki, kamyczki
   for (let i = 0; i < 52000; i++) {
     const x = r() * R, z = r() * R, q = r();
@@ -423,13 +439,18 @@ function wyczyscSwiat() {
 }
 const RODZAJ_SUR = { drzewo: 'drewno', krzak: 'jagody', kamien: 'kamien', ruda: 'zelazo', zloto: 'zloto' };
 const WYS_ZAS = { drzewo: 2.4, krzak: 0.9, kamien: 0.8, ruda: 0.8, zloto: 0.8 };
-// mapa jest taka sama dla obu stron: wszystko z połowy gracza odbijamy na połowę komputera
+// mapa jest taka sama dla wszystkich stron: przy 2 stronach wszystko z połowy gracza odbijamy na drugą połowę,
+// przy 3–4 stronach ćwiartkę gracza obracamy 3 razy o 90° (każdy róg mapy wygląda tak samo)
+const sym4 = () => ileStron() > 2;
+const naszaCzesc = (i, j) => sym4() ? i >= POL && j >= POL : i + j >= N - 1;
+const kopieKom = (i, j) => sym4() ? [[i, j], [N - 1 - j, i], [N - 1 - i, N - 1 - j], [j, N - 1 - i]] : [[i, j], [N - 1 - i, N - 1 - j]];
+const skalaMapy = () => (N / 192) ** 2 * (sym4() ? 0.5 : 1);
 function generujMape(seed) {
   const r = rng(seed), plan = new Uint8Array(N * N); // 0 nic, 1 drzewo, 2 krzak, 3 kamień, 4 złoto
   const TC = [BAZA, BAZA];
   const daj = (x, z, typ) => {
     const i = Math.floor(x + POL), j = Math.floor(z + POL);
-    if (i < 1 || j < 1 || i >= N - 1 || j >= N - 1 || i + j < N - 1) return;
+    if (i < 1 || j < 1 || i >= N - 1 || j >= N - 1 || !naszaCzesc(i, j)) return;
     if (Math.hypot(x - TC[0], z - TC[1]) < 5.5) return;
     if (!plan[j * N + i]) plan[j * N + i] = typ;
   };
@@ -463,19 +484,18 @@ function generujMape(seed) {
   las(...wewn(przy(aL, 14)), 5);
   kepa(...wewn(przy(aK + 0.6, 16)), 5, 2, 1.3);
   // lasy na mapie
-  for (let k = 0; k < 56; k++) {
-    const x = 4 - POL + r() * (N - 8), z = 4 - POL + r() * (N - 8); if (x + z < 4) continue;
+  for (let k = 0, ile = Math.round(56 * skalaMapy()); k < ile; k++) {
+    const x = 4 - POL + r() * (N - 8), z = 4 - POL + r() * (N - 8); if (sym4() ? x < 2 || z < 2 : x + z < 4) continue;
     if (Math.hypot(x - TC[0], z - TC[1]) < 12) continue;
     las(x, z, 2.5 + r() * 3.5);
   }
   // złoto i kamień na środku mapy (po jednej kępce na stronę)
-  kepa(8 + r() * 6, -6 + r() * 6, 5, 4, 1.0);
-  kepa(-4 + r() * 6, 12 + r() * 5, 4, 3, 1.0);
-  kepa(14 + r() * 6, 14 + r() * 6, 5, 2, 1.2);
+  if (sym4()) { kepa(6 + r() * 6, 6 + r() * 4, 5, 4, 1.0); kepa(4 + r() * 5, 14 + r() * 5, 4, 3, 1.0); kepa(14 + r() * 6, 5 + r() * 6, 5, 2, 1.2); }
+  else { kepa(8 + r() * 6, -6 + r() * 6, 5, 4, 1.0); kepa(-4 + r() * 6, 12 + r() * 5, 4, 3, 1.0); kepa(14 + r() * 6, 14 + r() * 6, 5, 2, 1.2); }
   // duża mapa: więcej kęp krzaków, kamienia, rudy i złota w dalszych częściach doliny
-  for (let k = 0, n = 0; k < 200 && n < 16; k++) {
+  for (let k = 0, n = 0, ile = Math.round(16 * skalaMapy()); k < 200 && n < ile; k++) {
     const x = 10 - POL + r() * (N - 20), z = 10 - POL + r() * (N - 20);
-    if (x + z < 8 || Math.hypot(x - TC[0], z - TC[1]) < 20) continue;
+    if ((sym4() ? x < 4 || z < 4 : x + z < 8) || Math.hypot(x - TC[0], z - TC[1]) < 20) continue;
     const typ = [2, 3, 4, 2, 3, 1][n % 6];
     if (typ === 1) las(x, z, 3 + r() * 3); else kepa(x, z, typ === 2 ? 6 : 5, typ, typ === 2 ? 1.2 : 1.0);
     n++;
@@ -485,10 +505,11 @@ function generujMape(seed) {
     const x = TC[0] * (1 - t), z = TC[1] * (1 - t);
     for (let dz = -1.6; dz <= 1.6; dz += 0.5) for (let dx = -1.6; dx <= 1.6; dx += 0.5) { const c = kom(x + dx, z + dz); if (c >= 0) plan[c] = 0; }
   }
-  // odbicie na drugą połowę
+  // odbicie na drugą połowę (albo obrót ćwiartki na pozostałe trzy)
   for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
-    const c = j * N + i, m = (N - 1 - j) * N + (N - 1 - i);
-    if (i + j > N - 1 && plan[c]) plan[m] = plan[c];
+    const c = j * N + i;
+    if (!plan[c] || !(sym4() ? naszaCzesc(i, j) : i + j > N - 1)) continue;
+    for (const [a, b] of kopieKom(i, j).slice(1)) plan[b * N + a] = plan[c];
   }
   // tworzenie zasobów (kolejność kratek = te same numery przy każdym wczytaniu)
   const RODZ = [null, 'drzewo', 'krzak', 'kamien', 'ruda'];
@@ -542,29 +563,30 @@ const ID_ZLOZ = 900000;
 function dodatkoweZloza(seed) {
   const r = rng(seed * 31 + 17), lista = { kamien: [], zloto: [] }, plan = new Map();
   const TC = [BAZA, BAZA];
-  const wolne = (i, j) => { const c = kom2(i, j), m = kom2(N - 1 - i, N - 1 - j); return c >= 0 && m >= 0 && blok[c] === 0 && blok[m] === 0 && !plan.has(c) && !plan.has(m) && i > 2 && j > 2 && i < N - 3 && j < N - 3; };
+  const wolne = (i, j) => i > 2 && j > 2 && i < N - 3 && j < N - 3 && kopieKom(i, j).every(([a, b]) => { const c = kom2(a, b); return c >= 0 && blok[c] === 0 && !plan.has(c); });
   const naDrodze = (x, z) => { const t = Math.max(0, Math.min(1, (x + z) / (2 * BAZA))); return Math.hypot(x - BAZA * t, z - BAZA * t) < 2.6; };
   const kepa = (cx, cz, ile, rodzaj) => {
     let n = 0;
     for (let k = 0; k < 80 && n < ile; k++) {
       const a = r() * 6.283, d = Math.sqrt(r()) * 0.75 * Math.sqrt(ile), x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
       const i = Math.floor(x + POL), j = Math.floor(z + POL);
-      if (i + j < N - 1 || !wolne(i, j) || Math.hypot(x - TC[0], z - TC[1]) < 6.5 || naDrodze(x, z)) continue;
-      plan.set(j * N + i, rodzaj); plan.set((N - 1 - j) * N + (N - 1 - i), rodzaj); n++;
+      if (!naszaCzesc(i, j) || !wolne(i, j) || Math.hypot(x - TC[0], z - TC[1]) < 6.5 || naDrodze(x, z)) continue;
+      for (const [a, b] of kopieKom(i, j)) plan.set(b * N + a, rodzaj); n++;
     }
   };
   // szukamy miejsc na kępy: przy bazie (kamień, złoto) i bliżej środka
   const szukaj = (dMin, dMax, rodzaj, ile) => {
     for (let p = 0; p < 40; p++) {
       const a = r() * 6.283, d = dMin + r() * (dMax - dMin), x = TC[0] + Math.cos(a) * d, z = TC[1] + Math.sin(a) * d;
-      if (x + z < 3 || Math.abs(x) > POL - 7 || Math.abs(z) > POL - 7) continue;
+      if ((sym4() ? x < 1.5 || z < 1.5 : x + z < 3) || Math.abs(x) > POL - 7 || Math.abs(z) > POL - 7) continue;
       const i = Math.floor(x + POL), j = Math.floor(z + POL); if (!wolne(i, j)) continue;
       kepa(x, z, ile, rodzaj); return;
     }
   };
-  szukaj(11, 16, 'kamien', 6); szukaj(16, 24, 'kamien', 6); szukaj(24, 34, 'kamien', 5);
-  szukaj(10, 14, 'zloto', 5); szukaj(26, 36, 'zloto', 5);
-  szukaj(36, 50, 'kamien', 6); szukaj(50, 70, 'kamien', 5); szukaj(40, 55, 'zloto', 5); szukaj(55, 75, 'zloto', 5);
+  const sk = N / 192, sz = (a, b, rodzaj, ile) => szukaj(a * sk, b * sk, rodzaj, ile);
+  sz(11, 16, 'kamien', 6); sz(16, 24, 'kamien', 6); sz(24, 34, 'kamien', 5);
+  sz(10, 14, 'zloto', 5); sz(26, 36, 'zloto', 5);
+  sz(36, 50, 'kamien', 6); sz(50, 70, 'kamien', 5); sz(40, 55, 'zloto', 5); sz(55, 75, 'zloto', 5);
   let id = ID_ZLOZ;
   for (const [c, rodzaj] of [...plan.entries()].sort((a, b) => a[0] - b[0])) {
     const [x, z] = srodekKom(c), kl = rodzaj + '_d';
@@ -587,9 +609,9 @@ function rozmiescOzdoby(seed) {
   OZD.clear();
   const r = rng(seed * 7 + 11), lista = {};
   for (const k of MOD.OZDOBY) lista[k] = [];
-  const odBazy = (x, z) => Math.min(Math.hypot(x - BAZA, z - BAZA), Math.hypot(x + BAZA, z + BAZA));
+  const bazy = Array.from({ length: ileStron() }, (_, s) => bazaStrony(s)), odBazy = (x, z) => Math.min(...bazy.map(([bx, bz]) => Math.hypot(x - bx, z - bz)));
   const przyLesie = c => { const i = c % N, j = (c / N) | 0; for (let k = 0; k < 8; k++) { const n = kom2(i + DI[k], j + DJ[k]); if (n >= 0 && blok[n] === 1) { const z0 = ZAS.get(naKom[n]); if (z0 && z0.rodzaj === 'drzewo') return true; } } return false; };
-  for (let k = 0; k < 18000; k++) {
+  for (let k = 0, ile = Math.round(18000 * (N / 192) ** 2); k < ile; k++) {
     const x = 1.5 - POL + r() * (N - 3), z = 1.5 - POL + r() * (N - 3), c = kom(x, z);
     if (c < 0 || blok[c] !== 0 || odBazy(x, z) < 6.5) continue;
     const q = r(), las = przyLesie(c), kw = szumMapy(x * 0.12, z * 0.12, 77);
@@ -645,9 +667,9 @@ function usunZasob(z0) {
 }
 
 // ================= droga (szukanie ścieżki po kratkach) =================
-const H_G = new Float32Array(N * N), H_OD = new Int32Array(N * N), H_ST = new Uint32Array(N * N), H_ZAM = new Uint32Array(N * N), H_CEL = new Uint32Array(N * N);
+const NN = N_MAKS * N_MAKS, H_G = new Float32Array(NN), H_OD = new Int32Array(NN), H_ST = new Uint32Array(NN), H_ZAM = new Uint32Array(NN), H_CEL = new Uint32Array(NN);
 let hGen = 0;
-const KOP_K = new Int32Array(N * N * 8), KOP_F = new Float32Array(N * N * 8); let kopN = 0;
+const KOP_K = new Int32Array(NN * 8), KOP_F = new Float32Array(NN * 8); let kopN = 0;
 function kopDodaj(k, f) {
   let i = kopN++; KOP_K[i] = k; KOP_F[i] = f;
   while (i > 0) { const p = (i - 1) >> 1; if (KOP_F[p] <= KOP_F[i]) break; [KOP_K[p], KOP_K[i]] = [KOP_K[i], KOP_K[p]]; [KOP_F[p], KOP_F[i]] = [KOP_F[i], KOP_F[p]]; i = p; }
@@ -778,7 +800,7 @@ function tempoZbierania(u, rodzaj) {
   if (rodzaj === 'drewno') t *= (ul.deski ? 1.15 : 1) * (ul.siekiera_z ? 1.2 : 1) * (ul.pila ? 1.2 : 1);
   if (rodzaj === 'kamien') t *= (ul.kilof ? 1.2 : 1) * (ul.kilof_z ? 1.2 : 1);
   if (rodzaj === 'zelazo' || rodzaj === 'zloto') t *= ul.kilof_z ? 1.2 : 1;
-  if (u.strona === KOMPUTER || (S.aiGracz && u.strona === STRONA_GRACZA)) t *= TRUDNOSC[u.strona === KOMPUTER ? S.trudnosc : S.trudnoscGracza].zbieranie;
+  if (u.strona !== STRONA_GRACZA || S.aiGracz) t *= TRUDNOSC[trudnoscStrony(u.strona)].zbieranie;
   return t;
 }
 function atakJ(u) {
@@ -932,26 +954,26 @@ function celPostawy(u) {
   const szal = p === 'szal', r = u.d.wzrok + (szal ? 2 : 0);
   let naj = null, nd = r * r;
   if (!u.d.tylkoBudynki) for (const e of JED) {
-    if (e.strona === u.strona || e.hp <= 0 || !szal && !e.d.wojsko) continue;
+    if (!wrogowie(u.strona, e.strona) || e.hp <= 0 || !szal && !e.d.wojsko) continue;
     let d = (e.x - u.x) ** 2 + (e.z - u.z) ** 2; if (!e.d.wojsko) d *= 1.6;
     if (d < nd) { nd = d; naj = e; }
   }
   if (naj) return naj;
   let nb = r;
-  for (const b of BUD) { if (b.strona === u.strona || !szal && !b.d.strzela) continue; const d = dystDoProst(u.x, u.z, b); if (d < nb) { nb = d; naj = b; } }
+  for (const b of BUD) { if (!wrogowie(u.strona, b.strona) || !szal && !b.d.strzela) continue; const d = dystDoProst(u.x, u.z, b); if (d < nb) { nb = d; naj = b; } }
   return naj;
 }
 // cel do walki w pobliżu (najpierw ludzie, potem budynki)
 function celWalki(u, r, budynkiTez) {
   let naj = null, nd = r * r;
   if (!u.d.tylkoBudynki) for (const e of JED) {
-    if (e.strona === u.strona || e.hp <= 0) continue;
+    if (!wrogowie(u.strona, e.strona) || e.hp <= 0) continue;
     let d = (e.x - u.x) ** 2 + (e.z - u.z) ** 2; if (!e.d.wojsko) d *= 1.6; // najpierw wojsko
     if (d < nd) { nd = d; naj = e; }
   }
   if (naj || !(budynkiTez || u.d.tylkoBudynki)) return naj;
   let nb = u.d.tylkoBudynki ? r + 4 : r;
-  for (const b of BUD) { if (b.strona === u.strona) continue; const d = dystDoProst(u.x, u.z, b) - (b.d.strzela ? 1 : 0); if (d < nb) { nb = d; naj = b; } }
+  for (const b of BUD) { if (!wrogowie(u.strona, b.strona)) continue; const d = dystDoProst(u.x, u.z, b) - (b.d.strzela ? 1 : 0); if (d < nb) { nb = d; naj = b; } }
   return naj;
 }
 
@@ -972,17 +994,17 @@ let alarmT = -99;
 function zadaj(cel, ile, od) {
   if (!zyje(cel)) return;
   cel.hp -= ile; cel.trafiony = S.czas;
-  if (od && od.strona !== cel.strona) {
+  if (od && wrogowie(od.strona, cel.strona)) {
     if (cel.strona === STRONA_GRACZA || od.strona === STRONA_GRACZA) walkaT = S.czas;
     if (cel.strona === STRONA_GRACZA && S.czas - alarmT > 25 && !S.aiGracz) { alarmT = S.czas; toast('⚠️ Atak na twoją osadę!'); dzwiek('alarm'); ping = { x: cel.x, z: cel.z, t: 3 }; }
   }
   // wojsko oddaje
   // (w obronie też oddają, ale potem wracają na swoje miejsce; w agresji i szale oddają też strzelającym budynkom)
   if (!jestBudynkiem(cel) && cel.d.wojsko && od && zyje(od) && (!jestBudynkiem(od) || (cel.postawa || 'agresja') !== 'obrona' && !cel.d.zasieg)
-    && (!cel.zad || cel.zad.typ === 'idz' && cel.strona === KOMPUTER)) {
+    && (!cel.zad || cel.zad.typ === 'idz' && cel.strona !== STRONA_GRACZA)) {
     rozkazAtak(cel, od, { typ: 'idz', x: cel.x, z: cel.z, wraca: true }); if (cel.zad) { cel.zad.sx = cel.x; cel.zad.sz = cel.z; cel.zad.pogon = cel.postawa === 'obrona' ? 7 : 12; }
   }
-  if (cel.hp <= 0) jestBudynkiem(cel) ? zniszczBudynek(cel) : zabij(cel);
+  if (cel.hp <= 0) jestBudynkiem(cel) ? zniszczBudynek(cel, false, od) : zabij(cel, od);
 }
 function uderz(u, c) {
   if (u.d.zasieg) { rzut(u, c, atakJ(u)); if (!odglos('zamach', u.x, u.z, 0.45)) dzwiek('rzut'); }
@@ -995,17 +1017,17 @@ function rzut(od, cel, atak) {
   const d = Math.hypot(cel.x - od.x, cel.z - od.z);
   POC.push({ mesh, x0: od.x, z0: od.z, y0: h, cel, od, atak, ox: cel.x, oz: cel.z, t: 0, T: Math.max(0.25, d / 13) });
 }
-function zabij(u) {
+function zabij(u, od) {
   E.delete(u.id); JED.splice(JED.indexOf(u), 1);
   wybrane = wybrane.filter(e => e !== u);
   UMIERA.push({ mesh: u.mesh, t: 0, j: true, ry: u.ry });
-  S.stat[wrog(u.strona)].pokonani++;
+  if (od && S.stat[od.strona]) S.stat[od.strona].pokonani++;
 }
 const GRUZY = [];
 function usunGruzy(i0, j0, w) {
   for (let k = GRUZY.length - 1; k >= 0; k--) { const g = GRUZY[k]; if (g.i0 < i0 + w && g.i0 + g.w > i0 && g.j0 < j0 + w && g.j0 + g.w > j0) { scena.remove(g.mesh); GRUZY.splice(k, 1); } }
 }
-function zniszczBudynek(b, wlasnaReka = false) {
+function zniszczBudynek(b, wlasnaReka = false, od = null) {
   E.delete(b.id); BUD.splice(BUD.indexOf(b), 1);
   wybrane = wybrane.filter(e => e !== b);
   for (let j = b.j0; j < b.j0 + b.w; j++) for (let i = b.i0; i < b.i0 + b.w; i++) { const c = kom2(i, j); if (naKom[c] === b.id) { blok[c] = 0; naKom[c] = 0; bramaStr[c] = -1; } }
@@ -1015,7 +1037,7 @@ function zniszczBudynek(b, wlasnaReka = false) {
   if (naEkranie(b)) EF.zawalenie(b);
   if (naEkranie(b) && !odglos('walenie', b.x, b.z, 1.2, 0)) dzwiek('zniszcz');
   if (!wlasnaReka) {
-    S.stat[wrog(b.strona)].zburzone++;
+    if (od && S.stat[od.strona]) S.stat[od.strona].zburzone++;
     // zostają ruiny (bez placu budowy); komputer odczeka, zanim postawi taki budynek znowu
     { const g = new THREE.Mesh(MOD.gruz(b.w), MAT); g.position.set(b.x, 0, b.z); g.receiveShadow = true; scena.add(g); GRUZY.push({ mesh: g, i0: b.i0, j0: b.j0, w: b.w, t: 0 }); }
     const A = S.ai[b.strona]; if (A) (A.stracone || (A.stracone = {}))[b.typ] = S.czas;
@@ -1184,7 +1206,7 @@ function naprawiaj(u, dt) {
 }
 function atakuj(u, dt) {
   const z = u.zad, c = E.get(z.cid);
-  if (!c || c.hp <= 0 || c.strona === u.strona) {
+  if (!c || c.hp <= 0 || !wrogowie(u.strona, c.strona)) {
     const w = u.d.wojsko ? celWalki(u, u.d.wzrok, z.potem && z.potem.typ === 'naprzod') : null;
     if (w) { z.cid = w.id; u.sciezka = null; return; }
     u.zad = z.potem && !z.potem.wraca ? z.potem : z.potem && z.potem.wraca ? { typ: 'idz', x: z.potem.x, z: z.potem.z } : null; u.sciezka = null;
@@ -1283,7 +1305,7 @@ function nowyBudynek(strona, typ, i0, j0, gotowy = false, id, poziom = 1, wyg = 
   b.mesh.position.set(b.x, 0, b.z);
   ukryjOzdoby(i0, j0, w); usunGruzy(i0, j0, w);
   if (!d.pole && !d.mur && !d.brama) { const k = new THREE.Mesh(GEO_KLEP[w] || (GEO_KLEP[w] = new THREE.PlaneGeometry(w + 1.1, w + 1.1).rotateX(-Math.PI / 2)), MAT_KLEP); k.position.y = 0.012; k.renderOrder = 1; k.receiveShadow = true; b.mesh.add(k); }
-  if (strona === KOMPUTER) b.mesh.rotation.y = Math.PI; // drzwi w stronę środka mapy
+  if (ROGI[strona] && ROGI[strona][1] < 0) b.mesh.rotation.y = Math.PI; // budynki w rogach z −z są obrócone
   if (d.mur || d.brama) ulozMur(b, wyg || (d.brama ? (b.kom ? wygladBramy(krB) : zgadnijWyglad(b) || [b.x, b.z, 0, 1]) : null));
   if (!gotowy) {
     b.mesh.scale.y = 0.12;
@@ -1385,9 +1407,9 @@ function aktualizujBudynek(b, dt) {
     if (b.cd <= 0) {
       const st = strzalBud(b);
       let naj = null, nd = st.zasieg + b.w / 2;
-      for (const e of JED) { if (e.strona === b.strona) continue; const d = Math.hypot(e.x - b.x, e.z - b.z); if (d < nd) { nd = d; naj = e; } }
+      for (const e of JED) { if (!wrogowie(b.strona, e.strona)) continue; const d = Math.hypot(e.x - b.x, e.z - b.z); if (d < nd) { nd = d; naj = e; } }
       // ambona: gdy w zasięgu nie ma ludzi, strzela w budynki wroga (także w place budowy)
-      if (!naj && b.typ === 'wieza') { let nb = st.zasieg; for (const o of BUD) { if (o.strona === b.strona) continue; const d = dystDoProst(b.x, b.z, o); if (d < nb) { nb = d; naj = o; } } }
+      if (!naj && b.typ === 'wieza') { let nb = st.zasieg; for (const o of BUD) { if (!wrogowie(b.strona, o.strona)) continue; const d = dystDoProst(b.x, b.z, o); if (d < nb) { nb = d; naj = o; } } }
       if (naj) { rzut(b, naj, st.atak); b.cd = st.odstep; odglos('zamach', b.x, b.z, 0.4); } else b.cd = 0.4;
     }
   }
@@ -1424,16 +1446,16 @@ function aktualizujBudynek(b, dt) {
       if (b.strona === STRONA_GRACZA && !S.aiGracz) { toast(emojiBud(b) + ' Rozbudowane: ' + nazwaBud(b)); dzwiek('buduj'); }
     } else if (q.rodzaj === 'era') {
       S.era[b.strona]++;
-      if (!S.aiGracz || b.strona === KOMPUTER) {
+      if (!S.aiGracz || b.strona !== STRONA_GRACZA) {
         if (b.strona === STRONA_GRACZA) { baner(`Era ${S.era[b.strona]}: ${ERY[S.era[b.strona]]}`, 'Nowe budynki, wojsko i ulepszenia!'); dzwiek('era'); EF.fajerwerki(b.x, b.z); }
-        else if (!S.aiGracz) toast(`🔴 Komputer wszedł w erę ${S.era[b.strona]}: ${ERY[S.era[b.strona]]}`);
+        else if (!S.aiGracz) toast(`${ZNAK_STRON[b.strona]} Komputer wszedł w erę ${S.era[b.strona]}: ${ERY[S.era[b.strona]]}`);
       }
     }
   }
 }
 
 // ================= handel na Jarmarku =================
-function ceny(strona) { if (!S.ceny) S.ceny = [{ ...HANDEL.ceny }, { ...HANDEL.ceny }]; return S.ceny[strona]; }
+function ceny(strona) { if (!S.ceny) S.ceny = []; return S.ceny[strona] || (S.ceny[strona] = { ...HANDEL.ceny }); }
 const cenaKupna = (strona, s) => Math.round(ceny(strona)[s]);
 const cenaSprzedazy = (strona, s) => Math.max(5, Math.round(ceny(strona)[s] * HANDEL.sprzedaz));
 function handluj(strona, s, kupno) {
@@ -1444,7 +1466,7 @@ function handluj(strona, s, kupno) {
   return null;
 }
 // ceny powoli wracają do zwykłych
-function cenyWracaja(dt) { for (const s of [0, 1]) { const c = ceny(s); for (const k in c) c[k] += (HANDEL.ceny[k] - c[k]) * Math.min(1, dt * 0.004); } }
+function cenyWracaja(dt) { for (let s = 0; s < ileStron(); s++) { const c = ceny(s); for (const k in c) c[k] += (HANDEL.ceny[k] - c[k]) * Math.min(1, dt * 0.004); } }
 
 // ================= przeciwnik komputerowy =================
 const UDZIALY = [null, { jagody: 0.52, drewno: 0.36, zelazo: 0.06, kamien: 0.06, zloto: 0 }, { jagody: 0.4, drewno: 0.3, zelazo: 0.17, kamien: 0.07, zloto: 0.06 },
@@ -1470,23 +1492,42 @@ function aiPostaw(strona, typ, miejsce, osadnicy) {
   const A = S.ai[strona], kiedy = A.stracone && A.stracone[typ];
   if (kiedy != null && S.czas - kiedy < (typ === 'dom' ? 30 : 75)) return null;
   const mx = miejsce[0] - POL + BUDYNKI[typ].w / 2, mz = miejsce[1] - POL + BUDYNKI[typ].w / 2;
-  if (JED.some(e => e.strona !== strona && e.d.wojsko && Math.hypot(e.x - mx, e.z - mz) < 12)) return null;
+  if (JED.some(e => wrogowie(strona, e.strona) && e.d.wojsko && Math.hypot(e.x - mx, e.z - mz) < 12)) return null;
   if (!zaplac(strona, BUDYNKI[typ].koszt)) return null;
   const b = nowyBudynek(strona, typ, miejsce[0], miejsce[1]);
   const wolni = osadnicy.filter(o => !o.zad || o.zad.typ === 'zbieraj' && o.zad.sur !== 'zelazo').sort((a, c) => dyst(a, b) - dyst(c, b));
   for (const o of wolni.slice(0, b.w >= 3 ? 2 : 1)) rozkazBuduj(o, b);
   return b;
 }
+// najbliższy wrogi Dworek (a gdy go nie ma, najbliższy wrogi budynek)
+function najblizszyWrog(strona, od) {
+  let naj = null, nd = Infinity, najB = null, ndB = Infinity;
+  for (const b of BUD) {
+    if (!wrogowie(strona, b.strona)) continue;
+    const d = dyst(b, od);
+    if (b.typ === 'ratusz' && d < nd) { nd = d; naj = b; }
+    if (d < ndB) { ndB = d; najB = b; }
+  }
+  return naj || najB;
+}
+// cel fali ataku: losowo jeden z wrogich Dworków, bliższe częściej (przy kilku komputerach nie idą wszyscy na gracza)
+function celAtaku(strona, od) {
+  const L = BUD.filter(b => b.typ === 'ratusz' && wrogowie(strona, b.strona));
+  if (L.length < 2) return L[0] || null;
+  const w = L.map(b => 1 / Math.max(1, dyst(b, od)) ** 2), suma = w.reduce((a, b) => a + b, 0);
+  let x = Math.random() * suma; for (let i = 0; i < L.length; i++) { x -= w[i]; if (x <= 0) return L[i]; }
+  return L[L.length - 1];
+}
 function ai(strona, dt) {
   const A = S.ai[strona]; A.t -= dt; if (A.t > 0) return; A.t = 1;
-  const T = TRUDNOSC[strona === KOMPUTER ? S.trudnosc : S.trudnoscGracza];
+  const T = TRUDNOSC[trudnoscStrony(strona)];
   const moje = BUD.filter(b => b.strona === strona);
   const ratusz = moje.find(b => b.typ === 'ratusz' && b.gotowy);
   if (!ratusz) return;
   const ludzie = JED.filter(u => u.strona === strona), osadnicy = ludzie.filter(u => u.typ === 'osadnik'), wojsko = ludzie.filter(u => u.d.wojsko);
   const zas = S.zas[strona], era = S.era[strona], ma = t => moje.some(b => b.typ === t), maG = t => moje.some(b => b.typ === t && b.gotowy);
   const budowane = moje.filter(b => !b.gotowy), lud = ludzie.length, limit = limitLudnosci(strona);
-  const wrogi = BUD.find(b => b.strona === wrog(strona) && b.typ === 'ratusz') || BUD.find(b => b.strona === wrog(strona));
+  const wrogi = najblizszyWrog(strona, ratusz);
   const kier = wrogi ? [(wrogi.x - ratusz.x) / dyst(wrogi, ratusz), (wrogi.z - ratusz.z) / dyst(wrogi, ratusz)] : [0, 0];
   if (A.nastAtak == null) A.nastAtak = T.pierwszyAtak;
   // rezerwa na nową erę
@@ -1497,7 +1538,7 @@ function ai(strona, dt) {
 
   // 1. obrona: wrogowie blisko bazy
   let groz = null, gd = 20;
-  for (const e of JED) if (e.strona !== strona && (e.d.wojsko || e.typ === 'osadnik' && dyst(e, ratusz) < 10)) { const d = dyst(e, ratusz); if (d < gd) { gd = d; groz = e; } }
+  for (const e of JED) if (wrogowie(strona, e.strona) && (e.d.wojsko || e.typ === 'osadnik' && dyst(e, ratusz) < 10)) { const d = dyst(e, ratusz); if (d < gd) { gd = d; groz = e; } }
   if (groz) {
     for (const w of wojsko) if (!w.zad || w.zad.typ !== 'atakuj') { const c = celWalki(w, 30, false) || groz; if (!w.d.tylkoBudynki) rozkazAtak(w, c); }
     if (!wojsko.length && gd < 8) for (const o of osadnicy) if (dyst(o, groz) < 6 && (!o.zad || o.zad.typ !== 'atakuj')) rozkazAtak(o, groz);
@@ -1624,9 +1665,10 @@ function ai(strona, dt) {
   if (wrogi && S.czas >= A.nastAtak && !groz && gotowi.length >= Math.min(30, T.fala(A.fala))) {
     // na łatwym poziomie komputer nie wysyła całego wojska naraz
     const wyslij = T.maksFala ? gotowi.slice(0, T.maksFala(A.fala)) : gotowi;
-    for (const w of wyslij) rozkazNaprzod(w, wrogi.x, wrogi.z);
+    const cel = celAtaku(strona, ratusz) || wrogi;
+    for (const w of wyslij) rozkazNaprzod(w, cel.x, cel.z);
     A.fala++; A.nastAtak = S.czas + T.odstep;
-    if (strona === KOMPUTER && !S.aiGracz) { toast('🔴 Wojsko komputera rusza na twoją osadę!'); dzwiek('alarm'); }
+    if (cel.strona === STRONA_GRACZA && strona !== STRONA_GRACZA && !S.aiGracz) { toast(`${ZNAK_STRON[strona]} Wojsko komputera rusza na twoją osadę!`); dzwiek('alarm'); }
   }
 }
 
@@ -1702,7 +1744,7 @@ function emitujEfekty(dt) {
   if (!czesto) return;
   for (const b of BUD) {
     if (!naEkranie(b)) continue;
-    const obr = b.strona === KOMPUTER ? -1 : 1;
+    const obr = ROGI[b.strona] && ROGI[b.strona][1] < 0 ? -1 : 1;
     if (b.gotowy) for (const [ox, oy, oz] of KOMINY[b.typ] || []) if (Math.random() < 0.35) EF.dym(b.x + ox * obr, oy, b.z + oz * obr, false, 0.8);
     if (b.typ === 'kuznia' && b.gotowy && Math.random() < 0.25) { EF.iskry(b.x + 0.55 * obr, 0.55, b.z - 0.6 * obr, 2, '#ffb347'); if (Math.random() < 0.3) odglos('kowadlo', b.x, b.z, 0.45, 900); }
     const z = b.hp / b.max;
@@ -1723,7 +1765,7 @@ function zbudujNiebo() {
   for (let i = 0; i < 26; i++) { const x = Math.random() * 512, y = Math.random() * 512, r = 30 + Math.random() * 70, g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(0,0,0,0.5)'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; for (const dx of [-512, 0, 512]) for (const dy of [-512, 0, 512]) c.fillRect(x - r + dx, y - r + dy, r * 2, r * 2); }
   const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2.6, 2.6);
   CHMURY = new THREE.Mesh(new THREE.PlaneGeometry(N + 44, N + 44).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0.22, depthWrite: false, color: '#000000' }));
-  CHMURY.position.y = 0.025; CHMURY.renderOrder = 1; scena.add(CHMURY);
+  CHMURY.position.y = 0.025; CHMURY.renderOrder = 1; CHMURY.userData.n = N; scena.add(CHMURY);
   const gk = new THREE.BoxGeometry(0.45, 0.03, 0.14), mk = new THREE.MeshBasicMaterial({ color: '#2b2b33' });
   for (let s = 0; s < 8; s++) {
     const cx = lo(-POL * 0.7, POL * 0.7), cz = lo(-POL * 0.7, POL * 0.7), r = lo(14, 26), wys = lo(11, 16), szyb = lo(0.12, 0.2) * (Math.random() < 0.5 ? 1 : -1);
@@ -1762,7 +1804,7 @@ function krokGry(dt) {
     }
   }
   cenyWracaja(dt);
-  ai(KOMPUTER, dt);
+  for (let s = 1; s < ileStron(); s++) if (!(S.odpadli && S.odpadli[s])) ai(s, dt);
   if (S.aiGracz) ai(STRONA_GRACZA, dt);
   if ((S.sprzatanie = (S.sprzatanie || 0) + dt) > 20) { S.sprzatanie = 0; sprzatnijListy(); }
   sprawdzKoniec();
@@ -1786,26 +1828,37 @@ function rozpychaj() {
 }
 function sprawdzKoniec() {
   if (S.wynik) return;
-  for (const s of [STRONA_GRACZA, KOMPUTER]) {
-    const maRatusz = BUD.some(b => b.strona === s && b.typ === 'ratusz');
-    if (!maRatusz) { S.wynik = s === STRONA_GRACZA ? 'przegrana' : 'wygrana'; koniecGry(); return; }
+  // strona bez Dworku odpada; gracz wygrywa, gdy odpadną wszyscy jego wrogowie
+  if (!S.odpadli) S.odpadli = [];
+  for (let s = 0; s < ileStron(); s++) if (!S.odpadli[s] && !BUD.some(b => b.strona === s && b.typ === 'ratusz')) {
+    S.odpadli[s] = true;
+    if (s !== STRONA_GRACZA && ileStron() > 2 && !S.aiGracz) { toast(`💥 ${ZNAK_STRON[s]} Osada ${NAZWY_STRON[s]} upadła!`); dzwiek('zniszcz'); }
   }
+  if (S.odpadli[STRONA_GRACZA]) { S.wynik = 'przegrana'; koniecGry(); return; }
+  let zostali = false; for (let s = 1; s < ileStron(); s++) if (wrogowie(STRONA_GRACZA, s) && !S.odpadli[s]) zostali = true;
+  if (!zostali) { S.wynik = 'wygrana'; koniecGry(); }
 }
 
 // ================= nowa gra, zapis, wczytanie =================
-function nowaGra(trudnosc) {
+// opcje: { rozmiar: 144 | 192 | 240, przeciwnicy: ['latwy', ...] (1–3 komputery), sojusz: 'kazdy' | 'razem' }; sam napis = jeden komputer
+function nowaGra(opcje = {}) {
+  if (typeof opcje === 'string') opcje = { przeciwnicy: [opcje] };
+  const przec = (opcje.przeciwnicy && opcje.przeciwnicy.length ? opcje.przeciwnicy : ['latwy']).slice(0, 3).map(t => TRUDNOSC[t] ? t : 'latwy');
+  const strony = przec.length + 1, dla = f => Array.from({ length: strony }, (_, s) => f(s));
+  ustawMape(opcje.rozmiar || 192);
   wyczyscSwiat();
   const seed = Math.floor(Math.random() * 1e9);
-  S = { v: 1, mapa: N, seed, trudnosc, trudnoscGracza: 'sredni', czas: 0, nextId: 1, zas: [{ ...START }, { ...START }], era: [1, 1], ul: [{}, {}], wynik: null,
-    stat: [0, 1].map(() => ({ zebrane: 0, wyszkoleni: 0, pokonani: 0, zburzone: 0, budynki: 0 })), ai: [nowyAI(), nowyAI()], usuniete: [], pomoc: {}, aiGracz: false };
+  S = { v: 1, mapa: N, seed, strony, trudnosc: przec[0], trudnosci: [null, ...przec], druzyna: dla(s => opcje.sojusz === 'razem' && s > 0 ? 1 : s), odpadli: [],
+    trudnoscGracza: 'sredni', czas: 0, nextId: 1, zas: dla(() => ({ ...START })), era: dla(() => 1), ul: dla(() => ({})), wynik: null,
+    stat: dla(() => ({ zebrane: 0, wyszkoleni: 0, pokonani: 0, zburzone: 0, budynki: 0 })), ai: dla(() => nowyAI()), usuniete: [], pomoc: {}, aiGracz: false };
   S.nextId = generujMape(seed);
   dodatkoweZloza(seed);
   rozmiescOzdoby(seed);
   zbudujZiemie();
-  for (const s of [STRONA_GRACZA, KOMPUTER]) {
-    const cx = s === STRONA_GRACZA ? BAZA : -BAZA, cz = cx;
+  for (let s = 0; s < strony; s++) {
+    const [cx, cz] = bazaStrony(s), a0 = Math.atan2(-cx, -cz); // osadnicy stoją od strony środka mapy
     const r = nowyBudynek(s, 'ratusz', cx + POL - 2, cz + POL - 2, true);
-    for (let k = 0; k < 3; k++) { const a = (s ? 0.8 : -2.35) + (k - 1) * 0.6; nowaJednostka(s, 'osadnik', r.x + Math.sin(a) * 3.2, r.z + Math.cos(a) * 3.2); }
+    for (let k = 0; k < 3; k++) { const a = a0 + (k - 1) * 0.6; nowaJednostka(s, 'osadnik', r.x + Math.sin(a) * 3.2, r.z + Math.cos(a) * 3.2); }
   }
   kam.x = BAZA; kam.z = BAZA; kam.d = 30; kam.kat = Math.PI / 4;
   zapiszGre();
@@ -1914,6 +1967,7 @@ function przerobStaryZapis(o) {
 }
 function wczytajGre(o) {
   przerobStaryZapis(o);
+  ustawMape(o.mapa || 192);
   wyczyscSwiat();
   S = { ...o }; delete S.zasoby; delete S.bud; delete S.jed; delete S.kamera;
   generujMape(S.seed);
@@ -1972,7 +2026,7 @@ const dolWidoku = () => { const p = $('panel'); const t = p ? p.getBoundingClien
 // najdalsze oddalenie: cała mapa (patrząc na jej środek) mieści się na ekranie; liczone od nowa przy obrocie i zmianie ekranu
 let dMaksKlucz = '', dMaksW = 400;
 function dMaks() {
-  const dol = innerHeight - 200, klucz = kam.kat.toFixed(2) + '|' + innerWidth + '|' + innerHeight + '|' + Math.round(dol);
+  const dol = innerHeight - 200, klucz = N + '|' + kam.kat.toFixed(2) + '|' + innerWidth + '|' + innerHeight + '|' + Math.round(dol);
   if (klucz === dMaksKlucz) return dMaksW;
   const yMin = 1 - 2 * (dol - 6) / innerHeight, yMax = 1 - 2 * 70 / innerHeight;
   const miesci = d => {
@@ -2020,7 +2074,7 @@ function pierscien(e) {
   const r = jestBudynkiem(e) ? e.w / 2 * Math.SQRT2 + 0.1 : e.d ? e.d.r + 0.12 : 0.6;
   const k = (jestBudynkiem(e) ? 'b' : 'j') + r.toFixed(2);
   const g = PIERSCIEN[k] || (PIERSCIEN[k] = jestBudynkiem(e) ? new THREE.RingGeometry(r - 0.08, r, 4, 1, Math.PI / 4).rotateX(-Math.PI / 2) : MOD.kolo(r - 0.07, r));
-  e.pierscien = new THREE.Mesh(g, MAT_RING[e.strona === KOMPUTER || e.strona == null ? 1 : 0]);
+  e.pierscien = new THREE.Mesh(g, MAT_RING[e.strona !== STRONA_GRACZA ? 1 : 0]);
   if (e.strona == null) e.pierscien.material = MAT_ZNACZNIK;
   if (e.kom && e.wyg) { e.pierscien.scale.x = e.wyg[3]; e.pierscien.rotation.y = e.wyg[2]; } // brama na 3 kratki
   e.pierscien.renderOrder = 3;
@@ -2145,7 +2199,7 @@ function rysujNakladke() {
     const [x, y, z] = naEkran(e.x, h, e.z); if (z > 1 || x < -50 || y < -50 || x > innerWidth + 50 || y > innerHeight + 50) return;
     const w = szer, p = Math.max(0, e.hp / e.max);
     c.fillStyle = 'rgba(0,0,0,0.55)'; c.fillRect(x - w / 2 - 1, y - 1, w + 2, 6);
-    c.fillStyle = e.strona === KOMPUTER ? '#ff5a4a' : '#4cff7a'; c.fillRect(x - w / 2, y, w * p, 4);
+    c.fillStyle = e.strona !== STRONA_GRACZA ? '#ff5a4a' : '#4cff7a'; c.fillRect(x - w / 2, y, w * p, 4);
   };
   // przy dużej zaznaczonej grupie paski tylko u rannych, żeby nie zlewały się w plamę
   const malaGrupa = wybrane.length <= 6;
@@ -2172,7 +2226,7 @@ function rysujNakladke() {
 
 // ================= mała mapa =================
 let miniBrud = true, miniTlo = null;
-const MINI = 120, MK = (MINI / 2) / (POL * Math.SQRT2);
+const MINI = 120; let MK = (MINI / 2) / (POL * Math.SQRT2);
 const naMini = (x, z) => [MINI / 2 + (x - z) / Math.SQRT2 * MK, MINI / 2 + (x + z) / Math.SQRT2 * MK];
 function rysujMini() {
   const cv = $('mini'), dpr = 2;
@@ -2190,7 +2244,7 @@ function rysujMini() {
   }
   c.clearRect(0, 0, MINI, MINI); c.drawImage(miniTlo, 0, 0, MINI, MINI);
   for (const b of BUD) { const [x, y] = naMini(b.x, b.z), r = b.w * MK * 0.75; c.fillStyle = MOD.KOLORY_STRON[b.strona]; c.fillRect(x - r, y - r, r * 2, r * 2); }
-  for (const u of JED) { const [x, y] = naMini(u.x, u.z); c.fillStyle = u.strona ? '#ff6a5a' : '#7fb2ff'; c.fillRect(x - 1, y - 1, 2.2, 2.2); }
+  for (const u of JED) { const [x, y] = naMini(u.x, u.z); c.fillStyle = KOLORY_MINI[u.strona] || '#ff6a5a'; c.fillRect(x - 1, y - 1, 2.2, 2.2); }
   // co widać na ekranie: od góry ekranu do panelu na dole (to, co zasłania panel, się nie liczy);
   // ponad horyzontem (gdy kamera jest pochylona) bierzemy ziemię daleko w tę stronę, a obrys przycinamy do mapy
   const dol = dolWidoku(), w = innerWidth, obrys = [];
@@ -2276,7 +2330,7 @@ function klik(px, py) {
 const produkuje = b => b.typ === 'ratusz' || Object.values(JEDNOSTKI).some(d => d.z === b.typ);
 function rozkaz(moje, cel, g) {
   dzwiek('rozkaz');
-  if (cel && cel.strona === KOMPUTER) {
+  if (cel && cel.strona != null && wrogowie(STRONA_GRACZA, cel.strona)) {
     for (const u of moje) if (u.d.kupiec) continue; else if (!u.d.tylkoBudynki || jestBudynkiem(cel)) rozkazAtak(u, cel); else rozkazIdz(u, cel.x, cel.z);
     pokazZnacznik(cel.x, cel.z, true); return;
   }
@@ -2696,7 +2750,7 @@ function podpowiedz() {
   if (woj.length < 8) return '🛡️ Szkol wojsko w Strażnicy Krzaka';
   if (S.era[0] === 2) return '🫐 W Dworku przejdź do ery 3: Owocowanie (potrzeba 200 żelaza)';
   if (S.era[0] === 3 && woj.length >= 12) return '🧺 W Dworku przejdź do ery 4: Wielkie Zbiory (rycerze na łosiach, katapulty)';
-  return '🚩 Zaznacz wojsko ⚔️ i dotknij czerwonego Dworku';
+  return '🚩 Zaznacz wojsko ⚔️ i dotknij Dworku komputera';
 }
 let toastT = null;
 function toast(t) { if (symulacja) return; const el = $('toast'); el.textContent = t; el.hidden = false; el.classList.remove('pokaz'); void el.offsetWidth; el.classList.add('pokaz'); clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 3200); }
@@ -2744,10 +2798,39 @@ function pokazWersje() {
 }
 function startuj() { if (zapis.malaMapa) { zapis.malaMapa = false; zapiszDysk(); } ukryjOkna(); pauza = false; odswiezPanel(true); odswiezHud(); grajMuzyke(); }
 $('m-dalej').onclick = () => { audio(); dzwiek('klik'); if (!S || S.seed !== zapis.gra.seed || S.wynik) wczytajGre(zapis.gra); startuj(); };
-$('m-nowa').onclick = () => { audio(); dzwiek('klik'); for (const b of document.querySelectorAll('[data-trudnosc]')) b.classList.toggle('wybrany', b.dataset.trudnosc === zapis.trudnosc); pokazOkno('o-nowa'); };
-for (const b of document.querySelectorAll('[data-trudnosc]')) b.onclick = () => {
-  audio(); dzwiek('klik'); zapis.trudnosc = b.dataset.trudnosc; zapiszDysk();
-  nowaGra(zapis.trudnosc); startuj(); baner('Age of Haskap II', 'Zbieraj, buduj i pokonaj czerwoną osadę!');
+// ---------- nowa gra: wielkość mapy, ilu komputerów, jak trudnych i kto z kim walczy ----------
+const NAZWY_TRUD = { latwy: '🙂 Łatwy', sredni: '😐 Średni', trudny: '😠 Trudny' };
+function opcjeNowej() {
+  const o = { rozmiar: 192, przeciwnicy: [zapis.trudnosc || 'latwy'], sojusz: 'kazdy', ...(zapis.opcje || {}) };
+  o.przeciwnicy = [...o.przeciwnicy]; return o;
+}
+let nowaOpc = null;
+function rysujNowa() {
+  const o = nowaOpc;
+  for (const b of $('n-rozmiar').children) b.classList.toggle('wybrany', +b.dataset.v === o.rozmiar);
+  for (const b of $('n-ile').children) b.classList.toggle('wybrany', +b.dataset.v === o.przeciwnicy.length);
+  $('n-komputery').innerHTML = o.przeciwnicy.map((t, i) => `<div class="n-komp"><span>${ZNAK_STRON[i + 1]} Komputer${o.przeciwnicy.length > 1 ? ' ' + (i + 1) : ''}</span><div class="wybory">`
+    + Object.keys(NAZWY_TRUD).map(k => `<button class="wyb${k === t ? ' wybrany' : ''}" data-komp="${i}" data-t="${k}">${NAZWY_TRUD[k]}</button>`).join('') + '</div></div>').join('');
+  $('n-sojusz-w').hidden = o.przeciwnicy.length < 2;
+  for (const b of $('n-sojusz').children) b.classList.toggle('wybrany', b.dataset.v === o.sojusz);
+  $('n-trud-opis').textContent = Object.keys(NAZWY_TRUD).map(k => `${TRUDNOSC[k].nazwa}: pierwszy atak po ${Math.round(TRUDNOSC[k].pierwszyAtak / 60)} min`).join(' · ');
+}
+$('o-nowa').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || !nowaOpc) return;
+  const o = nowaOpc, gdzie = b.parentElement && b.parentElement.id;
+  if (gdzie === 'n-rozmiar') o.rozmiar = +b.dataset.v;
+  else if (gdzie === 'n-ile') { const n = +b.dataset.v; while (o.przeciwnicy.length < n) o.przeciwnicy.push(o.przeciwnicy[o.przeciwnicy.length - 1]); o.przeciwnicy.length = n; }
+  else if (b.dataset.komp != null) o.przeciwnicy[+b.dataset.komp] = b.dataset.t;
+  else if (gdzie === 'n-sojusz') o.sojusz = b.dataset.v;
+  else return;
+  dzwiek('klik'); rysujNowa();
+});
+$('m-nowa').onclick = () => { audio(); dzwiek('klik'); nowaOpc = opcjeNowej(); rysujNowa(); pokazOkno('o-nowa'); };
+$('n-start').onclick = () => {
+  audio(); dzwiek('klik');
+  zapis.opcje = nowaOpc; zapis.trudnosc = nowaOpc.przeciwnicy[0]; zapiszDysk();
+  nowaGra(nowaOpc); startuj();
+  baner('Age of Haskap II', nowaOpc.przeciwnicy.length > 1 ? 'Zbieraj, buduj i pokonaj wszystkie wrogie osady!' : 'Zbieraj, buduj i pokonaj czerwoną osadę!');
 };
 $('n-wroc').onclick = () => { dzwiek('klik'); pokazMenu(); };
 $('m-wersje').onclick = () => { dzwiek('klik'); pokazWersje(); };
@@ -2770,7 +2853,7 @@ function koniecGry() {
     pauza = true; ciszaMuzyki();
     dzwiek(wygral ? 'wygrana' : 'przegrana');
     $('k-tytul').textContent = wygral ? '🏆 Wygrana!' : 'Tym razem przegrana';
-    $('k-tekst').textContent = wygral ? 'Dworek komputera upadł. Twoja osada rządzi doliną!' : 'Komputer zburzył twój Dworek. Spróbuj jeszcze raz!';
+    $('k-tekst').textContent = wygral ? (ileStron() > 2 ? 'Wszystkie wrogie Dworki upadły. Twoja osada rządzi doliną!' : 'Dworek komputera upadł. Twoja osada rządzi doliną!') : 'Komputer zburzył twój Dworek. Spróbuj jeszcze raz!';
     const s = S.stat[0];
     $('k-stat').innerHTML = `<span>⏱️ ${Math.floor(S.czas / 60)} min</span><span>🧺 zebrane: ${Math.floor(s.zebrane)}</span><span>🧑‍🌾 wyszkoleni: ${s.wyszkoleni}</span><span>⚔️ pokonani: ${s.pokonani}</span><span>💥 zburzone: ${s.zburzone}</span>`;
     pokazOkno('o-koniec');
@@ -2816,8 +2899,8 @@ function klatka(t) {
 // ================= start =================
 rozmiar(); rysujLogo();
 (function start() {
-  if (zapis.gra) { try { wczytajGre(zapis.gra); } catch (e) { console.error(e); zapis.gra = null; nowaGra(zapis.trudnosc); } }
-  else nowaGra(zapis.trudnosc);
+  if (zapis.gra) { try { wczytajGre(zapis.gra); } catch (e) { console.error(e); zapis.gra = null; nowaGra(zapis.opcje || zapis.trudnosc); } }
+  else nowaGra(zapis.opcje || zapis.trudnosc);
   ustawKamere();
   if (WERSJE.length > 1) pokazWersje(); else pokazMenu();
   requestAnimationFrame(klatka);
