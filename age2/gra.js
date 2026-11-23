@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY } from './dane.js';
 
-const WERSJA = 26;
+const WERSJA = 27;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 26, opis: '8 rodzajów map do wyboru: Dolina, Wielkie Jezioro, Rzeka z brodami, Skalne Przełęcze, Gęsta Puszcza, Mroźna Tundra, Oaza, Bagna (albo losowa). Do tego wszystko z wersji 25.' },
+  { nr: 27, opis: 'Nowa mapa Jotunheim: zimowa kraina olbrzymów z ośnieżonymi górami, fiordami, lasami świerkowymi i kamieniami z runami. Do tego wszystko z wersji 26.' },
+  { nr: 26, opis: '8 rodzajów map do wyboru: Dolina, Wielkie Jezioro, Rzeka z brodami, Skalne Przełęcze, Gęsta Puszcza, Mroźna Tundra, Oaza, Bagna (albo losowa). Do tego wszystko z wersji 25.', adres: 'wersje/26/' },
   { nr: 25, opis: 'Brama na 4 kratki; postawiona przy murze sama wskakuje w jego linię, a mur w tym miejscu znika. Do tego wszystko z wersji 24.', adres: 'wersje/25/' },
   { nr: 24, opis: 'Nowa gra z wyborem: wielkość mapy, od 1 do 3 komputerów (każdy ze swoim poziomem), każdy na każdego albo komputery razem. Do tego wszystko z wersji 23.', adres: 'wersje/24/' },
   { nr: 23, opis: 'W budynkach widać tylko ulepszenia, które można zrobić teraz; następne pojawiają się po poprzednich. Do tego wszystko z wersji 22.', adres: 'wersje/23/' },
@@ -489,7 +490,7 @@ function generujTeren(seed) {
   if (typ === 'dolina' || typ === 'puszcza') return { wolne, dodatki };
   const r = rng(seed * 101 + 29), sk = N / 192, TC = [BAZA, BAZA], zi = seed % 983;
   const ust = (i, j, t) => {
-    const m = t === 2 ? 0 : 3; if (i < m || j < m || i >= N - m || j >= N - m || !naszaCzesc(i, j)) return;
+    const m = t === 2 || t === 1 && typ === 'jotunheim' ? 0 : 3; if (i < m || j < m || i >= N - m || j >= N - m || !naszaCzesc(i, j)) return;
     if (Math.hypot(i - POL + 0.5 - TC[0], j - POL + 0.5 - TC[1]) < 13) return;
     TEREN[j * N + i] = t;
   };
@@ -550,6 +551,17 @@ function generujTeren(seed) {
     for (const b of wyjscia) wolne.push([TC[0] + Math.cos(b) * Rr, TC[1] + Math.sin(b) * Rr, 6]);
     // skałki na reszcie mapy
     for (let n = 0, ile = Math.round(10 * skalaMapy()); n < ile; n++) losuj(5, Rr + 9, (x, z) => { if (Math.hypot(x, z) < 9) return false; staw(x, z, 1.8 + r() * 2.2, 2); });
+  } else if (typ === 'jotunheim') {
+    // fiordy: wąskie zatoki lodowatej wody od brzegów mapy w stronę środka (środek zostaje lądem, tam się przechodzi)
+    // szerokie przy brzegu mapy, wąskie w głębi lądu, z poszarpanym brzegiem
+    const hw = 3 * Math.max(1, sk), f = r() * 6.283, T0 = POL * (sym4() ? 0.45 : 0.62), KON = sym4() ? POL : POL * Math.SQRT2;
+    const szer = (s, x, z) => hw * Math.min(1, (s - T0) / 10) * (0.8 + 1.6 * Math.max(0, (s - T0) / (KON - T0)) ** 1.5) * (1 + 0.2 * Math.sin(s * 0.17 + f)) + (szumMapy(x * 0.22, z * 0.22, zi) - 0.5) * 3;
+    if (!sym4()) kazda((x, z) => { const d = Math.abs(x + z) / Math.SQRT2, t = Math.abs(x - z) / Math.SQRT2; return t > T0 && d < szer(t, x, z) ? 1 : 0; });
+    else kazda((x, z) => x > T0 && Math.abs(z) < szer(x, x, z) || z > T0 && Math.abs(x) < szer(z, x, z) ? 1 : 0);
+    // ośnieżone góry olbrzymów (wojsko chodzi dolinami między nimi), dwa zamarznięte stawy
+    for (let n = 0, ile = Math.round(9 * skalaMapy()) + 1; n < ile; n++) { const rad = 3.5 + r() * 4; losuj(rad + 3, 24, (x, z) => { if (Math.hypot(x, z) < 10) return false; staw(x, z, rad, 2); }); }
+    for (let n = 0; n < 2; n++) { const rad = 3 + r() * 3; losuj(rad + 2, 24, (x, z) => staw(x, z, rad, 4)); }
+    for (let n = 0; n < 3; n++) losuj(6, 22, (x, z) => { dodatki.push([x, z, n === 1 ? 3 : 4, 5]); });
   } else if (typ === 'tundra') {
     // zamarznięte jeziora (lód: chodzi się, nie buduje), co trzecie z wodą
     for (let n = 0, ile = Math.round(8 * skalaMapy()) + 2; n < ile; n++) { const rad = 4 + r() * 5; losuj(rad + 2, 24, (x, z) => staw(x, z, rad, n % 3 === 2 ? 1 : 4)); }
@@ -710,8 +722,11 @@ function generujMape(seed) {
   if (skaly.length) {
     const im = new THREE.InstancedMesh(MOD.glaz(motyw()), MAT, skaly.length); im.castShadow = true;
     skaly.forEach((c, k) => {
-      const rr = rng(c * 13 + 7), [x, z] = srodekKom(c), s = 0.95 + rr() * 0.55;
-      q.setFromAxisAngle(up, rr() * 6.283); sc.set(s, s * (0.75 + rr() * 0.9), s); p.set(x + (rr() - 0.5) * 0.3, -0.05, z + (rr() - 0.5) * 0.3);
+      // im głębiej w skałach, tym wyżej (grzbiety i góry rosną do środka)
+      let gl = 0; const ci = c % N, cj = (c / N) | 0; for (let b = -2; b <= 2; b++) for (let a = -2; a <= 2; a++) { const n = kom2(ci + a, cj + b); if (n >= 0 && TEREN[n] === 2) gl++; }
+      gl = Math.max(0, gl - 1) / 24;
+      const rr = rng(c * 13 + 7), [x, z] = srodekKom(c), s = (0.95 + rr() * 0.55) * (1 + gl * 0.35);
+      q.setFromAxisAngle(up, rr() * 6.283); sc.set(s, s * (0.75 + rr() * 0.9) * (1 + gl * gl * 2.2), s); p.set(x + (rr() - 0.5) * 0.3, -0.05, z + (rr() - 0.5) * 0.3);
       im.setMatrixAt(k, m4.compose(p, q, sc));
     });
     im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); INST.teren_skaly = im; scena.add(im);
@@ -813,6 +828,7 @@ function rozmiescOzdoby(seed) {
     const q = r(), las = przyLesie(c), kw = szumMapy(x * 0.12, z * 0.12, 77);
     let typ;
     if (q < 0.6 && przyWodzie(c)) typ = mt === 'zima' ? 'zaspa' : 'trzcina';
+    else if (!las && q < 0.006 && typMapy() === 'jotunheim') typ = 'runa';
     else if (mt === 'zima') { if (q > 0.55) continue; typ = las ? (q < 0.15 ? 'zaspa' : q < 0.25 ? 'kloda' : q < 0.35 ? 'krzaczek' : 'sucha') : q < 0.07 ? 'zaspa' : q < 0.13 ? 'kamyki' : 'sucha'; }
     else if (mt === 'piasek') { if (!las && q > 0.62) continue; typ = las ? (q < 0.4 ? 'sucha' : q < 0.6 ? 'trawa2' : 'krzaczek') : q < 0.28 ? 'sucha' : q < 0.42 ? 'kamyki' : q < 0.5 ? 'kaktus' : 'trawa2'; }
     else if (las) typ = q < 0.28 ? 'paproc' : q < 0.38 ? 'muchomor' : q < 0.48 ? 'borowik' : q < 0.6 ? 'jagodnik' : q < 0.66 ? 'kloda' : q < 0.76 ? 'krzaczek' : 'trawa';

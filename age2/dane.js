@@ -67,6 +67,7 @@ export const MAPY = {
   przelecze: { nazwa: 'Skalne Przełęcze', emoji: '⛰️', motyw: 'lato', lasy: 0.9, opis: 'Każda osada stoi w skalnej kotlinie z dwoma wąskimi wyjściami. Dobra mapa do obrony.' },
   puszcza: { nazwa: 'Gęsta Puszcza', emoji: '🌲', motyw: 'puszcza', lasy: 1, opis: 'Wszędzie las, tylko kręte przesieki i polany. Drewna nie zabraknie, ale wróg może przyjść z każdej strony.' },
   tundra: { nazwa: 'Mroźna Tundra', emoji: '❄️', motyw: 'zima', lasy: 0.5, opis: 'Śnieg, świerki i zamarznięte jeziora, po których da się chodzić (ale nie budować). Mało lasu, więcej rudy i kamienia.' },
+  jotunheim: { nazwa: 'Jotunheim', emoji: '🏔️', motyw: 'zima', lasy: 1.6, opis: 'Kraina lodowych olbrzymów z dawnych północnych opowieści: ośnieżone góry, ciemne lasy świerkowe, fiordy z lodowatą wodą i kamienie z runami. Wojsko przechodzi dolinami między górami.' },
   oaza: { nazwa: 'Oaza', emoji: '🏜️', motyw: 'piasek', lasy: 0.15, opis: 'Piaski i mało drzew. Palmy rosną przy oazach, najwięcej przy wielkiej oazie na środku.' },
   bagna: { nazwa: 'Bagna', emoji: '🐸', motyw: 'bagno', lasy: 0.75, opis: 'Mnóstwo małych stawów i trzcin, dużo krzaków z jagodami. Drogi kręcą się między wodą.' },
 };

@@ -5,6 +5,20 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 27 (23.11.2026)
+
+**Dodane**
+- Nowa mapa 🏔️ Jotunheim: zimowa, nordycka kraina lodowych olbrzymów (nazwa z dawnych północnych opowieści,
+  wygląd i układ nasze):
+  - ośnieżone, poszarpane góry, przez które nie da się przejść (wojsko chodzi dolinami między nimi),
+  - fiordy: zatoki lodowatej wody od brzegów mapy, szerokie przy brzegu i wąskie w głębi lądu (środek mapy zostaje lądem),
+  - gęste lasy świerków przysypanych śniegiem, zamarznięte stawy,
+  - kamienie z niebieskimi runami.
+- Skały i góry na wszystkich mapach są wyższe w środku (grzbiety rosną do góry).
+
+**Do sprawdzenia**
+- Bitwy komputer na komputer trwały 36–41 minut; gracz, który nic nie robi, na łatwym przegrywa po 26–32 minutach.
+
 ## Wersja 26 (23.11.2026)
 
 **Dodane**

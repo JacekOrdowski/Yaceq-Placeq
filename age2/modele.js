@@ -735,7 +735,7 @@ export const drzewo = cache((gat = 'swierk') => {
   return polacz(c, { wiatr: 0.035 });
 });
 // ozdoby krajobrazu (nie zasłaniają drogi, są tylko do patrzenia)
-export const OZDOBY = ['trawa', 'trawa2', 'kwiatyB', 'kwiatyZ', 'kwiatyF', 'paproc', 'muchomor', 'borowik', 'kamyki', 'kloda', 'krzaczek', 'jagodnik', 'trzcina', 'zaspa', 'kaktus', 'sucha'];
+export const OZDOBY = ['trawa', 'trawa2', 'kwiatyB', 'kwiatyZ', 'kwiatyF', 'paproc', 'muchomor', 'borowik', 'kamyki', 'kloda', 'krzaczek', 'jagodnik', 'trzcina', 'zaspa', 'kaktus', 'sucha', 'runa'];
 export const ozdoba = cache(rodzaj => {
   const c = [];
   if (rodzaj === 'trawa' || rodzaj === 'trawa2' || rodzaj === 'sucha') {
@@ -768,6 +768,11 @@ export const ozdoba = cache(rodzaj => {
   } else if (rodzaj === 'trzcina') {
     // trzciny przy wodzie: cienkie łodygi, niektóre z brązową pałką
     for (let i = 0; i < 7; i++) { const a = i * 2.3, d = 0.04 + (i % 3) * 0.05, h = 0.45 + (i % 4) * 0.12, x = Math.cos(a) * d, z = Math.sin(a) * d; c.push(cz(cyl(0.01, 0.015, h, 3), i % 2 ? '#7a9a4a' : '#8aa858', x, h / 2, z, Math.sin(a) * 0.12, 0, Math.cos(a) * 0.12)); if (i % 2 === 0) c.push(cz(cyl(0.026, 0.026, 0.11, 5), '#6b4527', x + Math.cos(a) * 0.05, h - 0.02, z + Math.sin(a) * 0.05)); }
+  } else if (rodzaj === 'runa') {
+    // kamień z runami (Jotunheim): stojąca płyta z wyrytymi niebieskimi znakami i czapą śniegu
+    c.push(cz(box(0.42, 1.0, 0.16), '#8a8178', 0, 0.5, 0, 0, 0, 0.04), cz(box(0.38, 0.07, 0.17), '#f4f8fc', 0.02, 1.02, 0, 0, 0, 0.04));
+    for (const [y, w, a] of [[0.25, 0.2, 0], [0.42, 0.14, 0.7], [0.58, 0.22, -0.6], [0.74, 0.12, 0.5], [0.86, 0.18, 0]]) c.push(cz(box(w, 0.035, 0.02), '#4a78c8', 0.02 * y, y, 0.085, 0, 0, a), cz(box(w, 0.035, 0.02), '#4a78c8', 0.02 * y, y, -0.085, 0, 0, -a));
+    c.push(cz(new THREE.DodecahedronGeometry(0.14), '#7d838c', 0.25, 0.06, 0.1), cz(new THREE.DodecahedronGeometry(0.1), '#9aa0a8', -0.22, 0.05, -0.05));
   } else if (rodzaj === 'zaspa') {
     c.push(cz(new THREE.SphereGeometry(0.34, 10, 4, 0, Math.PI * 2, 0, Math.PI / 2), '#f6f9fc', 0, 0, 0, 0, 0, 0, 1.6, 0.28, 1.1));
   } else if (rodzaj === 'kaktus') {
