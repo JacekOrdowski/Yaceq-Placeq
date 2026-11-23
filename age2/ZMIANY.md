@@ -25,6 +25,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
   Sprawdź, czy telefon daje radę.
 - Gry zapisane wcześniej (1 komputer, średnia mapa) wczytują się tak jak dotąd, na tej samej mapie.
 
+Zapis w repozytorium: `53077ad`
+
 ## Wersja 23 (23.11.2026)
 
 **Zmienione**
