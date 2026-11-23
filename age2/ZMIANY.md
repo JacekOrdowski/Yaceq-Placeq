@@ -31,6 +31,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 - Na Gęstej Puszczy jest około 3 razy więcej drzew niż w Dolinie: czy telefon nie zwalnia (zwłaszcza na Dużej mapie).
 - Bitwy komputer na komputer trwały od 28 do 82 minut (najdłużej na Puszczy i Bagnach).
 
+Zapis w repozytorium: `9d2850a`
+
 ## Wersja 25 (23.11.2026)
 
 **Zmienione**
