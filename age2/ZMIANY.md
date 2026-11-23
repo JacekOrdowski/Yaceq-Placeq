@@ -5,6 +5,27 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 22 (23.11.2026)
+
+**Zmienione**
+- Odświeżone budynki (nasz własny wygląd). Są większe i lepiej wypełniają swój plac, a każdy ma znak,
+  po którym łatwo go poznać z daleka:
+  - Dworek Jagodowy: dach z czerwonej dachówki i wysoka wieża z dzwonem na tylnym rogu (zamiast małej dzwonniczki
+    na dachu), kamienne schody przed gankiem.
+  - Spichlerz: wielki pleciony kosz ze strzechą i szyld z jagodami.
+  - Tartak: większy stos bali i szyld z piłą tarczową.
+  - Kamieniołom: nowy wygląd, czyli ściana wyrobiska z tarasami ciętego kamienia, szopa z narzędziami, żuraw z blokiem,
+    stos bloków i taczka.
+  - Kopalnia rudy żelaza: wieża wyciągowa z kołem nad wejściem.
+  - Strażnica Krzaka: dach z szarego łupku i wieża strażnicza na rogu palisady.
+  - Strzelnica: wysoka tyczka z drewnianym ptakiem.
+  - Zagroda reniferów: renifer z porożem i uprzężą w kolorze gracza.
+  - Kuźnia: dach z łupku i szyld z kowadłem.
+  - Domy, Jarmark i Warsztat: trochę większe.
+
+**Do sprawdzenia**
+- Czy na telefonie gra dalej chodzi płynnie (budynki mają więcej szczegółów).
+
 ## Wersja 21 (22.11.2026)
 
 **Dodane**

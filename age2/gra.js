@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA } from './dane.js';
 
-const WERSJA = 21;
+const WERSJA = 22;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 21, opis: 'Szeroka brama na 3 kratki, którą można zamknąć i otworzyć; rzemieślnicy z Kuźni sami naprawiają budynki. Do tego wszystko z wersji 20.' },
+  { nr: 22, opis: 'Odświeżone budynki: większe, z różnymi dachami i znakami rozpoznawczymi (wieża Dworku, koło kopalni, renifer w Zagrodzie). Do tego wszystko z wersji 21.' },
+  { nr: 21, opis: 'Szeroka brama na 3 kratki, którą można zamknąć i otworzyć; rzemieślnicy z Kuźni sami naprawiają budynki. Do tego wszystko z wersji 20.', adres: 'wersje/21/' },
   { nr: 20, opis: 'Palisadę i mur można stawiać po skosie, pod dowolnym kątem (równa, ciągła ściana). Do tego wszystko z wersji 19.', adres: 'wersje/20/' },
   { nr: 19, opis: 'Naprawione przybliżanie po dużym oddaleniu: każde przybliżenie wyraźnie pokazuje mniej mapy. Do tego wszystko z wersji 18.', adres: 'wersje/19/' },
   { nr: 18, opis: 'Gdy nic nie jest wybrane, okienko na dole zwija się do cienkiego paska (więcej widać mapy). Do tego wszystko z wersji 17.', adres: 'wersje/18/' },
@@ -1212,7 +1213,7 @@ function atakuj(u, dt) {
 }
 
 // ================= budynki =================
-function wysokoscBud(b) { return b.typ === 'wieza' ? [0, 4.2, 4.6, 5.4][b.poziom || 1] : { ratusz: 4.6, dom: 1.8, pole: 0.6, mur: 1.3, brama: 2.2 }[b.typ] || 2.0; }
+function wysokoscBud(b) { return b.typ === 'wieza' ? [0, 4.2, 4.6, 5.4][b.poziom || 1] : { ratusz: 5.6, dom: 2.1, pole: 0.6, mur: 1.3, brama: 2.2 }[b.typ] || 2.0; }
 function miejsceWolne(typ, i0, j0, margines = 0) {
   const w = BUDYNKI[typ].w;
   for (let j = j0 - margines; j < j0 + w + margines; j++) for (let i = i0 - margines; i < i0 + w + margines; i++) {
@@ -1693,7 +1694,7 @@ const EF = {
   liscie(x, z) { for (let i = 0; i < 14; i++) czastka(CZ_NORM, x + lo(-0.8, 0.8), lo(0.8, 2), z + lo(-0.8, 0.8), lo(-0.8, 0.8), lo(0.2, 0.8), lo(-0.8, 0.8), lo(1.2, 2), 0.14, 0.1, 1, Math.random() < 0.5 ? '#4a8f3a' : '#7fae4c', 1.5); EF.kurz(x, z, 6, 2); },
 };
 // skąd leci dym z komina (budynki gracza i komputera są obrócone o pół obrotu)
-const KOMINY = { dom: [[-0.38, 1.6, -0.3]], kuznia: [[0.75, 2.1, -0.95]], ratusz: [] };
+const KOMINY = { dom: [[-0.43, 1.92, -0.34]], kuznia: [[0.83, 2.42, -1.05]], ratusz: [] };
 let efT = 0;
 function emitujEfekty(dt) {
   efT += dt; const czesto = efT > 0.12; if (czesto) efT = 0;

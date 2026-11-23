@@ -1,0 +1,18 @@
+{
+  "name": "Age of Haskap II",
+  "short_name": "Age of Haskap",
+  "description": "Dowodź osadnikami, buduj osadę, przechodź do nowych er i pokonaj osadę komputera.",
+  "lang": "pl",
+  "start_url": "./",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#9fd3f0",
+  "theme_color": "#9fd3f0",
+  "icons": [
+    { "src": "ikona-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "ikona-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "ikona-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
