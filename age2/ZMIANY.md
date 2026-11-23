@@ -5,6 +5,21 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 28 (23.11.2026)
+
+**Dodane**
+- Nowa wielkość mapy: Mega (384 × 384 kratki), 2 razy większa w każdą stronę niż Średnia.
+  Ozdób (trawa, kwiaty) jest na niej tyle co na Dużej, a Gęsta Puszcza jest rzadsza, żeby telefon dał radę.
+
+**Zmienione**
+- Jotunheim ma prawdziwe góry: wysokie masywy (do około 20 razy wyższe od ludzika) ze stromymi skalnymi ścianami,
+  poszarpanymi szczytami i śniegiem na górze. Góry łączą się w pasma z 1–3 szczytów. U stóp gór leżą głazy.
+  Wcześniej „góry” były tylko kępkami skał, które z daleka wyglądały jak kamienie.
+
+**Do sprawdzenia**
+- Mapa Mega na telefonie: w Dolinie Mega jest około 13 tysięcy drzew (4 razy więcej niż na Średniej), w Puszczy Mega około 26 tysięcy.
+- Bitwa komputer na komputer na Dolinie Mega trwała około 80 minut, na Jotunheim (Średnia) 61 minut, bez błędów.
+
 ## Wersja 27 (23.11.2026)
 
 **Dodane**

@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY } from './dane.js';
 
-const WERSJA = 27;
+const WERSJA = 28;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 27, opis: 'Nowa mapa Jotunheim: zimowa kraina olbrzymów z ośnieżonymi górami, fiordami, lasami świerkowymi i kamieniami z runami. Do tego wszystko z wersji 26.' },
+  { nr: 28, opis: 'Prawdziwe wysokie góry ze śniegiem na szczytach w Jotunheim i nowa wielkość mapy Mega (384 × 384, 2 razy większa niż Średnia). Do tego wszystko z wersji 27.' },
+  { nr: 27, opis: 'Nowa mapa Jotunheim: zimowa kraina olbrzymów z ośnieżonymi górami, fiordami, lasami świerkowymi i kamieniami z runami. Do tego wszystko z wersji 26.', adres: 'wersje/27/' },
   { nr: 26, opis: '8 rodzajów map do wyboru: Dolina, Wielkie Jezioro, Rzeka z brodami, Skalne Przełęcze, Gęsta Puszcza, Mroźna Tundra, Oaza, Bagna (albo losowa). Do tego wszystko z wersji 25.', adres: 'wersje/26/' },
   { nr: 25, opis: 'Brama na 4 kratki; postawiona przy murze sama wskakuje w jego linię, a mur w tym miejscu znika. Do tego wszystko z wersji 24.', adres: 'wersje/25/' },
   { nr: 24, opis: 'Nowa gra z wyborem: wielkość mapy, od 1 do 3 komputerów (każdy ze swoim poziomem), każdy na każdego albo komputery razem. Do tego wszystko z wersji 23.', adres: 'wersje/24/' },
@@ -41,8 +42,8 @@ const KLUCZ = 'age-of-haskap-2';
 const $ = id => document.getElementById(id);
 const losowo = (a, b) => a + Math.random() * (b - a);
 
-// mapa N × N kratek (do wyboru przy nowej grze: 144, 192 albo 240; do wersji 13: 96); Dworki stoją w rogach (±BAZA, ±BAZA)
-const N_MAKS = 240, ROZMIARY = [144, 192, 240];
+// mapa N × N kratek (do wyboru przy nowej grze: 144, 192, 240 albo 384 (Mega); do wersji 13: 96); Dworki stoją w rogach (±BAZA, ±BAZA)
+const N_MAKS = 384, ROZMIARY = [144, 192, 240, 384];
 let N = 192, POL = N / 2, BAZA = 60;
 function ustawMape(n) {
   N = ROZMIARY.includes(n) ? n : 192; POL = N / 2; BAZA = Math.round(N * 60 / 192);
@@ -559,7 +560,15 @@ function generujTeren(seed) {
     if (!sym4()) kazda((x, z) => { const d = Math.abs(x + z) / Math.SQRT2, t = Math.abs(x - z) / Math.SQRT2; return t > T0 && d < szer(t, x, z) ? 1 : 0; });
     else kazda((x, z) => x > T0 && Math.abs(z) < szer(x, x, z) || z > T0 && Math.abs(x) < szer(z, x, z) ? 1 : 0);
     // ośnieżone góry olbrzymów (wojsko chodzi dolinami między nimi), dwa zamarznięte stawy
-    for (let n = 0, ile = Math.round(9 * skalaMapy()) + 1; n < ile; n++) { const rad = 3.5 + r() * 4; losuj(rad + 3, 24, (x, z) => { if (Math.hypot(x, z) < 10) return false; staw(x, z, rad, 2); }); }
+    // pasma: 1–3 zachodzące na siebie masywy w jednej linii
+    for (let n = 0, ile = Math.round(4 * skalaMapy()) + 1; n < ile; n++) {
+      const rad = (6.5 + r() * 5) * Math.sqrt(Math.max(1, sk)), a = r() * 6.283, dl = 1 + Math.floor(r() * 3);
+      const kola = k => [Math.cos(a) * k * rad * 0.95, Math.sin(a) * k * rad * 0.95, rad * (1 - k * 0.22)];
+      losuj(rad + 3, 26 + rad, (x, z) => {
+        for (let k = 0; k < dl; k++) { const [dx, dz, rk] = kola(k); if (!wCzesci(x + dx, z + dz, rk + 3) || Math.hypot(x + dx - TC[0], z + dz - TC[1]) < 26 + rk || Math.hypot(x + dx, z + dz) < rk + 9) return false; }
+        for (let k = 0; k < dl; k++) { const [dx, dz, rk] = kola(k); staw(x + dx, z + dz, rk, 2); }
+      });
+    }
     for (let n = 0; n < 2; n++) { const rad = 3 + r() * 3; losuj(rad + 2, 24, (x, z) => staw(x, z, rad, 4)); }
     for (let n = 0; n < 3; n++) losuj(6, 22, (x, z) => { dodatki.push([x, z, n === 1 ? 3 : 4, 5]); });
   } else if (typ === 'tundra') {
@@ -649,7 +658,7 @@ function generujMape(seed) {
       if (!naszaCzesc(i, j)) continue;
       const x = i - POL + 0.5, z = j - POL + 0.5, d = Math.hypot(x - TC[0], z - TC[1]); if (d < 19) continue;
       const n = szum2(x * 0.075, z * 0.075, zp + 21) + (d < 26 ? (26 - d) * 0.02 : 0);
-      if (n < 0.43 && r() < 0.85) daj(x, z, 1);
+      if (n < (N > 240 ? 0.36 : 0.43) && r() < (N > 240 ? 0.5 : 0.85)) daj(x, z, 1); // na Mega mapie rzadziej (telefon)
     }
   }
   for (const [x, z, co, ile] of ter.dodatki) {
@@ -719,6 +728,12 @@ function generujMape(seed) {
   // teren: woda i skały zamykają kratki, brody i lód są do chodzenia (bez budowania)
   const skaly = [];
   for (let c = 0; c < N * N; c++) { const t = TEREN[c]; if (!t) continue; blok[c] = t === 1 || t === 2 ? 6 : 7; naKom[c] = 0; if (t === 2) skaly.push(c); }
+  // Jotunheim: prawdziwe góry z siatki wysokości, a głazy tylko u ich stóp
+  if (typMap === 'jotunheim' && skaly.length) {
+    const gory = zbudujGory(seed); INST.teren_gory = gory; scena.add(gory);
+    const brzegowa = c => { const ci = c % N, cj = (c / N) | 0; for (let k = 0; k < 8; k++) { const n = kom2(ci + DI[k], cj + DJ[k]); if (n >= 0 && TEREN[n] !== 2) return true; } return false; };
+    skaly.splice(0, skaly.length, ...skaly.filter(brzegowa));
+  }
   if (skaly.length) {
     const im = new THREE.InstancedMesh(MOD.glaz(motyw()), MAT, skaly.length); im.castShadow = true;
     skaly.forEach((c, k) => {
@@ -740,6 +755,57 @@ function generujMape(seed) {
   return id;
 }
 const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
+// góry z siatki wysokości nad kratkami skał: im dalej od brzegu skał, tym wyżej; strome ściany skalne, śnieg na szczytach
+function zbudujGory(seed) {
+  const D = new Float32Array(N * N), zi = seed % 977;
+  for (let c = 0; c < N * N; c++) D[c] = TEREN[c] === 2 ? 1e9 : 0;
+  // odległość od brzegu skał (dwa przejścia przez mapę)
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+    const c = j * N + i; if (!D[c]) continue; let d = D[c];
+    if (i > 0) d = Math.min(d, D[c - 1] + 1); if (j > 0) d = Math.min(d, D[c - N] + 1);
+    if (i > 0 && j > 0) d = Math.min(d, D[c - N - 1] + 1.414); if (i < N - 1 && j > 0) d = Math.min(d, D[c - N + 1] + 1.414); D[c] = d;
+  }
+  for (let j = N - 1; j >= 0; j--) for (let i = N - 1; i >= 0; i--) {
+    const c = j * N + i; if (!D[c]) continue; let d = D[c];
+    if (i < N - 1) d = Math.min(d, D[c + 1] + 1); if (j < N - 1) d = Math.min(d, D[c + N] + 1);
+    if (i < N - 1 && j < N - 1) d = Math.min(d, D[c + N + 1] + 1.414); if (i > 0 && j < N - 1) d = Math.min(d, D[c + N - 1] + 1.414); D[c] = d;
+  }
+  // wysokość w rogach kratek (róg przy zwykłej ziemi leży na ziemi)
+  const W = N + 1, H = new Float32Array(W * W);
+  for (let vj = 0; vj <= N; vj++) for (let vi = 0; vi <= N; vi++) {
+    let m = 1e9;
+    for (const [a, b] of [[vi - 1, vj - 1], [vi, vj - 1], [vi - 1, vj], [vi, vj]]) { if (a < 0 || b < 0 || a >= N || b >= N) continue; m = Math.min(m, D[b * N + a]); }
+    if (m >= 1e8 || m <= 0) { H[vj * W + vi] = m >= 1e8 ? 6 : 0; continue; }
+    const x = vi - POL, z = vj - POL, d = Math.min(m, 30) - 0.5;
+    // wysokie masywy łagodnie się spłaszczają (słońce jest na wysokości 34), a szczyty zostają poszarpane
+    const sur = d * 2.3 * (0.7 + 0.6 * szumMapy(x * 0.07, z * 0.07, zi));
+    H[vj * W + vi] = 19 * Math.tanh(sur / 19) + szumMapy(x * 0.55, z * 0.55, zi + 3) * 1.6 * Math.min(d, 3) + szumMapy(x * 0.22, z * 0.22, zi + 9) * 5 * Math.min(1, d / 6);
+  }
+  const pos = [], nor = [], kol = [], c3 = new THREE.Color(), A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), n3 = new THREE.Vector3();
+  const SKALY = ['#9a948a', '#8a847a', '#a8a298', '#7f796f'];
+  const tr = (p1, p2, p3) => {
+    A.set(...p1); B.set(...p2); C.set(...p3);
+    n3.subVectors(C, B).cross(B.clone().sub(A).negate()).normalize(); if (n3.y < 0) n3.negate();
+    const h = (A.y + B.y + C.y) / 3, mx = (A.x + B.x + C.x) / 3, mz = (A.z + B.z + C.z) / 3;
+    const linia = 3.5 + szumMapy(mx * 0.12, mz * 0.12, zi + 5) * 5;
+    if (h > linia && n3.y > 0.28) c3.set(n3.y > 0.6 ? '#f5f8fb' : '#e3eaf0');
+    else if (h > linia - 2.5 && n3.y > 0.45) c3.set('#d3dbe2');
+    else c3.set(SKALY[Math.floor(szumMapy(mx * 0.9, mz * 0.9, zi + 7) * 3.99)]).multiplyScalar(h < 1.2 ? 0.85 : 1);
+    for (const v of [A, B, C]) { pos.push(v.x, v.y, v.z); nor.push(n3.x, n3.y, n3.z); kol.push(c3.r, c3.g, c3.b); }
+  };
+  const V = (vi, vj) => [vi - POL, H[vj * W + vi], vj - POL];
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+    if (TEREN[j * N + i] !== 2) continue;
+    const a = V(i, j), b = V(i + 1, j), c = V(i, j + 1), d = V(i + 1, j + 1);
+    if ((i + j) % 2) { tr(a, c, b); tr(b, c, d); } else { tr(a, c, d); tr(a, d, b); }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(kol, 3));
+  g.computeBoundingSphere();
+  const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true }));
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
 // dodatkowe złoża: więcej kamienia i złoto; numery od 900000, mapa dalej taka sama dla obu stron
 const ID_ZLOZ = 900000;
 function dodatkoweZloza(seed) {
@@ -822,7 +888,7 @@ function rozmiescOzdoby(seed) {
   const przyLesie = c => { const i = c % N, j = (c / N) | 0; for (let k = 0; k < 8; k++) { const n = kom2(i + DI[k], j + DJ[k]); if (n >= 0 && blok[n] === 1) { const z0 = ZAS.get(naKom[n]); if (z0 && z0.rodzaj === 'drzewo') return true; } } return false; };
   const przyWodzie = c => { const i = c % N, j = (c / N) | 0; for (let b = -2; b <= 2; b++) for (let a = -2; a <= 2; a++) { const n = kom2(i + a, j + b); if (n >= 0 && TEREN[n] === 1) return true; } return false; };
   const mt = motyw();
-  for (let k = 0, ile = Math.round(18000 * (N / 192) ** 2); k < ile; k++) {
+  for (let k = 0, ile = Math.round(18000 * (Math.min(N, 240) / 192) ** 2); k < ile; k++) { // Mega mapa: ozdób tyle co na Dużej (telefon)
     const x = 1.5 - POL + r() * (N - 3), z = 1.5 - POL + r() * (N - 3), c = kom(x, z);
     if (c < 0 || blok[c] !== 0 || odBazy(x, z) < 6.5) continue;
     const q = r(), las = przyLesie(c), kw = szumMapy(x * 0.12, z * 0.12, 77);
@@ -980,7 +1046,7 @@ function ustawDroge(u, cele, tx, tz, punkt = false) {
     const [cx, cz] = punkt && kom(tx, tz) === cele[0] ? [tx, tz] : srodekKom(cele[0]);
     if (widac(u.x, u.z, cx, cz)) { u.sciezka = [[cx, cz]]; return true; }
   }
-  const d = szukajDrogi(u.x, u.z, cele, tx, tz, typMapy() === 'dolina' ? 7000 : 30000);
+  const d = szukajDrogi(u.x, u.z, cele, tx, tz, (typMapy() === 'dolina' ? 7000 : 30000) * Math.max(1, (N / 240) ** 2));
   if (!d) { u.sciezka = null; return false; }
   const pts = d.map(srodekKom);
   if (punkt && kom(tx, tz) === d[d.length - 1]) pts[pts.length - 1] = [tx, tz];
@@ -2063,7 +2129,7 @@ function sprawdzKoniec() {
 }
 
 // ================= nowa gra, zapis, wczytanie =================
-// opcje: { mapa: 'dolina' | ... | 'losowa' (MAPY w dane.js), rozmiar: 144 | 192 | 240, przeciwnicy: ['latwy', ...] (1–3 komputery), sojusz: 'kazdy' | 'razem' }; sam napis = jeden komputer
+// opcje: { mapa: 'dolina' | ... | 'losowa' (MAPY w dane.js), rozmiar: 144 | 192 | 240 | 384, przeciwnicy: ['latwy', ...] (1–3 komputery), sojusz: 'kazdy' | 'razem' }; sam napis = jeden komputer
 function nowaGra(opcje = {}) {
   if (typeof opcje === 'string') opcje = { przeciwnicy: [opcje] };
   const przec = (opcje.przeciwnicy && opcje.przeciwnicy.length ? opcje.przeciwnicy : ['latwy']).slice(0, 3).map(t => TRUDNOSC[t] ? t : 'latwy');

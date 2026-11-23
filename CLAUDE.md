@@ -111,7 +111,7 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   Następne kawałki: przetwórnie (sortownia, chłodnia i mroźnia, tłocznia, smażalnia, liofilizatornia, jarmark), owce,
   huta i transport (muły, tory), Zielarnia i Akademia Ogrodnika, mury i Ambony z cegły, Gawra z niedźwiedziem.
   Modele 3D (sklejone bryły z kolorami) w `age2/modele.js`, reszta w `age2/gra.js` (przeciwnik komputerowy: funkcja `ai`).
-- Mapa ma 144, 192 albo 240 kratek (wybór przy nowej grze; `ustawMape`, `N`, `BAZA` na początku `age2/gra.js`; do wersji 13: 96 × 96)
+- Mapa ma 144, 192, 240 albo 384 (Mega) kratki (wybór przy nowej grze; `ustawMape`, `N`, `BAZA` na początku `age2/gra.js`; do wersji 13: 96 × 96)
   i jest taka sama dla wszystkich stron: przy 2 stronach połowa gracza odbita na drugą stronę, przy 3–4 ćwiartka obrócona 3 razy
   (`generujMape`, `kopieKom`). Mapa 192 z 1 komputerem musi zostać dokładnie taka jak dotąd (zapisy odtwarzają ją z `seed`).
   Stare zapisy z mapą 96 przechodzą do kopii wersji 13.
@@ -119,6 +119,7 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   `TEREN` (1 woda, 2 skały, 3 bród, 4 lód, 5 polanka zamknięta lasem) robi `generujTeren` (część gracza, potem kopia jak zasoby);
   woda i skały to `blok` 6, bród i lód 7 (chodzi się, nie buduje). Kolory i ozdoby motywów: `MOTYWY` w `age2/gra.js`.
   Dolina ma zostać dokładnie taka jak dotąd (nowe rodzaje map nie mogą zmieniać losowania Doliny).
+  Góry w Jotunheim to siatka wysokości nad kratkami skał (`zbudujGory`), na innych mapach skały to głazy (`MOD.glaz`).
 - Strony: 0 = gracz, 1–3 = komputery (`S.strony`, rogi `ROGI`, kolory `KOLORY_STRON` w `age2/modele.js`), poziom każdego komputera
   w `S.trudnosci`, drużyny w `S.druzyna` (kto jest wrogiem: `wrogowie(a, b)`), przegrani w `S.odpadli`. Opcje nowej gry: `nowaGra(opcje)`.
 - Test bez klikania: `window.__haskap` (`krok(sekundy)`, `komputerKontraKomputer(trudnosc)` = komputer gra też za gracza).
