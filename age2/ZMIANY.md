@@ -5,6 +5,18 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 25 (23.11.2026)
+
+**Zmienione**
+- Brama jest szeroka na 4 kratki (wcześniej 3). Kosztuje 60 drewna zamiast 45 i buduje się trochę dłużej.
+- Brama postawiona przy murze (do 2 kratek od miejsca, które wskażesz palcem) sama wskakuje w linię muru,
+  także skośnego, a kawałki muru w tym miejscu znikają (wraca połowa ich ceny). Wcześniej brama postawiona
+  o kratkę obok muru stawała obok niego i mur zostawał.
+- Bramę dalej można postawić w dowolnym wolnym miejscu, także bez muru.
+
+**Do sprawdzenia**
+- Bramy postawione wcześniej zostają takie, jakie były (3 kratki).
+
 ## Wersja 24 (23.11.2026)
 
 **Dodane**

@@ -308,36 +308,38 @@ function kamienie(x, z, n, s = 1, k1 = KAMIEN, k2 = KAMIEN2) {
   return c;
 }
 
-// brama na 3 kratki: dwa filary, belka (albo łuk z cegły) i dwa skrzydła wrót; otwarte skrzydła są obrócone do środka osady
+// brama na 4 kratki (od x = -2 do 2): dwa filary, belka (albo łuk z cegły) i dwa skrzydła wrót; otwarte skrzydła są obrócone do +z
 function brama3D(poziom, zamk, k) {
-  const c = [], CEG = '#b5553a', CEG2 = '#9c4630', STAL = '#4a4f57', WROTA = '#8a5530', OKUCIA = '#5a3518';
+  const c = [], CEG = '#b5553a', CEG2 = '#9c4630', STAL = '#4a4f57', WROTA = '#8a5530', OKUCIA = '#5a3518', W = 4, H = W / 2;
   if (poziom === 1) {
     for (const sx of [-1, 1]) {
-      c.push(cz(cyl(0.16, 0.18, 2.0, 8), BAL, sx * 1.33, 1.0, 0), cz(stozek(0.16, 0.3, 8), BAL2, sx * 1.33, 2.15, 0));
-      c.push(cz(cyl(0.11, 0.12, 1.55, 6), BAL2, sx * 1.33, 0.78, 0.2), cz(cyl(0.11, 0.12, 1.55, 6), BAL2, sx * 1.33, 0.78, -0.2));
+      const x = sx * (H - 0.18);
+      c.push(cz(cyl(0.17, 0.19, 2.1, 8), BAL, x, 1.05, 0), cz(stozek(0.17, 0.32, 8), BAL2, x, 2.26, 0));
+      c.push(cz(cyl(0.11, 0.12, 1.6, 6), BAL2, x, 0.8, 0.22), cz(cyl(0.11, 0.12, 1.6, 6), BAL2, x, 0.8, -0.22));
     }
-    c.push(cz(box(3.0, 0.18, 0.3), '#6b4527', 0, 1.78, 0), cz(box(2.4, 0.12, 0.32), k, 0, 1.6, 0));
+    c.push(cz(box(W, 0.2, 0.32), '#6b4527', 0, 1.88, 0), cz(box(W - 0.7, 0.13, 0.34), k, 0, 1.69, 0));
     // daszek nad przejściem
-    c.push(cz(box(1.7, 0.08, 0.7), GONT, 0, 2.02, 0.17, 0.45, 0, 0), cz(box(1.7, 0.08, 0.7), GONT, 0, 2.02, -0.17, -0.45, 0, 0), cz(box(1.8, 0.07, 0.07), BAL2, 0, 2.18, 0));
+    c.push(cz(box(W - 1.2, 0.08, 0.72), GONT, 0, 2.13, 0.17, 0.45, 0, 0), cz(box(W - 1.2, 0.08, 0.72), GONT, 0, 2.13, -0.17, -0.45, 0, 0), cz(box(W - 1.1, 0.07, 0.07), BAL2, 0, 2.3, 0));
   } else {
     for (const sx of [-1, 1]) {
-      c.push(cz(box(0.46, 0.22, 1.0), KAMIEN2, sx * 1.27, 0.11, 0));
-      for (let i = 0; i < 7; i++) c.push(cz(box(0.4, 0.26, 0.94), i % 2 ? CEG : CEG2, sx * 1.27, 0.35 + i * 0.26, 0));
-      c.push(cz(box(0.48, 0.1, 1.0), KAMIEN, sx * 1.27, 2.17, 0), cz(box(0.2, 0.22, 0.2), CEG, sx * 1.27 - 0.12, 2.33, -0.3), cz(box(0.2, 0.22, 0.2), CEG, sx * 1.27 + 0.12, 2.33, 0.3));
+      const x = sx * (H - 0.25);
+      c.push(cz(box(0.5, 0.22, 1.0), KAMIEN2, x, 0.11, 0));
+      for (let i = 0; i < 7; i++) c.push(cz(box(0.44, 0.27, 0.94), i % 2 ? CEG : CEG2, x, 0.355 + i * 0.27, 0));
+      c.push(cz(box(0.52, 0.1, 1.0), KAMIEN, x, 2.24, 0), cz(box(0.2, 0.22, 0.2), CEG, x - 0.12, 2.4, -0.3), cz(box(0.2, 0.22, 0.2), CEG, x + 0.12, 2.4, 0.3));
     }
-    c.push(cz(box(2.1, 0.36, 0.94), CEG, 0, 1.92, 0), cz(box(2.2, 0.08, 1.0), KAMIEN, 0, 2.14, 0), cz(box(1.4, 0.16, 0.96), k, 0, 1.85, 0));
-    for (const x of [-0.7, 0, 0.7]) c.push(cz(box(0.24, 0.2, 0.24), CEG, x, 2.28, 0));
+    c.push(cz(box(W - 0.9, 0.38, 0.94), CEG, 0, 1.99, 0), cz(box(W - 0.8, 0.08, 1.0), KAMIEN, 0, 2.22, 0), cz(box(W - 1.8, 0.16, 0.96), k, 0, 1.92, 0));
+    for (const x of [-1.05, -0.35, 0.35, 1.05]) c.push(cz(box(0.24, 0.2, 0.24), CEG, x, 2.36, 0));
     if (poziom === 3) {
-      for (const sx of [-1, 1]) for (const y of [0.6, 1.3]) c.push(cz(box(0.44, 0.06, 0.98), STAL, sx * 1.27, y, 0));
-      c.push(cz(box(2.12, 0.06, 0.98), STAL, 0, 1.76, 0), cz(box(2.12, 0.06, 0.98), STAL, 0, 2.06, 0));
-      for (const x of [-0.9, -0.3, 0.3, 0.9]) c.push(cz(kula(0.035, 4), METAL, x, 1.92, 0.48), cz(kula(0.035, 4), METAL, x, 1.92, -0.48));
+      for (const sx of [-1, 1]) for (const y of [0.6, 1.3]) c.push(cz(box(0.48, 0.06, 0.98), STAL, sx * (H - 0.25), y, 0));
+      c.push(cz(box(W - 0.88, 0.06, 0.98), STAL, 0, 1.82, 0), cz(box(W - 0.88, 0.06, 0.98), STAL, 0, 2.14, 0));
+      for (const x of [-1.2, -0.6, 0, 0.6, 1.2]) c.push(cz(kula(0.035, 4), METAL, x, 1.99, 0.48), cz(kula(0.035, 4), METAL, x, 1.99, -0.48));
     }
   }
-  // skrzydła wrót: zawias przy filarze, każde ma 1,1 szerokości
-  const zaw = poziom === 1 ? 1.17 : 1.05, sz = zaw - 0.02, h = poziom === 1 ? 1.45 : 1.65;
+  // skrzydła wrót: zawias przy filarze, każde do połowy przejścia
+  const zaw = poziom === 1 ? H - 0.35 : H - 0.49, sz = zaw - 0.02, h = poziom === 1 ? 1.5 : 1.72;
   for (const sx of [-1, 1]) {
     const czesci = [cz(box(sz, h, 0.1), WROTA, 0, h / 2 + 0.05, 0)];
-    for (let i = 1; i < 4; i++) czesci.push(cz(box(0.025, h, 0.11), OKUCIA, -sz / 2 + i * sz / 4, h / 2 + 0.05, 0));
+    for (let i = 1; i < 5; i++) czesci.push(cz(box(0.025, h, 0.11), OKUCIA, -sz / 2 + i * sz / 5, h / 2 + 0.05, 0));
     czesci.push(cz(box(sz, 0.08, 0.12), poziom === 3 ? STAL : OKUCIA, 0, 0.35, 0), cz(box(sz, 0.08, 0.12), poziom === 3 ? STAL : OKUCIA, 0, h - 0.2, 0));
     czesci.push(cz(box(Math.hypot(sz, h - 0.6) - 0.05, 0.07, 0.12), OKUCIA, 0, h / 2 + 0.05, 0, 0, 0, sx * Math.atan2(h - 0.6, sz)));
     czesci.push(cz(box(sz * 0.8, 0.1, 0.12), k, 0, h * 0.62, 0));
@@ -631,7 +633,7 @@ const BUD = {
     for (const [x, z] of [[-0.49, -0.3], [-0.49, 0.3], [0.49, -0.3], [0.49, 0.3], [-0.3, 0.49], [0.3, 0.49], [-0.3, -0.49], [0.3, -0.49]]) c.push(cz(kula(0.03, 4), METAL, x, 0.86, z));
     return c;
   },
-  // bramy na 3 kratki (od x = -1.5 do 1.5): drewniana, ceglana, okuta stalą; wersje z „Z” są zamknięte
+  // bramy na 4 kratki (od x = -2 do 2): drewniana, ceglana, okuta stalą; wersje z „Z” są zamknięte
   brama(k, d) { return brama3D(1, false, k); },
   bramaZ(k, d) { return brama3D(1, true, k); },
   brama2(k, d) { return brama3D(2, false, k); },

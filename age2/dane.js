@@ -76,7 +76,7 @@ export const BUDYNKI = {
   kuznia: { nazwa: 'Kuźnia', emoji: '⚒️', w: 3, hp: 600, koszt: { drewno: 150 }, czas: 30, era: 2, opis: 'Ulepsza broń, zbroje i pociski, szkoli rzemieślników' },
   wieza: { nazwa: 'Ambona', emoji: '🗼', w: 2, hp: 800, koszt: { drewno: 50, kamien: 125 }, czas: 40, era: 2, strzela: { atak: 5, zasieg: 7.5, odstep: 1.6 }, opis: 'Sama strzela do wrogów' },
   mur: { nazwa: 'Palisada', emoji: '🪵', w: 1, hp: 250, koszt: { drewno: 5 }, czas: 4, era: 1, mur: true, opis: 'Ściana z pali: przeciągnij palcem linię muru' },
-  brama: { nazwa: 'Brama', emoji: '🚪', w: 1, hp: 400, koszt: { drewno: 45 }, czas: 12, era: 1, brama: true, opis: 'Szeroka na 3 kratki; otwarta przepuszcza twoich, wrogów nigdy' },
+  brama: { nazwa: 'Brama', emoji: '🚪', w: 1, hp: 400, koszt: { drewno: 60 }, czas: 14, era: 1, brama: true, opis: 'Szeroka na 4 kratki; w murze sama się wpasowuje. Otwarta przepuszcza twoich, wrogów nigdy' },
   warsztat: { nazwa: 'Warsztat', emoji: '🛠️', w: 3, hp: 600, koszt: { drewno: 200 }, czas: 35, era: 3, wymaga: 'kuznia', opis: 'Buduje tarany i katapulty' },
 };
 // rozbudowa ambony (w samej ambonie): każdy stopień ma więcej życia, strzela dalej, mocniej i częściej

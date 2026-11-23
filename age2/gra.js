@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA } from './dane.js';
 
-const WERSJA = 24;
+const WERSJA = 25;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 24, opis: 'Nowa gra z wyborem: wielkość mapy, od 1 do 3 komputerów (każdy ze swoim poziomem), każdy na każdego albo komputery razem. Do tego wszystko z wersji 23.' },
+  { nr: 25, opis: 'Brama na 4 kratki; postawiona przy murze sama wskakuje w jego linię, a mur w tym miejscu znika. Do tego wszystko z wersji 24.' },
+  { nr: 24, opis: 'Nowa gra z wyborem: wielkość mapy, od 1 do 3 komputerów (każdy ze swoim poziomem), każdy na każdego albo komputery razem. Do tego wszystko z wersji 23.', adres: 'wersje/24/' },
   { nr: 23, opis: 'W budynkach widać tylko ulepszenia, które można zrobić teraz; następne pojawiają się po poprzednich. Do tego wszystko z wersji 22.', adres: 'wersje/23/' },
   { nr: 22, opis: 'Odświeżone budynki: większe, z różnymi dachami i znakami rozpoznawczymi (wieża Dworku, koło kopalni, renifer w Zagrodzie). Do tego wszystko z wersji 21.', adres: 'wersje/22/' },
   { nr: 21, opis: 'Szeroka brama na 3 kratki, którą można zamknąć i otworzyć; rzemieślnicy z Kuźni sami naprawiają budynki. Do tego wszystko z wersji 20.', adres: 'wersje/21/' },
@@ -1250,15 +1251,22 @@ const GEO_PLAC = {};
 // choć zajmuje swoją kratkę; stare zapisy i bramy zgadują kierunek od sąsiadów
 function ulozMur(b, wyg) {
   if (!wyg) return;
-  b.wyg = wyg; b.mesh.position.set(wyg[0], 0, wyg[1]); b.mesh.rotation.y = wyg[2]; b.mesh.scale.x = b.d.brama ? wyg[3] / 3 : wyg[3];
+  b.wyg = wyg; b.mesh.position.set(wyg[0], 0, wyg[1]); b.mesh.rotation.y = wyg[2]; b.mesh.scale.x = b.d.brama ? wyg[3] / SZER_MODELU_BRAMY : wyg[3];
 }
-// brama na 3 kratki: kierunek 0 = wzdłuż x, 1 = po skosie (1, 1), 2 = wzdłuż z, 3 = po skosie (1, -1);
-// po skosie kratki idą schodkami jak mur, więc nikt nie przeciśnie się bokiem. Stare bramy (kier = null) mają 1 kratkę.
-const KIER_BRAMY = [[[-1, 0], [0, 0], [1, 0]], [[-1, 0], [0, 0], [0, 1]], [[0, -1], [0, 0], [0, 1]], [[-1, 0], [0, 0], [0, -1]]];
-const kratkiBramy = (i, j, kier) => kier == null ? [[i, j]] : KIER_BRAMY[kier].map(([a, c]) => [i + a, j + c]);
-function wygladBramy(kr) {
-  const p = kr[0], q = kr[kr.length - 1], dx = q[0] - p[0], dz = q[1] - p[1], L = Math.hypot(dx, dz);
-  return [(p[0] + q[0]) / 2 - POL + 0.5, (p[1] + q[1]) / 2 - POL + 0.5, L ? Math.atan2(-dz, dx) : 0, L ? L * 1.5 : 1];
+// brama na SZER_BRAMY kratek (od wersji 25: 4, wcześniej 3): kierunek 0 = wzdłuż x, 1 = po skosie (1, 1), 2 = wzdłuż z, 3 = po skosie (1, -1);
+// po skosie kratki idą schodkami jak mur, więc nikt nie przeciśnie się bokiem. Bardzo stare bramy (kier = null) mają 1 kratkę.
+const SZER_BRAMY = 4, SZER_MODELU_BRAMY = 4, KAT_BRAMY = [0, -Math.PI / 4, -Math.PI / 2, Math.PI / 4];
+function kratkiBramy(i, j, kier, szer = SZER_BRAMY) {
+  if (kier == null) return [[i, j]];
+  const out = [];
+  if (kier % 2 === 0) for (let k = -1; k < szer - 1; k++) out.push(kier === 0 ? [i + k, j] : [i, j + k]);
+  else { let a = i - 1, c = j; const dz = kier === 1 ? 1 : -1; out.push([a, c]); for (let k = 1; k < szer; k++) { if (k % 2) a++; else c += dz; out.push([a, c]); } }
+  return out;
+}
+// wygląd bramy: środek jej kratek, kąt kierunku, długość (po skosie kratka to √½ długości)
+function wygladBramy(kr, kier) {
+  let x = 0, z = 0; for (const [a, c] of kr) { x += a; z += c; }
+  return [x / kr.length - POL + 0.5, z / kr.length - POL + 0.5, kier == null ? 0 : KAT_BRAMY[kier], kier == null ? 1 : kr.length * (kier % 2 ? Math.SQRT1_2 : 1)];
 }
 // kierunek nowej bramy: jak najbliższy mur gracza, a gdy go nie ma, poziomo na ekranie
 const kierZKata = a => ((Math.round(a / (Math.PI / 4)) % 4) + 4) % 4;
@@ -1293,12 +1301,12 @@ function zgadnijWyglad(b) {
   if ((sas(0, 1) || sas(0, -1)) && !sas(1, 0) && !sas(-1, 0)) return [b.x, b.z, Math.PI / 2, 1];
   return null;
 }
-function nowyBudynek(strona, typ, i0, j0, gotowy = false, id, poziom = 1, wyg = null, kier = null) {
+function nowyBudynek(strona, typ, i0, j0, gotowy = false, id, poziom = 1, wyg = null, kier = null, szer = SZER_BRAMY) {
   const d = BUDYNKI[typ], w = d.w, max = maxHpBud(strona, typ, poziom);
   const b = { id: id || S.nextId++, strona, typ, d, i0, j0, w, poziom, x: i0 - POL + w / 2, z: j0 - POL + w / 2, max, hp: gotowy ? max : Math.max(1, max * 0.05), postep: gotowy ? 1 : 0, gotowy, kolejka: [], cd: 0, zbiorka: null, rolnik: 0 };
   for (let j = j0; j < j0 + w; j++) for (let i = i0; i < i0 + w; i++) { const c = kom2(i, j); blok[c] = d.pole ? 4 : d.brama ? 5 : 2; naKom[c] = b.id; if (d.brama) bramaStr[c] = strona; }
   // brama na 3 kratki: zajmuje też kratki obok środka
-  const krB = d.brama ? kratkiBramy(i0, j0, kier) : null; b.kier = d.brama ? kier : null; b.zamk = false;
+  const krB = d.brama ? kratkiBramy(i0, j0, kier, szer) : null; b.kier = d.brama ? kier : null; b.szer = szer; b.zamk = false;
   if (krB && krB.length > 1) { b.kom = krB.map(([i, j]) => kom2(i, j)); for (const c of b.kom) { blok[c] = 5; naKom[c] = b.id; bramaStr[c] = strona; } for (const [i, j] of krB) { ukryjOzdoby(i, j, 1); usunGruzy(i, j, 1); } }
   b.mesh = new THREE.Mesh(MOD.budynek(modelBud(typ, poziom, strona), strona), MAT);
   b.mesh.castShadow = true; b.mesh.receiveShadow = true;
@@ -1306,7 +1314,7 @@ function nowyBudynek(strona, typ, i0, j0, gotowy = false, id, poziom = 1, wyg = 
   ukryjOzdoby(i0, j0, w); usunGruzy(i0, j0, w);
   if (!d.pole && !d.mur && !d.brama) { const k = new THREE.Mesh(GEO_KLEP[w] || (GEO_KLEP[w] = new THREE.PlaneGeometry(w + 1.1, w + 1.1).rotateX(-Math.PI / 2)), MAT_KLEP); k.position.y = 0.012; k.renderOrder = 1; k.receiveShadow = true; b.mesh.add(k); }
   if (ROGI[strona] && ROGI[strona][1] < 0) b.mesh.rotation.y = Math.PI; // budynki w rogach z −z są obrócone
-  if (d.mur || d.brama) ulozMur(b, wyg || (d.brama ? (b.kom ? wygladBramy(krB) : zgadnijWyglad(b) || [b.x, b.z, 0, 1]) : null));
+  if (d.mur || d.brama) ulozMur(b, wyg || (d.brama ? (b.kom ? wygladBramy(krB, kier) : zgadnijWyglad(b) || [b.x, b.z, 0, 1]) : null));
   if (!gotowy) {
     b.mesh.scale.y = 0.12;
     const g = GEO_PLAC[w] || (GEO_PLAC[w] = new THREE.PlaneGeometry(w - 0.1, w - 0.1).rotateX(-Math.PI / 2));
@@ -1945,7 +1953,7 @@ function zadDoZapisu(z) {
 function stanDoZapisu() {
   const o = { ...S };
   o.zasoby = []; for (const z0 of ZAS.values()) if (z0.ile !== z0.start) o.zasoby.push([z0.id, Math.round(z0.ile * 10) / 10]);
-  o.bud = BUD.map(b => [b.id, b.strona, b.typ, b.i0, b.j0, Math.round(b.hp), Math.round(b.postep * 1000) / 1000, b.kolejka.map(q => [q.rodzaj, q.typ, Math.round(q.t * 10) / 10, q.czas, q.koszt]), b.zbiorka, b.rolnik || 0, b.poziom || 1, b.wyg ? b.wyg.map(v => Math.round(v * 1000) / 1000) : 0, b.d.brama ? [b.kier == null ? -1 : b.kier, b.zamk ? 1 : 0] : 0]);
+  o.bud = BUD.map(b => [b.id, b.strona, b.typ, b.i0, b.j0, Math.round(b.hp), Math.round(b.postep * 1000) / 1000, b.kolejka.map(q => [q.rodzaj, q.typ, Math.round(q.t * 10) / 10, q.czas, q.koszt]), b.zbiorka, b.rolnik || 0, b.poziom || 1, b.wyg ? b.wyg.map(v => Math.round(v * 1000) / 1000) : 0, b.d.brama ? [b.kier == null ? -1 : b.kier, b.zamk ? 1 : 0, b.szer || 3] : 0]);
   o.jed = JED.map(u => [u.id, u.strona, u.typ, Math.round(u.x * 100) / 100, Math.round(u.z * 100) / 100, Math.round(u.hp * 10) / 10, u.niesie.sur, Math.round(u.niesie.ile * 10) / 10, zadDoZapisu(u.zad), u.postawa || 'agresja']);
   o.kamera = [kam.x, kam.z, kam.d, kam.kat];
   return o;
@@ -1979,7 +1987,7 @@ function wczytajGre(o) {
   for (const [id, ile] of o.zasoby) { const z0 = ZAS.get(id); if (z0) { z0.ile = ile; if (ile < z0.start) zetnij(z0, z0.x, z0.z, true); } }
   sprzatnijListy();
   for (const [id, strona, typ, i0, j0, hp, postep, kolejka, zbiorka, rolnik, poziom, wyg, brm] of o.bud) {
-    const b = nowyBudynek(strona, typ, i0, j0, postep >= 1, id, poziom || 1, wyg || null, brm && brm[0] >= 0 ? brm[0] : null);
+    const b = nowyBudynek(strona, typ, i0, j0, postep >= 1, id, poziom || 1, wyg || null, brm && brm[0] >= 0 ? brm[0] : null, brm && brm[2] || 3);
     if (brm && brm[1]) ustawBrame(b, true);
     b.hp = hp; b.postep = postep; b.zbiorka = zbiorka; b.rolnik = rolnik;
     b.kolejka = kolejka.map(([rodzaj, t, czasT, czas, koszt]) => ({ rodzaj, typ: t, t: czasT, czas, koszt }));
@@ -2513,15 +2521,31 @@ function przesunDucha(x, z, start) {
   $('st-tekst').textContent = tryb.ok ? `${BUDYNKI[tryb.typ].emoji} ${BUDYNKI[tryb.typ].nazwa}: przesuń palcem i postaw` : '❌ Tu nie można: coś tu stoi albo rośnie';
   $('st-tak').disabled = !tryb.ok;
 }
-// brama: 3 kratki w poprzek przejścia; może stanąć na twoim murze (te kawałki muru znikają, wraca połowa ich ceny)
+// brama blisko muru wskakuje w jego linię: szukamy miejsca (do 2 kratek od palca), gdzie najwięcej kratek bramy to twój mur,
+// a reszta jest wolna; zwraca środkową kratkę albo null, gdy muru nie ma obok
+function bramaWMurze(i0, j0, kier) {
+  let naj = null, najW = 0, najD = 1e9;
+  for (let dj = -2; dj <= 2; dj++) for (let di = -2; di <= 2; di++) {
+    const i = i0 + di, j = j0 + dj; let w = 0, ok = true;
+    for (const [a, c] of kratkiBramy(i, j, kier)) {
+      const o = E.get(naKom[kom2(a, c)]);
+      if (o && o.strona === STRONA_GRACZA && o.d && o.d.mur) w++; else if (!miejsceWolne('mur', a, c)) { ok = false; break; }
+    }
+    const d = di * di + dj * dj;
+    if (ok && w >= 2 && (w > najW || w === najW && d < najD)) { naj = [i, j]; najW = w; najD = d; }
+  }
+  return naj;
+}
+// brama: 4 kratki w poprzek przejścia; postawiona w murze zastępuje jego kawałki (wraca połowa ich ceny)
 function ustawDuchaBramy(x, z) {
-  const i = Math.floor(x + POL), j = Math.floor(z + POL);
+  let i = Math.floor(x + POL), j = Math.floor(z + POL);
   if (tryb.kierAuto) tryb.kier = kierunekBramy(i, j);
-  const kr = kratkiBramy(i, j, tryb.kier), wyg = wygladBramy(kr);
-  // przy murze w tym samym kierunku brama stoi dokładnie na linii muru (skośny mur idzie schodkami)
-  const m = murObok(i, j);
+  const wMurze = bramaWMurze(i, j, tryb.kier); if (wMurze) [i, j] = wMurze;
+  const kr = kratkiBramy(i, j, tryb.kier), wyg = wygladBramy(kr, tryb.kier);
+  // w murze brama stoi dokładnie na linii muru (skośny mur idzie schodkami)
+  const m = wMurze && murObok(i, j);
   if (m && m.wyg && kierZKata(-m.wyg[2]) === tryb.kier) {
-    const ux = Math.cos(m.wyg[2]), uz = -Math.sin(m.wyg[2]), cx = i - POL + 0.5, cz0 = j - POL + 0.5, t = (cx - m.wyg[0]) * ux + (cz0 - m.wyg[1]) * uz;
+    const ux = Math.cos(m.wyg[2]), uz = -Math.sin(m.wyg[2]), t = (wyg[0] - m.wyg[0]) * ux + (wyg[1] - m.wyg[1]) * uz;
     wyg[0] = m.wyg[0] + ux * t; wyg[1] = m.wyg[1] + uz * t;
   }
   let mury = 0;
@@ -2531,11 +2555,11 @@ function ustawDuchaBramy(x, z) {
     const o = E.get(naKom[kom2(a, c)]); if (o && o.strona === STRONA_GRACZA && o.d.mur) { mury++; return true; }
     return false;
   });
-  tryb.duch.position.set(wyg[0], 0, wyg[1]); tryb.duch.rotation.y = wyg[2]; tryb.duch.scale.x = wyg[3] / 3;
+  tryb.duch.position.set(wyg[0], 0, wyg[1]); tryb.duch.rotation.y = wyg[2]; tryb.duch.scale.x = wyg[3] / SZER_MODELU_BRAMY;
   tryb.plama.position.set(wyg[0], 0.05, wyg[1]); tryb.plama.rotation.y = wyg[2]; tryb.plama.scale.set(wyg[3], 1, 1);
   tryb.plama.material.color.set(tryb.ok ? '#4cff7a' : '#ff4a3a');
   tryb.duch.material.color.set(tryb.ok ? '#ffffff' : '#ff8a80');
-  $('st-tekst').textContent = tryb.ok ? `🚪 Brama na 3 kratki${mury ? ' (zastąpi kawałek muru)' : ''}: przesuń palcem, 🔄 obraca` : '❌ Tu nie można: coś tu stoi albo rośnie';
+  $('st-tekst').textContent = tryb.ok ? `🚪 Brama na 4 kratki${mury ? ' (wpasuje się w mur)' : ''}: przesuń palcem, 🔄 obraca` : '❌ Tu nie można: coś tu stoi albo rośnie';
   $('st-tak').disabled = !tryb.ok;
 }
 $('st-obroc').onclick = () => {
@@ -2568,7 +2592,7 @@ $('st-tak').onclick = () => {
     if (!tryb.kr.every(([a, c]) => miejsceWolne('mur', a, c))) { toast('Tu nie można'); dzwiek('blad'); return; }
   }
   zaplac(STRONA_GRACZA, BUDYNKI[typ].koszt);
-  const b = typ === 'brama' ? nowyBudynek(STRONA_GRACZA, typ, tryb.i0, tryb.j0, false, undefined, 1, tryb.wyg, tryb.kier) : nowyBudynek(STRONA_GRACZA, typ, tryb.i0, tryb.j0);
+  const b = typ === 'brama' ? nowyBudynek(STRONA_GRACZA, typ, tryb.i0, tryb.j0, false, undefined, 1, tryb.wyg, tryb.kier, SZER_BRAMY) : nowyBudynek(STRONA_GRACZA, typ, tryb.i0, tryb.j0);
   for (const u of wybrane) if (u.typ === 'osadnik') rozkazBuduj(u, b);
   dzwiek('rozkaz'); zakonczStawianie();
 };
