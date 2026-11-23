@@ -5,6 +5,32 @@ Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
 
+## Wersja 26 (23.11.2026)
+
+**Dodane**
+- Przy nowej grze można wybrać rodzaj mapy (nazwy i wygląd są nasze):
+  - 🌳 Dolina: jak dotąd, łąki, lasy i krzaki.
+  - 🏞️ Wielkie Jezioro: na środku jezioro, do wroga idzie się dookoła brzegu; na brzegu ruda żelaza i kamień.
+  - 🌊 Rzeka z brodami: rzeka dzieli osady, przejść można tylko przez 3 płytkie brody. Przy 2–3 komputerach
+    dwie rzeki na krzyż i każdy ma swoją ćwiartkę.
+  - ⛰️ Skalne Przełęcze: każdy Dworek stoi w skalnej kotlinie z dwoma wąskimi wyjściami, na reszcie mapy skałki.
+  - 🌲 Gęsta Puszcza: las prawie wszędzie, tylko kręte przesieki i polany.
+  - ❄️ Mroźna Tundra: śnieg, świerki z czapami śniegu, zamarznięte jeziora (można po nich chodzić, ale nie budować).
+  - 🏜️ Oaza: piasek, kaktusy i mało drzew; palmy rosną przy oazach, największa oaza jest na środku.
+  - 🐸 Bagna: dużo małych stawów z trzcinami i więcej krzaków z jagodami.
+  - 🎲 Losowa: gra sama wybiera jedną z powyższych.
+- Woda błyszczy i faluje, na małej mapce widać wodę, skały i lód.
+- Nowe drzewa (palma, świerk w śniegu) i ozdoby (trzciny, zaspy, kaktusy, sucha trawa).
+
+**Zmienione**
+- Każda mapa dalej jest taka sama dla wszystkich stron. Dolina wygląda dokładnie tak jak wcześniej.
+- Małe polanki całkiem otoczone lasem są zamknięte (nikt tam nie buduje i nie chodzi), dopóki ktoś nie wytnie
+  do nich drzewa. Wcześniej komputer potrafił tam postawić budynek, do którego nie dało się dojść.
+
+**Do sprawdzenia**
+- Na Gęstej Puszczy jest około 3 razy więcej drzew niż w Dolinie: czy telefon nie zwalnia (zwłaszcza na Dużej mapie).
+- Bitwy komputer na komputer trwały od 28 do 82 minut (najdłużej na Puszczy i Bagnach).
+
 ## Wersja 25 (23.11.2026)
 
 **Zmienione**

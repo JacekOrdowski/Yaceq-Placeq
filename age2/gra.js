@@ -4,12 +4,13 @@
 import * as THREE from '../survival/three.module.min.js';
 import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
-  ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA } from './dane.js';
+  ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY } from './dane.js';
 
-const WERSJA = 25;
+const WERSJA = 26;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 25, opis: 'Brama na 4 kratki; postawiona przy murze sama wskakuje w jego linię, a mur w tym miejscu znika. Do tego wszystko z wersji 24.' },
+  { nr: 26, opis: '8 rodzajów map do wyboru: Dolina, Wielkie Jezioro, Rzeka z brodami, Skalne Przełęcze, Gęsta Puszcza, Mroźna Tundra, Oaza, Bagna (albo losowa). Do tego wszystko z wersji 25.' },
+  { nr: 25, opis: 'Brama na 4 kratki; postawiona przy murze sama wskakuje w jego linię, a mur w tym miejscu znika. Do tego wszystko z wersji 24.', adres: 'wersje/25/' },
   { nr: 24, opis: 'Nowa gra z wyborem: wielkość mapy, od 1 do 3 komputerów (każdy ze swoim poziomem), każdy na każdego albo komputery razem. Do tego wszystko z wersji 23.', adres: 'wersje/24/' },
   { nr: 23, opis: 'W budynkach widać tylko ulepszenia, które można zrobić teraz; następne pojawiają się po poprzednich. Do tego wszystko z wersji 22.', adres: 'wersje/23/' },
   { nr: 22, opis: 'Odświeżone budynki: większe, z różnymi dachami i znakami rozpoznawczymi (wieża Dworku, koło kopalni, renifer w Zagrodzie). Do tego wszystko z wersji 21.', adres: 'wersje/22/' },
@@ -64,14 +65,17 @@ const zapis = wczytaj();
 function zapiszDysk() { try { localStorage.setItem(KLUCZ, JSON.stringify(zapis)); } catch (e) { /* pełna pamięć albo tryb prywatny */ } }
 
 // ================= mapa: kratki =================
-const blok = new Uint8Array(N_MAKS * N_MAKS);   // 0 wolne, 1 zasób (drzewo, krzak, skała), 2 budynek, 4 pole (można chodzić, nie można budować)
+const blok = new Uint8Array(N_MAKS * N_MAKS);   // 0 wolne, 1 zasób (drzewo, krzak, skała), 2 budynek, 4 pole (można chodzić, nie można budować), 5 brama,
+                                                // 6 woda albo skały (nie da się wejść), 7 bród albo lód (można chodzić, nie można budować)
 const naKom = new Int32Array(N_MAKS * N_MAKS);  // id zasobu albo budynku w tej kratce
 const kom = (x, z) => { const i = Math.floor(x + POL), j = Math.floor(z + POL); return i < 0 || j < 0 || i >= N || j >= N ? -1 : j * N + i; };
 const kom2 = (i, j) => (i < 0 || j < 0 || i >= N || j >= N ? -1 : j * N + i);
 const srodekKom = c => [(c % N) - POL + 0.5, Math.floor(c / N) - POL + 0.5];
 const bramaStr = new Int8Array(N_MAKS * N_MAKS).fill(-1); // właściciel bramy w kratce
 let RUCH = -1; // czyi ludzie teraz chodzą (przez swoje bramy przechodzą, przez cudze nie)
-const wolnaKom = c => c >= 0 && (blok[c] === 0 || blok[c] === 4 || blok[c] === 5 && bramaStr[c] === RUCH);
+const wolnaKom = c => c >= 0 && (blok[c] === 0 || blok[c] === 4 || blok[c] === 7 || blok[c] === 5 && bramaStr[c] === RUCH);
+// teren (rodzaje map): 0 ląd, 1 woda, 2 skały, 3 bród (płytka woda), 4 lód, 5 polanka zamknięta lasem (nie da się dojść, otwiera się po wycięciu drzewa)
+const TEREN = new Uint8Array(N_MAKS * N_MAKS);
 const wolneXZ = (x, z) => wolnaKom(kom(x, z));
 
 function rng(seed) {
@@ -89,6 +93,9 @@ const szum2 = (x, z, ziarno) => szumMapy(x, z, ziarno) * 0.65 + szumMapy(x * 2.7
 
 // ================= stan gry =================
 let S = null;                 // stan zapisywany
+// rodzaj mapy (stare zapisy: Dolina) i jej motyw (kolory ziemi, drzewa, ozdoby)
+const typMapy = () => (S && MAPY[S.mapaTyp] ? S.mapaTyp : 'dolina');
+const motyw = () => MAPY[typMapy()].motyw;
 const E = new Map();          // wszystko, co ma id: zasoby, budynki, jednostki
 const ZAS = new Map();        // zasoby na mapie
 const ZAS_TYP = { jagody: [], drewno: [], kamien: [], zelazo: [], zloto: [] };
@@ -197,19 +204,48 @@ const MAT_RING = [new THREE.MeshBasicMaterial({ color: '#4cff7a', transparent: t
 const MAT_PLAC = new THREE.MeshLambertMaterial({ color: '#b0814f' });
 const MAT_ZNACZNIK = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.9, depthWrite: false });
 
+// motywy map: kolory ziemi (od nizin do łąk), suche plamy, runo pod lasem, źdźbła, kwiaty, ścieżki, woda, mała mapka, mgła, okolica za mapą
+const MOTYWY = {
+  lato: { kol: [[86, 150, 64], [112, 182, 84], [146, 200, 100], [176, 192, 104]], suche: [168, 170, 96], runo: 'rgba(48,78,34,0.42)', przyKrzaku: 'rgba(60,110,50,0.35)',
+    zdzbla: ['rgba(40,100,35,0.35)', 'rgba(150,210,110,0.35)', 'rgba(90,150,60,0.4)', 'rgba(200,220,140,0.3)'], kwiaty: 900,
+    sciezka: ['rgba(160,128,84,0.35)', 'rgba(178,146,100,0.5)', 'rgba(196,166,120,0.45)'], plac: ['rgba(190,156,108,0.65)', 'rgba(196,164,116,0.5)'],
+    brzeg: '#cbb88a', woda: '#3d8fcf', glebia: '#2b70ad', brod: '#7fb8d6', skala: '#8d877c', lod: '#dcecf6', lodBrzeg: '#c6dbe8', mini: '#7cc35e', mgla: '#d4ebf5',
+    okolica: ['#5f9e4a', '#5d9a44', '#3f7a35', '#c9b98a'] },
+  puszcza: { kol: [[58, 104, 44], [72, 124, 54], [90, 142, 62], [112, 146, 70]], suche: [120, 128, 70], runo: 'rgba(36,62,26,0.45)', przyKrzaku: 'rgba(50,95,42,0.35)',
+    zdzbla: ['rgba(30,80,28,0.4)', 'rgba(110,170,80,0.3)', 'rgba(70,120,50,0.4)', 'rgba(150,170,100,0.25)'], kwiaty: 250,
+    sciezka: ['rgba(130,100,64,0.4)', 'rgba(150,118,78,0.5)', 'rgba(170,138,96,0.45)'], plac: ['rgba(170,136,92,0.65)', 'rgba(180,146,100,0.5)'],
+    brzeg: '#a99868', woda: '#3a7fb8', glebia: '#2a6399', brod: '#76a8c4', skala: '#7d786e', lod: '#dcecf6', lodBrzeg: '#c6dbe8', mini: '#4f8a3e', mgla: '#cfe3df',
+    okolica: ['#4a8a3e', '#47853a', '#335f2c', '#9b9466'] },
+  zima: { kol: [[208, 220, 230], [224, 233, 241], [238, 244, 249], [216, 226, 236]], suche: [166, 172, 160], runo: 'rgba(150,170,185,0.35)', przyKrzaku: 'rgba(170,190,205,0.3)',
+    zdzbla: ['rgba(255,255,255,0.45)', 'rgba(190,206,222,0.35)', 'rgba(150,170,150,0.25)', 'rgba(230,240,250,0.4)'], kwiaty: 0,
+    sciezka: ['rgba(170,182,195,0.18)', 'rgba(182,194,206,0.26)', 'rgba(196,206,216,0.24)'], plac: ['rgba(170,165,155,0.6)', 'rgba(185,180,170,0.45)'],
+    brzeg: '#b9c8d4', woda: '#4b8fc4', glebia: '#336fa3', brod: '#8fbad6', skala: '#8a8a88', lod: '#cfe6f5', lodBrzeg: '#b8d3e6', mini: '#e4edf4', mgla: '#e4eef6',
+    okolica: ['#e2ebf2', '#dfe8f0', '#c3d0db', '#e8eef3'] },
+  piasek: { kol: [[206, 176, 118], [220, 192, 134], [232, 208, 154], [214, 184, 122]], suche: [186, 160, 104], runo: 'rgba(150,120,70,0.3)', przyKrzaku: 'rgba(120,130,70,0.3)',
+    zdzbla: ['rgba(170,140,90,0.3)', 'rgba(250,235,200,0.3)', 'rgba(190,160,100,0.3)', 'rgba(230,210,160,0.3)'], kwiaty: 0,
+    sciezka: ['rgba(170,136,90,0.35)', 'rgba(184,150,104,0.45)', 'rgba(196,164,118,0.4)'], plac: ['rgba(180,146,100,0.55)', 'rgba(190,156,108,0.45)'],
+    brzeg: '#7f9a52', woda: '#3a9ac4', glebia: '#2a78a8', brod: '#86c2d6', skala: '#b08a60', lod: '#dcecf6', lodBrzeg: '#c6dbe8', mini: '#dcc286', mgla: '#efe4cc',
+    okolica: ['#d6bd84', '#d2b67c', '#b89a62', '#d8c08a'] },
+  bagno: { kol: [[68, 112, 58], [86, 128, 64], [104, 140, 70], [96, 116, 66]], suche: [116, 110, 72], runo: 'rgba(40,66,32,0.42)', przyKrzaku: 'rgba(60,100,48,0.35)',
+    zdzbla: ['rgba(40,90,35,0.38)', 'rgba(130,180,96,0.32)', 'rgba(80,130,56,0.4)', 'rgba(160,170,110,0.28)'], kwiaty: 400,
+    sciezka: ['rgba(120,100,70,0.4)', 'rgba(136,114,82,0.5)', 'rgba(152,130,96,0.45)'], plac: ['rgba(160,132,94,0.65)', 'rgba(170,142,102,0.5)'],
+    brzeg: '#6f6a48', woda: '#3f7f8f', glebia: '#2f6472', brod: '#7aa6a8', skala: '#7d786e', lod: '#dcecf6', lodBrzeg: '#c6dbe8', mini: '#5f8f4c', mgla: '#d6e6dc',
+    okolica: ['#4f8a44', '#4c853f', '#38642f', '#8f8a62'] },
+};
+const motywMapy = () => MOTYWY[motyw()];
 function malujZiemie(seed) {
   const R = 2048, sk = R / N, cv = document.createElement('canvas'); cv.width = cv.height = R;
-  const c = cv.getContext('2d'), r = rng(seed * 13 + 7), zi = seed % 997;
+  const c = cv.getContext('2d'), r = rng(seed * 13 + 7), zi = seed % 997, M0 = motywMapy();
   // 1. podstawa: łąki jaśniejsze, niziny ciemniejsze, gdzieniegdzie wyschnięta trawa (mała mapa rozciągnięta z wygładzeniem)
   const M = 256, mc = document.createElement('canvas'); mc.width = mc.height = M;
   const mx = mc.getContext('2d'), im = mx.createImageData(M, M);
-  const KOL = [[86, 150, 64], [112, 182, 84], [146, 200, 100], [176, 192, 104]];
+  const KOL = M0.kol;
   for (let py = 0; py < M; py++) for (let px = 0; px < M; px++) {
     const x = px / M * N - POL, z = py / M * N - POL;
     const n = szum2(x * 0.06, z * 0.06, zi), d = szumMapy(x * 0.18, z * 0.18, zi + 3);
     let t = Math.min(2.999, Math.max(0, n * 3.2 - 0.4)), a = Math.floor(t), f = t - a;
     let col = KOL[a].map((v, k) => v + (KOL[Math.min(3, a + 1)][k] - v) * f);
-    if (d > 0.72) col = col.map((v, k) => v + ([168, 170, 96][k] - v) * (d - 0.72) * 2.2);
+    if (d > 0.72) col = col.map((v, k) => v + (M0.suche[k] - v) * (d - 0.72) * 2.2);
     const o = (py * M + px) * 4; im.data[o] = col[0]; im.data[o + 1] = col[1]; im.data[o + 2] = col[2]; im.data[o + 3] = 255;
   }
   mx.putImageData(im, 0, 0);
@@ -219,8 +255,8 @@ function malujZiemie(seed) {
   // 2. runo pod lasem (ciemniej, igły i liście), żwir przy skałach, ciemniejsza trawa przy krzakach
   for (const z0 of ZAS.values()) {
     const x = P(z0.x), z = P(z0.z);
-    if (z0.rodzaj === 'drzewo') plama(x, z, 1.5 * sk, 'rgba(48,78,34,0.42)');
-    else if (z0.rodzaj === 'krzak') plama(x, z, 1.1 * sk, 'rgba(60,110,50,0.35)');
+    if (z0.rodzaj === 'drzewo') plama(x, z, 1.5 * sk, M0.runo);
+    else if (z0.rodzaj === 'krzak') plama(x, z, 1.1 * sk, M0.przyKrzaku);
     else plama(x, z, 1.25 * sk, 'rgba(150,138,118,0.55)');
   }
   for (const z0 of ZAS.values()) {
@@ -233,20 +269,22 @@ function malujZiemie(seed) {
   for (let s = 0; s < ileStron(); s++) {
     const [sx, sz] = ROGI[s], zn = s === 1 ? -1 : s === 0 ? 1 : s, pkt = [];
     for (let t = 0; t <= 1.0001; t += 0.025) { const b = BAZA * (1 - t), w = Math.sin(t * 9 + zn) * 3 * Math.sin(t * Math.PI); pkt.push([sx * (b + w), sz * (b - w)]); }
-    for (const [szer, kol] of [[1.9, 'rgba(160,128,84,0.35)'], [1.2, 'rgba(178,146,100,0.5)'], [0.5, 'rgba(196,166,120,0.45)']]) {
+    for (const [szer, kol] of [[1.9, M0.sciezka[0]], [1.2, M0.sciezka[1]], [0.5, M0.sciezka[2]]]) {
       c.strokeStyle = kol; c.lineWidth = szer * sk; c.beginPath(); pkt.forEach(([x, z], i) => i ? c.lineTo(P(x), P(z)) : c.moveTo(P(x), P(z))); c.stroke();
     }
   }
   // 4. place przy Dworkach
-  for (let s = 0; s < ileStron(); s++) { const [x, z] = bazaStrony(s); plama(P(x), P(z), 7.5 * sk, 'rgba(190,156,108,0.65)'); plama(P(x), P(z), 4.5 * sk, 'rgba(196,164,116,0.5)'); }
+  for (let s = 0; s < ileStron(); s++) { const [x, z] = bazaStrony(s); plama(P(x), P(z), 7.5 * sk, M0.plac[0]); plama(P(x), P(z), 4.5 * sk, M0.plac[1]); }
   // 5. drobne szczegóły: źdźbła trawy, kwiatki, kamyczki
   for (let i = 0; i < 52000; i++) {
     const x = r() * R, z = r() * R, q = r();
-    c.fillStyle = q < 0.35 ? 'rgba(40,100,35,0.35)' : q < 0.7 ? 'rgba(150,210,110,0.35)' : q < 0.85 ? 'rgba(90,150,60,0.4)' : 'rgba(200,220,140,0.3)';
+    c.fillStyle = q < 0.35 ? M0.zdzbla[0] : q < 0.7 ? M0.zdzbla[1] : q < 0.85 ? M0.zdzbla[2] : M0.zdzbla[3];
     c.fillRect(x, z, 1.5, 3 + r() * 4);
   }
-  for (let i = 0; i < 900; i++) { c.fillStyle = ['#ffffff', '#ffe066', '#ff9ec7', '#b6a6ff', '#ffb347'][Math.floor(r() * 5)]; c.beginPath(); c.arc(r() * R, r() * R, 2 + r() * 1.5, 0, 7); c.fill(); }
+  for (let i = 0; i < M0.kwiaty; i++) { c.fillStyle = ['#ffffff', '#ffe066', '#ff9ec7', '#b6a6ff', '#ffb347'][Math.floor(r() * 5)]; c.beginPath(); c.arc(r() * R, r() * R, 2 + r() * 1.5, 0, 7); c.fill(); }
   for (let i = 0; i < 900; i++) { c.fillStyle = r() < 0.5 ? 'rgba(120,115,105,0.6)' : 'rgba(170,165,150,0.6)'; c.beginPath(); c.arc(r() * R, r() * R, 1 + r() * 2, 0, 7); c.fill(); }
+  // 6. teren: brzegi, woda, brody, lód i skały
+  malujTeren(c, P, sk, M0, r);
   const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
   return t;
 }
@@ -443,15 +481,105 @@ const WYS_ZAS = { drzewo: 2.4, krzak: 0.9, kamien: 0.8, ruda: 0.8, zloto: 0.8 };
 // mapa jest taka sama dla wszystkich stron: przy 2 stronach wszystko z połowy gracza odbijamy na drugą połowę,
 // przy 3–4 stronach ćwiartkę gracza obracamy 3 razy o 90° (każdy róg mapy wygląda tak samo)
 const sym4 = () => ileStron() > 2;
+// teren rodzaju mapy (woda, skały, brody, lód): robimy go w części gracza i kopiujemy tak jak zasoby;
+// zwraca miejsca bez lasu (brody, wyjścia z kotlin) i miejsca na dodatkowe zasoby
+function generujTeren(seed) {
+  TEREN.fill(0);
+  const typ = typMapy(), wolne = [], dodatki = [];
+  if (typ === 'dolina' || typ === 'puszcza') return { wolne, dodatki };
+  const r = rng(seed * 101 + 29), sk = N / 192, TC = [BAZA, BAZA], zi = seed % 983;
+  const ust = (i, j, t) => {
+    const m = t === 2 ? 0 : 3; if (i < m || j < m || i >= N - m || j >= N - m || !naszaCzesc(i, j)) return;
+    if (Math.hypot(i - POL + 0.5 - TC[0], j - POL + 0.5 - TC[1]) < 13) return;
+    TEREN[j * N + i] = t;
+  };
+  const kazda = f => { for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) if (naszaCzesc(i, j)) { const t = f(i - POL + 0.5, j - POL + 0.5); if (t) ust(i, j, t); } };
+  // staw (albo skała) o nierównym brzegu
+  const staw = (cx, cz, rad, t) => {
+    for (let z = Math.floor(cz - rad * 1.2 - 1); z <= cz + rad * 1.2 + 1; z++) for (let x = Math.floor(cx - rad * 1.2 - 1); x <= cx + rad * 1.2 + 1; x++) {
+      const d = Math.hypot(x + 0.5 - cx, z + 0.5 - cz), w = rad * (0.82 + 0.36 * szumMapy((x + 0.5) * 0.3, (z + 0.5) * 0.3, zi));
+      if (d < w) ust(x + POL, z + POL, t);
+    }
+  };
+  // czy kółko mieści się w części gracza (żeby po skopiowaniu nie było prostych brzegów)
+  const wCzesci = (x, z, m) => (sym4() ? x > m && z > m : (x + z) / Math.SQRT2 > m) && Math.abs(x) < POL - m - 4 && Math.abs(z) < POL - m - 4;
+  const losuj = (m, odBazy, f) => {
+    for (let k = 0; k < 300; k++) {
+      const x = r() * N - POL, z = r() * N - POL;
+      if (!wCzesci(x, z, m) || Math.hypot(x - TC[0], z - TC[1]) < odBazy) continue;
+      if (f(x, z) !== false) return true;
+    }
+    return false;
+  };
+  if (typ === 'jezioro') {
+    const R0 = N * 0.2, f0 = r() * 6.283, f1 = r() * 6.283;
+    kazda((x, z) => { const a = Math.atan2(z, x), R = R0 * (1 + 0.1 * Math.sin(4 * a + f0) + 0.06 * Math.sin(8 * a + f1)) + (szumMapy(x * 0.2, z * 0.2, zi) - 0.5) * 2.4; return Math.hypot(x, z) < R ? 1 : 0; });
+    // ruda i kamień na brzegu, od strony gracza
+    const a = Math.PI / 4, d = R0 * 1.18 + 5;
+    dodatki.push([Math.cos(a) * d, Math.sin(a) * d, 4, 6], [Math.cos(a - 0.6) * d, Math.sin(a - 0.6) * d, 3, 5], [Math.cos(a + 0.6) * d, Math.sin(a + 0.6) * d, 3, 5]);
+  } else if (typ === 'rzeka') {
+    const hw = 2.6 * Math.max(1, sk), F = POL * 0.55;
+    if (!sym4()) {
+      // rzeka w poprzek mapy, między osadami; wije się (przesunięcie nieparzyste, więc po odbiciu pasuje)
+      const A = 7 * sk, f = 0.05 / sk, ph = r() * 0.6;
+      const srodek = t => A * Math.sin(t * f) * (1 + ph);
+      kazda((x, z) => {
+        const d = (x + z) / Math.SQRT2, t = (x - z) / Math.SQRT2, w = hw + (szumMapy(x * 0.25, z * 0.25, zi) - 0.5) * 1.4;
+        if (Math.abs(d - srodek(t)) >= w) return 0;
+        return Math.abs(t) < 3 || Math.abs(t - F) < 3 || Math.abs(t + F) < 3 ? 3 : 1;
+      });
+      for (const t of [0, F, -F]) { const d = srodek(t); wolne.push([(d + t) / Math.SQRT2, (d - t) / Math.SQRT2, 6]); }
+    } else {
+      // przy 3–4 stronach: dwie rzeki na krzyż, każda osada na swojej ćwiartce; brody w połowie i na środku
+      const fz = r() * 6.283, sz = s => hw * (1 + 0.22 * Math.sin(s * 0.09 / sk + fz));
+      kazda((x, z) => {
+        const r1 = Math.abs(x) < sz(z), r2 = Math.abs(z) < sz(x); if (!r1 && !r2) return 0;
+        return Math.hypot(x, z) < 5.5 || r1 && Math.abs(z - F) < 3 || r2 && Math.abs(x - F) < 3 ? 3 : 1;
+      });
+      wolne.push([0, F, 6], [F, 0, 6], [0, 0, 8]);
+    }
+  } else if (typ === 'przelecze') {
+    // skalna kotlina wokół Dworku z dwoma wyjściami w stronę środka mapy
+    const Rr = 25, ac = Math.atan2(-TC[1], -TC[0]), wyjscia = [ac - 0.75, ac + 0.75];
+    kazda((x, z) => {
+      const dx = x - TC[0], dz = z - TC[1], d = Math.hypot(dx, dz), a = Math.atan2(dz, dx);
+      if (Math.abs(d - Rr) > 1.5 + szumMapy(x * 0.3, z * 0.3, zi) * 1.5) return 0;
+      for (const b of wyjscia) { const da = Math.abs(((a - b) % 6.283 + 9.425) % 6.283 - 3.1416); if (da * Rr < 3.6) return 0; }
+      return 2;
+    });
+    for (const b of wyjscia) wolne.push([TC[0] + Math.cos(b) * Rr, TC[1] + Math.sin(b) * Rr, 6]);
+    // skałki na reszcie mapy
+    for (let n = 0, ile = Math.round(10 * skalaMapy()); n < ile; n++) losuj(5, Rr + 9, (x, z) => { if (Math.hypot(x, z) < 9) return false; staw(x, z, 1.8 + r() * 2.2, 2); });
+  } else if (typ === 'tundra') {
+    // zamarznięte jeziora (lód: chodzi się, nie buduje), co trzecie z wodą
+    for (let n = 0, ile = Math.round(8 * skalaMapy()) + 2; n < ile; n++) { const rad = 4 + r() * 5; losuj(rad + 2, 24, (x, z) => staw(x, z, rad, n % 3 === 2 ? 1 : 4)); }
+    for (let n = 0; n < 3; n++) losuj(6, 22, (x, z) => { dodatki.push([x, z, n === 1 ? 3 : 4, 5]); });
+  } else if (typ === 'oaza') {
+    // wielka oaza na środku i mała oaza dla każdej strony; palmy dookoła dokłada generujMape
+    const rs = 8.5 * Math.max(1, sk); staw(0, 0, rs, 1); dodatki.push([0, 0, 'palmy', rs]);
+    losuj(10, 30, (x, z) => { if (Math.hypot(x - TC[0], z - TC[1]) > 50 || Math.hypot(x, z) < 26) return false; staw(x, z, 2.8, 1); dodatki.push([x, z, 'palmy', 2.8]); });
+    for (let n = 0; n < 2; n++) losuj(6, 20, (x, z) => { if (Math.hypot(x - TC[0], z - TC[1]) > 40) return false; dodatki.push([x, z, 'palmy', 0]); });
+  } else if (typ === 'bagna') {
+    for (let n = 0, ile = Math.round(36 * skalaMapy()); n < ile; n++) { const rad = 1.6 + r() * 2.8; losuj(rad + 2, 19, (x, z) => staw(x, z, rad, 1)); }
+    for (let n = 0, ile = Math.round(8 * skalaMapy()); n < ile; n++) losuj(4, 18, (x, z) => { dodatki.push([x, z, 2, 6]); });
+  }
+  // kopiujemy na pozostałe części mapy (jak zasoby)
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+    const c = j * N + i;
+    if (!TEREN[c] || !(sym4() ? naszaCzesc(i, j) : i + j > N - 1)) continue;
+    for (const [a, b] of kopieKom(i, j).slice(1)) TEREN[b * N + a] = TEREN[c];
+  }
+  return { wolne, dodatki };
+}
 const naszaCzesc = (i, j) => sym4() ? i >= POL && j >= POL : i + j >= N - 1;
 const kopieKom = (i, j) => sym4() ? [[i, j], [N - 1 - j, i], [N - 1 - i, N - 1 - j], [j, N - 1 - i]] : [[i, j], [N - 1 - i, N - 1 - j]];
 const skalaMapy = () => (N / 192) ** 2 * (sym4() ? 0.5 : 1);
 function generujMape(seed) {
   const r = rng(seed), plan = new Uint8Array(N * N); // 0 nic, 1 drzewo, 2 krzak, 3 kamień, 4 złoto
-  const TC = [BAZA, BAZA];
+  const TC = [BAZA, BAZA], typMap = typMapy(), ter = generujTeren(seed);
   const daj = (x, z, typ) => {
     const i = Math.floor(x + POL), j = Math.floor(z + POL);
-    if (i < 1 || j < 1 || i >= N - 1 || j >= N - 1 || !naszaCzesc(i, j)) return;
+    if (i < 1 || j < 1 || i >= N - 1 || j >= N - 1 || !naszaCzesc(i, j) || TEREN[j * N + i]) return;
     if (Math.hypot(x - TC[0], z - TC[1]) < 5.5) return;
     if (!plan[j * N + i]) plan[j * N + i] = typ;
   };
@@ -485,7 +613,7 @@ function generujMape(seed) {
   las(...wewn(przy(aL, 14)), 5);
   kepa(...wewn(przy(aK + 0.6, 16)), 5, 2, 1.3);
   // lasy na mapie
-  for (let k = 0, ile = Math.round(56 * skalaMapy()); k < ile; k++) {
+  for (let k = 0, ile = Math.round(56 * skalaMapy() * MAPY[typMap].lasy); k < ile; k++) {
     const x = 4 - POL + r() * (N - 8), z = 4 - POL + r() * (N - 8); if (sym4() ? x < 2 || z < 2 : x + z < 4) continue;
     if (Math.hypot(x - TC[0], z - TC[1]) < 12) continue;
     las(x, z, 2.5 + r() * 3.5);
@@ -501,11 +629,31 @@ function generujMape(seed) {
     if (typ === 1) las(x, z, 3 + r() * 3); else kepa(x, z, typ === 2 ? 6 : 5, typ, typ === 2 ? 1.2 : 1.0);
     n++;
   }
+  // dodatki rodzajów map
+  if (typMap === 'puszcza') {
+    // gęsty las wszędzie poza polaną przy Dworku; szum zostawia kręte przesieki i polany
+    const zp = seed % 991;
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      if (!naszaCzesc(i, j)) continue;
+      const x = i - POL + 0.5, z = j - POL + 0.5, d = Math.hypot(x - TC[0], z - TC[1]); if (d < 19) continue;
+      const n = szum2(x * 0.075, z * 0.075, zp + 21) + (d < 26 ? (26 - d) * 0.02 : 0);
+      if (n < 0.43 && r() < 0.85) daj(x, z, 1);
+    }
+  }
+  for (const [x, z, co, ile] of ter.dodatki) {
+    if (co === 'palmy') {
+      // palmy wokół oazy (albo kępka palm)
+      if (ile) { for (let k = 0; k < 40 * ile; k++) { const a = r() * 6.283, d = ile * 1.25 + 0.8 + r() * 4.5; daj(x + Math.cos(a) * d, z + Math.sin(a) * d, 1); } }
+      else las(x, z, 3 + r() * 1.5);
+    } else kepa(x, z, ile, co, co === 2 ? 1.2 : 1.0);
+  }
   // droga od ratusza do środka mapy zawsze wolna
   for (let t = 0; t <= 1; t += 0.01) {
     const x = TC[0] * (1 - t), z = TC[1] * (1 - t);
     for (let dz = -1.6; dz <= 1.6; dz += 0.5) for (let dx = -1.6; dx <= 1.6; dx += 0.5) { const c = kom(x + dx, z + dz); if (c >= 0) plan[c] = 0; }
   }
+  // brody, wyjścia z kotlin i przesieki bez lasu
+  for (const [x, z, rad] of ter.wolne) for (let dz = -rad; dz <= rad; dz++) for (let dx = -rad; dx <= rad; dx++) { if (dx * dx + dz * dz > rad * rad) continue; const c = kom(x + dx, z + dz); if (c >= 0) plan[c] = 0; }
   // odbicie na drugą połowę (albo obrót ćwiartki na pozostałe trzy)
   for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
     const c = j * N + i;
@@ -530,6 +678,12 @@ function generujMape(seed) {
     const n = szumMapy(z0.x * 0.07, z0.z * 0.07, zi + 11);
     let g = brzeg < 4 ? (rr() < 0.7 ? 'swierk' : 'modrzew') : n < 0.32 ? 'swierk' : n < 0.47 ? 'sosna' : n < 0.62 ? 'brzoza' : n < 0.8 ? 'dab' : 'modrzew';
     if (rr() < 0.28) g = MOD.GATUNKI[Math.floor(rr() * MOD.GATUNKI.length)];
+    // inne motywy: w śniegu świerki z czapami, na piasku palmy, w puszczy drzewa iglaste, na bagnach brzozy
+    const mt = motyw();
+    if (mt === 'zima') g = rr() < 0.85 ? 'swierkS' : 'swierk';
+    else if (mt === 'piasek') g = rr() < 0.82 ? 'palma' : 'sosna';
+    else if (mt === 'puszcza') g = g === 'modrzew' || g === 'swierk' ? g : rr() < 0.1 ? 'brzoza' : rr() < 0.7 ? 'swierk' : 'modrzew'; // proste drzewa: puszcza ma ich bardzo dużo
+    else if (mt === 'bagno') g = g === 'dab' ? 'brzoza' : g === 'sosna' && rr() < 0.5 ? 'modrzew' : g;
     z0.gat = g; z0.pn = k;
     const kl = 'drzewo_' + g; (grupy[kl] || (grupy[kl] = [])).push(z0); z0.inst = grupy[kl].length - 1; z0.klucz = kl;
   });
@@ -549,6 +703,18 @@ function generujMape(seed) {
     }
     im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere();
     INST[klucz] = im; scena.add(im);
+  }
+  // teren: woda i skały zamykają kratki, brody i lód są do chodzenia (bez budowania)
+  const skaly = [];
+  for (let c = 0; c < N * N; c++) { const t = TEREN[c]; if (!t) continue; blok[c] = t === 1 || t === 2 ? 6 : 7; naKom[c] = 0; if (t === 2) skaly.push(c); }
+  if (skaly.length) {
+    const im = new THREE.InstancedMesh(MOD.glaz(motyw()), MAT, skaly.length); im.castShadow = true;
+    skaly.forEach((c, k) => {
+      const rr = rng(c * 13 + 7), [x, z] = srodekKom(c), s = 0.95 + rr() * 0.55;
+      q.setFromAxisAngle(up, rr() * 6.283); sc.set(s, s * (0.75 + rr() * 0.9), s); p.set(x + (rr() - 0.5) * 0.3, -0.05, z + (rr() - 0.5) * 0.3);
+      im.setMatrixAt(k, m4.compose(p, q, sc));
+    });
+    im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); INST.teren_skaly = im; scena.add(im);
   }
   // pieńki po ściętych drzewach (na początku niewidoczne)
   if (lista.drzewo.length) {
@@ -604,6 +770,33 @@ function dodatkoweZloza(seed) {
     INST[rodzaj + '_d'] = im; scena.add(im);
   }
 }
+// polanki, do których nie da się dojść z żadnego Dworku (np. w środku puszczy), zamykamy: nikt tam nie buduje
+// i nie szuka drogi na próżno; po wycięciu drzewa obok polanka się otwiera
+function zamknijPolanki() {
+  const ok = c => blok[c] === 0 || blok[c] === 4 || blok[c] === 7, byl = new Uint8Array(N * N), stos = [];
+  for (let s = 0; s < ileStron(); s++) {
+    const [x, z] = bazaStrony(s); let c = najblizszaWolna(kom(x - ROGI[s][0] * 4, z - ROGI[s][1] * 4), 10);
+    if (c >= 0 && !byl[c]) { byl[c] = 1; stos.push(c); }
+  }
+  while (stos.length) {
+    const c = stos.pop(), i = c % N, j = (c / N) | 0;
+    for (let k = 0; k < 8; k++) {
+      const ni = i + DI[k], nj = j + DJ[k]; if (ni < 0 || nj < 0 || ni >= N || nj >= N) continue;
+      const n = nj * N + ni; if (byl[n] || !ok(n)) continue;
+      if (DI[k] && DJ[k] && (!ok(j * N + ni) || !ok(nj * N + i))) continue;
+      byl[n] = 1; stos.push(n);
+    }
+  }
+  for (let c = 0; c < N * N; c++) if (blok[c] === 0 && !byl[c]) { blok[c] = 6; TEREN[c] = 5; }
+}
+function otworzPolanke(c0) {
+  const i0 = c0 % N, j0 = (c0 / N) | 0, stos = [];
+  for (let k = 0; k < 8; k++) { const n = kom2(i0 + DI[k], j0 + DJ[k]); if (n >= 0 && TEREN[n] === 5) { TEREN[n] = 0; blok[n] = 0; stos.push(n); } }
+  while (stos.length) {
+    const c = stos.pop(), i = c % N, j = (c / N) | 0;
+    for (let k = 0; k < 8; k++) { const n = kom2(i + DI[k], j + DJ[k]); if (n >= 0 && TEREN[n] === 5) { TEREN[n] = 0; blok[n] = 0; stos.push(n); } }
+  }
+}
 // ozdoby: trawa, kwiaty, paprocie, grzyby, kamyki, kłody, krzaczki; tylko do patrzenia, znikają spod budynków
 const OZD = new Map();
 function rozmiescOzdoby(seed) {
@@ -612,12 +805,17 @@ function rozmiescOzdoby(seed) {
   for (const k of MOD.OZDOBY) lista[k] = [];
   const bazy = Array.from({ length: ileStron() }, (_, s) => bazaStrony(s)), odBazy = (x, z) => Math.min(...bazy.map(([bx, bz]) => Math.hypot(x - bx, z - bz)));
   const przyLesie = c => { const i = c % N, j = (c / N) | 0; for (let k = 0; k < 8; k++) { const n = kom2(i + DI[k], j + DJ[k]); if (n >= 0 && blok[n] === 1) { const z0 = ZAS.get(naKom[n]); if (z0 && z0.rodzaj === 'drzewo') return true; } } return false; };
+  const przyWodzie = c => { const i = c % N, j = (c / N) | 0; for (let b = -2; b <= 2; b++) for (let a = -2; a <= 2; a++) { const n = kom2(i + a, j + b); if (n >= 0 && TEREN[n] === 1) return true; } return false; };
+  const mt = motyw();
   for (let k = 0, ile = Math.round(18000 * (N / 192) ** 2); k < ile; k++) {
     const x = 1.5 - POL + r() * (N - 3), z = 1.5 - POL + r() * (N - 3), c = kom(x, z);
     if (c < 0 || blok[c] !== 0 || odBazy(x, z) < 6.5) continue;
     const q = r(), las = przyLesie(c), kw = szumMapy(x * 0.12, z * 0.12, 77);
     let typ;
-    if (las) typ = q < 0.28 ? 'paproc' : q < 0.38 ? 'muchomor' : q < 0.48 ? 'borowik' : q < 0.6 ? 'jagodnik' : q < 0.66 ? 'kloda' : q < 0.76 ? 'krzaczek' : 'trawa';
+    if (q < 0.6 && przyWodzie(c)) typ = mt === 'zima' ? 'zaspa' : 'trzcina';
+    else if (mt === 'zima') { if (q > 0.55) continue; typ = las ? (q < 0.15 ? 'zaspa' : q < 0.25 ? 'kloda' : q < 0.35 ? 'krzaczek' : 'sucha') : q < 0.07 ? 'zaspa' : q < 0.13 ? 'kamyki' : 'sucha'; }
+    else if (mt === 'piasek') { if (!las && q > 0.62) continue; typ = las ? (q < 0.4 ? 'sucha' : q < 0.6 ? 'trawa2' : 'krzaczek') : q < 0.28 ? 'sucha' : q < 0.42 ? 'kamyki' : q < 0.5 ? 'kaktus' : 'trawa2'; }
+    else if (las) typ = q < 0.28 ? 'paproc' : q < 0.38 ? 'muchomor' : q < 0.48 ? 'borowik' : q < 0.6 ? 'jagodnik' : q < 0.66 ? 'kloda' : q < 0.76 ? 'krzaczek' : 'trawa';
     else if (kw > 0.6 && q < 0.5) typ = ['kwiatyB', 'kwiatyZ', 'kwiatyF'][Math.floor(r() * 3)];
     else typ = q < 0.5 ? 'trawa' : q < 0.78 ? 'trawa2' : q < 0.85 ? 'kamyki' : q < 0.9 ? 'krzaczek' : q < 0.95 ? 'kwiatyZ' : 'trawa';
     lista[typ].push([x, z, r() * 6.283, 0.75 + r() * 0.55, c]);
@@ -660,7 +858,7 @@ function pieniekZostaje(z0) {
 function usunZasob(z0) {
   if (!ZAS.has(z0.id)) return;
   ZAS.delete(z0.id); E.delete(z0.id); z0.ile = 0;
-  if (blok[z0.c] === 1) { blok[z0.c] = 0; naKom[z0.c] = 0; }
+  if (blok[z0.c] === 1) { blok[z0.c] = 0; naKom[z0.c] = 0; otworzPolanke(z0.c); }
   const im = INST[z0.klucz]; if (im) { im.setMatrixAt(z0.inst, ZERO); im.instanceMatrix.needsUpdate = true; }
   if (z0.rodzaj === 'drzewo') { const sc = SCIETE.get(z0.id); if (sc) { scena.remove(sc.g); SCIETE.delete(z0.id); } pieniekZostaje(z0); }
   S.usuniete.push(z0.id); miniBrud = true;
@@ -766,7 +964,7 @@ function ustawDroge(u, cele, tx, tz, punkt = false) {
     const [cx, cz] = punkt && kom(tx, tz) === cele[0] ? [tx, tz] : srodekKom(cele[0]);
     if (widac(u.x, u.z, cx, cz)) { u.sciezka = [[cx, cz]]; return true; }
   }
-  const d = szukajDrogi(u.x, u.z, cele, tx, tz);
+  const d = szukajDrogi(u.x, u.z, cele, tx, tz, typMapy() === 'dolina' ? 7000 : 30000);
   if (!d) { u.sciezka = null; return false; }
   const pts = d.map(srodekKom);
   if (punkt && kom(tx, tz) === d[d.length - 1]) pts[pts.length - 1] = [tx, tz];
@@ -1793,6 +1991,7 @@ function ruszNiebo(dt, t) {
     const mach = Math.sin(t * 9 + b.f) * 0.6; b.l.rotation.z = mach; b.pr.rotation.z = -mach;
   }
   if (dalej && dalej.userData.woda) dalej.userData.woda.material.color.setHSL(0.57, 0.6, 0.55 + Math.sin(t * 0.6) * 0.02);
+  if (INST.teren_woda && FALE) { FALE.offset.x = t * 0.012; FALE.offset.y = t * 0.007; }
 }
 
 // ================= krok gry =================
@@ -1848,19 +2047,21 @@ function sprawdzKoniec() {
 }
 
 // ================= nowa gra, zapis, wczytanie =================
-// opcje: { rozmiar: 144 | 192 | 240, przeciwnicy: ['latwy', ...] (1–3 komputery), sojusz: 'kazdy' | 'razem' }; sam napis = jeden komputer
+// opcje: { mapa: 'dolina' | ... | 'losowa' (MAPY w dane.js), rozmiar: 144 | 192 | 240, przeciwnicy: ['latwy', ...] (1–3 komputery), sojusz: 'kazdy' | 'razem' }; sam napis = jeden komputer
 function nowaGra(opcje = {}) {
   if (typeof opcje === 'string') opcje = { przeciwnicy: [opcje] };
   const przec = (opcje.przeciwnicy && opcje.przeciwnicy.length ? opcje.przeciwnicy : ['latwy']).slice(0, 3).map(t => TRUDNOSC[t] ? t : 'latwy');
   const strony = przec.length + 1, dla = f => Array.from({ length: strony }, (_, s) => f(s));
+  const rodzaje = Object.keys(MAPY), mapaTyp = opcje.mapa === 'losowa' ? rodzaje[Math.floor(Math.random() * rodzaje.length)] : MAPY[opcje.mapa] ? opcje.mapa : 'dolina';
   ustawMape(opcje.rozmiar || 192);
   wyczyscSwiat();
   const seed = Math.floor(Math.random() * 1e9);
-  S = { v: 1, mapa: N, seed, strony, trudnosc: przec[0], trudnosci: [null, ...przec], druzyna: dla(s => opcje.sojusz === 'razem' && s > 0 ? 1 : s), odpadli: [],
+  S = { v: 1, mapa: N, mapaTyp, seed, strony, trudnosc: przec[0], trudnosci: [null, ...przec], druzyna: dla(s => opcje.sojusz === 'razem' && s > 0 ? 1 : s), odpadli: [],
     trudnoscGracza: 'sredni', czas: 0, nextId: 1, zas: dla(() => ({ ...START })), era: dla(() => 1), ul: dla(() => ({})), wynik: null,
     stat: dla(() => ({ zebrane: 0, wyszkoleni: 0, pokonani: 0, zburzone: 0, budynki: 0 })), ai: dla(() => nowyAI()), usuniete: [], pomoc: {}, aiGracz: false };
   S.nextId = generujMape(seed);
   dodatkoweZloza(seed);
+  zamknijPolanki();
   rozmiescOzdoby(seed);
   zbudujZiemie();
   for (let s = 0; s < strony; s++) {
@@ -1881,9 +2082,59 @@ function zbudujZiemie() {
   };
   ziemia = new THREE.Mesh(new THREE.PlaneGeometry(N, N).rotateX(-Math.PI / 2), mz);
   ziemia.receiveShadow = true; scena.add(ziemia);
+  const woda = zbudujWode(); if (woda) { INST.teren_woda = woda; scena.add(woda); }
+  scena.fog.color.set(motywMapy().mgla);
   dalej = zbudujOkolice(S.seed); scena.add(dalej);
 }
 let DETAL = null;
+// teren na ziemi: kółko na każdej kratce, kółka zlewają się w gładkie brzegi
+function malujTeren(c, P, sk, M0, r) {
+  const L = [];
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { const t = TEREN[j * N + i]; if (t) L.push([i, j, t, i - POL + 0.5, j - POL + 0.5]); }
+  if (!L.length) return;
+  const kolo = (x, z, rad, kol) => { c.fillStyle = kol; c.beginPath(); c.arc(P(x), P(z), rad * sk, 0, 7); c.fill(); };
+  const T = (i, j) => (i < 0 || j < 0 || i >= N || j >= N ? 0 : TEREN[j * N + i]);
+  const gleboko = (i, j) => { for (let b = -2; b <= 2; b++) for (let a = -2; a <= 2; a++) if (T(i + a, j + b) !== 1) return false; return true; };
+  for (const [, , t, x, z] of L) if (t === 1 || t === 3) kolo(x, z, 1.9, M0.brzeg);
+  for (const [, , t, x, z] of L) if (t === 2) kolo(x, z, 1.5, M0.skala);
+  for (const [, , t, x, z] of L) if (t === 4) kolo(x, z, 1.3, M0.lodBrzeg);
+  for (const [, , t, x, z] of L) if (t === 3) kolo(x, z, 1.05, M0.brod);
+  for (const [, , t, x, z] of L) if (t === 1) kolo(x, z, 1.1, M0.woda);
+  for (const [i, j, t, x, z] of L) if (t === 1 && gleboko(i, j)) kolo(x, z, 1.3, M0.glebia);
+  for (const [, , t, x, z] of L) if (t === 4) kolo(x, z, 1.0, M0.lod);
+  // kamyczki w brodach, pęknięcia na lodzie, kamienie między skałami
+  c.lineWidth = 1.3;
+  for (const [, , t, x, z] of L) {
+    if (t === 3) for (let k = 0; k < 3; k++) kolo(x + r() - 0.5, z + r() - 0.5, 0.06 + r() * 0.08, r() < 0.5 ? '#9a9486' : '#c2bcae');
+    else if (t === 4 && r() < 0.22) { c.strokeStyle = 'rgba(140,175,205,0.75)'; c.beginPath(); c.moveTo(P(x), P(z)); c.lineTo(P(x + (r() - 0.5) * 3), P(z + (r() - 0.5) * 3)); c.lineTo(P(x + (r() - 0.5) * 4), P(z + (r() - 0.5) * 4)); c.stroke(); }
+    else if (t === 2) kolo(x + r() - 0.5, z + r() - 0.5, 0.15 + r() * 0.15, r() < 0.5 ? '#6f6a60' : '#a39d90');
+  }
+}
+// błyszcząca tafla wody nad namalowaną wodą (przezroczystość z maski, fale ruszają się w ruszNiebo)
+let FALE = null;
+function zbudujWode() {
+  let jest = false; for (let c = 0; c < N * N && !jest; c++) if (TEREN[c] === 1 || TEREN[c] === 3) jest = true;
+  if (!jest) return null;
+  const R = 1024, sk = R / N, cv = document.createElement('canvas'); cv.width = cv.height = R; const c = cv.getContext('2d');
+  c.fillStyle = '#000'; c.fillRect(0, 0, R, R);
+  for (const [t, kol, rad] of [[3, '#4a4a4a', 0.9], [1, '#ffffff', 1.05]]) {
+    c.fillStyle = kol;
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) if (TEREN[j * N + i] === t) { c.beginPath(); c.arc((i + 0.5) * sk, (j + 0.5) * sk, rad * sk, 0, 7); c.fill(); }
+  }
+  const maska = new THREE.CanvasTexture(cv);
+  if (!FALE) {
+    const fc = document.createElement('canvas'); fc.width = fc.height = 256; const f = fc.getContext('2d');
+    f.fillStyle = 'rgb(128,128,128)'; f.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 700; i++) { const x = Math.random() * 256, y = Math.random() * 256, w = 8 + Math.random() * 22, v = Math.random() < 0.5 ? 112 : 150; f.strokeStyle = `rgba(${v},${v},${v},0.6)`; f.lineWidth = 2 + Math.random() * 3; f.beginPath(); f.ellipse(x, y, w, w * 0.22, 0, 0.3, Math.PI - 0.3); f.stroke(); }
+    FALE = new THREE.CanvasTexture(fc); FALE.wrapS = FALE.wrapT = THREE.RepeatWrapping;
+  }
+  FALE.repeat.set(N / 10, N / 10);
+  const M0 = motywMapy();
+  const m = new THREE.MeshPhongMaterial({ color: M0.woda, specular: '#dff2ff', shininess: 60, transparent: true, opacity: 0.55, alphaMap: maska, bumpMap: FALE, bumpScale: 0.7, depthWrite: false });
+  const w = new THREE.Mesh(new THREE.PlaneGeometry(N, N).rotateX(-Math.PI / 2), m);
+  w.position.y = 0.035; w.renderOrder = 1;
+  return w;
+}
 function teksturaDetalu() {
   if (DETAL) return DETAL;
   const R = 256, cv = document.createElement('canvas'); cv.width = cv.height = R; const c = cv.getContext('2d');
@@ -1898,7 +2149,7 @@ function teksturaDetalu() {
 // okolica za mapą: zalesione wzgórza, góry ze śniegiem, wulkany z dymem i jezioro
 let WULKANY = [];
 function zbudujOkolice(seed) {
-  const grupa = new THREE.Group(), r = rng(seed * 3 + 1), zi = seed % 991;
+  const grupa = new THREE.Group(), r = rng(seed * 3 + 1), zi = seed % 991, OK = motywMapy().okolica, mt = motyw();
   const OD = POL - 48, S2 = 440 + 2 * OD, SEG = Math.round(150 * S2 / 440), geo = new THREE.PlaneGeometry(S2, S2, SEG, SEG).rotateX(-Math.PI / 2);
   const pos = geo.attributes.position, kol = [], c = new THREE.Color();
   // jezioro po jednej stronie (za brzegiem mapy), wulkany daleko
@@ -1914,9 +2165,9 @@ function zbudujOkolice(seed) {
   };
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i), z = pos.getZ(i), h = wys(x, z); pos.setY(i, h);
-    if (h < 0.05) c.set(Math.max(Math.abs(x), Math.abs(z)) < POL + 4 ? '#5f9e4a' : '#c9b98a');
-    else if (h < 5) c.set('#5d9a44').lerp(new THREE.Color('#3f7a35'), h / 5);
-    else if (h < 16) c.set('#3f7a35').lerp(new THREE.Color('#7d7a6e'), (h - 5) / 11);
+    if (h < 0.05) c.set(Math.max(Math.abs(x), Math.abs(z)) < POL + 4 ? OK[0] : OK[3]);
+    else if (h < 5) c.set(OK[1]).lerp(new THREE.Color(OK[2]), h / 5);
+    else if (h < 16) c.set(OK[2]).lerp(new THREE.Color(mt === 'zima' ? '#a9b4bd' : '#7d7a6e'), (h - 5) / 11);
     else if (h < 26) c.set('#7d7a6e').lerp(new THREE.Color('#9d978a'), (h - 16) / 10);
     else c.set('#f4f7fb');
     kol.push(c.r, c.g, c.b);
@@ -1932,9 +2183,10 @@ function zbudujOkolice(seed) {
   for (let k = 0; k < 6000 && L.length < 1900; k++) {
     const x = (r() - 0.5) * (300 + 2 * OD), z = (r() - 0.5) * (300 + 2 * OD); if (Math.max(Math.abs(x), Math.abs(z)) < POL + 3) continue;
     const h = wys(x, z); if (h < 0.3 || h > 14 || szumMapy(x * 0.05, z * 0.05, zi + 9) < 0.35) continue;
-    L.push([x, h, z, 1.1 + r() * 1.4, r() * 6.283, r() < 0.7 ? 'swierk' : 'sosna']);
+    const s = 1.1 + r() * 1.4, a = r() * 6.283, gat = r() < 0.7 ? 'swierk' : 'sosna';
+    L.push([x, h, z, s, a, mt === 'zima' ? (gat === 'swierk' ? 'swierkS' : 'swierk') : mt === 'piasek' ? (gat === 'swierk' ? 'palma' : 'sosna') : gat]);
   }
-  for (const gat of ['swierk', 'sosna']) {
+  for (const gat of ['swierk', 'sosna', 'swierkS', 'palma']) {
     const lista = L.filter(t => t[5] === gat); if (!lista.length) continue;
     const im = new THREE.InstancedMesh(MOD.drzewo(gat), MAT, lista.length);
     lista.forEach(([x, h, z, s, a], i) => { q.setFromAxisAngle(up, a); sc.set(s, s, s); p.set(x, h - 0.1, z); im.setMatrixAt(i, m4.compose(p, q, sc)); });
@@ -1980,6 +2232,7 @@ function wczytajGre(o) {
   S = { ...o }; delete S.zasoby; delete S.bud; delete S.jed; delete S.kamera;
   generujMape(S.seed);
   dodatkoweZloza(S.seed);
+  zamknijPolanki();
   rozmiescOzdoby(S.seed);
   zbudujZiemie();
   for (const id of o.usuniete) { const z0 = ZAS.get(id); if (z0) usunZasob(z0); }
@@ -2245,8 +2498,10 @@ function rysujMini() {
     miniTlo = document.createElement('canvas'); miniTlo.width = miniTlo.height = MINI * dpr;
     const t = miniTlo.getContext('2d'); t.setTransform(dpr, 0, 0, dpr, 0, 0);
     t.save(); t.translate(MINI / 2, MINI / 2); t.rotate(Math.PI / 4); const s = MK * Math.SQRT2 * 0.999;
-    t.fillStyle = '#7cc35e'; t.fillRect(-POL * s / Math.SQRT2 * Math.SQRT2 / Math.SQRT2 * Math.SQRT2 / Math.SQRT2, -POL * s / Math.SQRT2, N * s / Math.SQRT2, N * s / Math.SQRT2);
+    t.fillStyle = motywMapy().mini; t.fillRect(-POL * s / Math.SQRT2 * Math.SQRT2 / Math.SQRT2 * Math.SQRT2 / Math.SQRT2, -POL * s / Math.SQRT2, N * s / Math.SQRT2, N * s / Math.SQRT2);
     t.restore();
+    const KT = [null, '#3f8fd0', '#857f74', '#8cc6e2', '#cfe6f5'];
+    for (let c = 0; c < N * N; c++) { const tt = TEREN[c]; if (!tt || tt > 4) continue; const [x, y] = naMini(...srodekKom(c)); t.fillStyle = KT[tt]; t.fillRect(x - 0.7, y - 0.7, 1.4, 1.4); }
     const kol = { drzewo: '#2c6e33', krzak: '#3a4bb0', kamien: '#9aa0a8', ruda: '#c4622d', zloto: '#f2c94c' };
     for (const z0 of ZAS.values()) { const [x, y] = naMini(z0.x, z0.z); t.fillStyle = kol[z0.rodzaj]; t.fillRect(x - 0.8, y - 0.8, z0.rodzaj === 'drzewo' ? 1.6 : 2.2, z0.rodzaj === 'drzewo' ? 1.6 : 2.2); }
   }
@@ -2825,12 +3080,15 @@ $('m-dalej').onclick = () => { audio(); dzwiek('klik'); if (!S || S.seed !== zap
 // ---------- nowa gra: wielkość mapy, ilu komputerów, jak trudnych i kto z kim walczy ----------
 const NAZWY_TRUD = { latwy: '🙂 Łatwy', sredni: '😐 Średni', trudny: '😠 Trudny' };
 function opcjeNowej() {
-  const o = { rozmiar: 192, przeciwnicy: [zapis.trudnosc || 'latwy'], sojusz: 'kazdy', ...(zapis.opcje || {}) };
+  const o = { mapa: 'dolina', rozmiar: 192, przeciwnicy: [zapis.trudnosc || 'latwy'], sojusz: 'kazdy', ...(zapis.opcje || {}) };
+  if (!MAPY[o.mapa] && o.mapa !== 'losowa') o.mapa = 'dolina';
   o.przeciwnicy = [...o.przeciwnicy]; return o;
 }
 let nowaOpc = null;
 function rysujNowa() {
   const o = nowaOpc;
+  $('n-mapa').innerHTML = [...Object.keys(MAPY), 'losowa'].map(k => `<button class="wyb${k === o.mapa ? ' wybrany' : ''}" data-v="${k}">${k === 'losowa' ? '🎲 Losowa' : MAPY[k].emoji + ' ' + MAPY[k].nazwa}</button>`).join('');
+  $('n-mapa-opis').textContent = o.mapa === 'losowa' ? 'Niespodzianka: gra sama wybierze jedną z map.' : MAPY[o.mapa].opis;
   for (const b of $('n-rozmiar').children) b.classList.toggle('wybrany', +b.dataset.v === o.rozmiar);
   for (const b of $('n-ile').children) b.classList.toggle('wybrany', +b.dataset.v === o.przeciwnicy.length);
   $('n-komputery').innerHTML = o.przeciwnicy.map((t, i) => `<div class="n-komp"><span>${ZNAK_STRON[i + 1]} Komputer${o.przeciwnicy.length > 1 ? ' ' + (i + 1) : ''}</span><div class="wybory">`
@@ -2842,7 +3100,8 @@ function rysujNowa() {
 $('o-nowa').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || !nowaOpc) return;
   const o = nowaOpc, gdzie = b.parentElement && b.parentElement.id;
-  if (gdzie === 'n-rozmiar') o.rozmiar = +b.dataset.v;
+  if (gdzie === 'n-mapa') o.mapa = b.dataset.v;
+  else if (gdzie === 'n-rozmiar') o.rozmiar = +b.dataset.v;
   else if (gdzie === 'n-ile') { const n = +b.dataset.v; while (o.przeciwnicy.length < n) o.przeciwnicy.push(o.przeciwnicy[o.przeciwnicy.length - 1]); o.przeciwnicy.length = n; }
   else if (b.dataset.komp != null) o.przeciwnicy[+b.dataset.komp] = b.dataset.t;
   else if (gdzie === 'n-sojusz') o.sojusz = b.dataset.v;
@@ -2854,7 +3113,7 @@ $('n-start').onclick = () => {
   audio(); dzwiek('klik');
   zapis.opcje = nowaOpc; zapis.trudnosc = nowaOpc.przeciwnicy[0]; zapiszDysk();
   nowaGra(nowaOpc); startuj();
-  baner('Age of Haskap II', nowaOpc.przeciwnicy.length > 1 ? 'Zbieraj, buduj i pokonaj wszystkie wrogie osady!' : 'Zbieraj, buduj i pokonaj czerwoną osadę!');
+  baner(`${MAPY[S.mapaTyp].emoji} ${MAPY[S.mapaTyp].nazwa}`, nowaOpc.przeciwnicy.length > 1 ? 'Zbieraj, buduj i pokonaj wszystkie wrogie osady!' : 'Zbieraj, buduj i pokonaj czerwoną osadę!');
 };
 $('n-wroc').onclick = () => { dzwiek('klik'); pokazMenu(); };
 $('m-wersje').onclick = () => { dzwiek('klik'); pokazWersje(); };
@@ -2862,7 +3121,7 @@ for (const id of ['m-muz', 'p-muz']) $(id).onclick = () => { audio(); zapis.muzy
 for (const id of ['m-dzw', 'p-dzw']) $(id).onclick = () => { audio(); zapis.dzwieki = !zapis.dzwieki; zapiszDysk(); ustawPrzelaczniki(); dzwiek('klik'); };
 $('b-pauza').onclick = () => {
   if (!S) return; audio(); dzwiek('klik'); pauza = true; zapiszGre(); ciszaMuzyki();
-  $('pa-info').textContent = `${TRUDNOSC[S.trudnosc].nazwa} · ${Math.floor(S.czas / 60)} min · era ${S.era[0]} · ludzie: ${ludnosc(0)}`;
+  $('pa-info').textContent = `${MAPY[typMapy()].emoji} ${MAPY[typMapy()].nazwa} · ${TRUDNOSC[S.trudnosc].nazwa} · ${Math.floor(S.czas / 60)} min · era ${S.era[0]} · ludzie: ${ludnosc(0)}`;
   ustawPrzelaczniki(); pokazOkno('o-pauza');
 };
 $('pa-dalej').onclick = () => { dzwiek('klik'); startuj(); };
@@ -2935,7 +3194,7 @@ window.__haskap = {
   get S() { return S; }, get JED() { return JED; }, get BUD() { return BUD; }, get ZAS() { return ZAS; }, kam, muz, muzykaKrok, walka(ile = 0) { walkaT = S.czas - ile; },
   nowaGra, krokGry, zapiszGre, wczytajGre, stanDoZapisu, ai, dodajDoKolejki, nowyBudynek, nowaJednostka, miejsceWolne, zaznacz, klik, wskaz, rozkaz, zacznijStawianie, przesunDucha, ustawBrame,
   // komputer gra też za gracza: sprawdzenie, czy gra się kończy i nic się nie psuje
-  wolne(strona, x, z) { RUCH = strona; return wolneXZ(x, z); },
+  wolne(strona, x, z) { RUCH = strona; return wolneXZ(x, z); }, TEREN, blok, get N() { return N; }, szukajDrogi, MAPY,
   komputerKontraKomputer(trudnoscGracza = 'sredni') { S.aiGracz = true; S.trudnoscGracza = trudnoscGracza; },
   krok(sek, dt = 0.1, rysujTez = false) { symulacja = !rysujTez; try { for (let t = 0; t < sek && !S.wynik; t += dt) krokGry(dt); } finally { symulacja = false; } if (rysujTez) rysuj(0.016); return S.wynik; },
 };

@@ -143,6 +143,7 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .wyb.wybrany { background: #fff4d6; box-shadow: 0 3px 0 #e8cf8f; }
 .wyb[disabled] { flex: 0 0 auto; padding: 10px 14px; opacity: 1; }
 .n-komp { margin-top: 6px; }
+.mapy .wyb { flex: 1 1 40%; font-size: 14px; padding: 9px 6px; }
 .n-komp > span { display: block; font-size: 14px; font-weight: 900; margin-bottom: 4px; }
 .wkrotce { display: block; margin-top: 6px; font-size: 12px; font-weight: 800; color: var(--ink-soft); }
 .wybory .wkrotce { display: inline; margin-top: 0; }
@@ -225,8 +226,8 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 <div class="okno" id="o-nowa" hidden>
   <div class="karta">
     <h2>Nowa gra</h2>
-    <p>Każdy zaczyna w swoim rogu takiej samej doliny.</p>
-    <div class="opcja"><b>Rodzaj mapy</b><div class="wybory"><button class="wyb wybrany" disabled>🌲 Dolina</button><span class="wkrotce">inne rodzaje map wkrótce</span></div></div>
+    <p>Każdy zaczyna w swoim rogu; mapa jest dla wszystkich taka sama.</p>
+    <div class="opcja"><b>Rodzaj mapy</b><div class="wybory mapy" id="n-mapa"></div><small class="wkrotce" id="n-mapa-opis"></small></div>
     <div class="opcja"><b>Wielkość mapy</b><div class="wybory" id="n-rozmiar"><button class="wyb" data-v="144">Mała</button><button class="wyb" data-v="192">Średnia</button><button class="wyb" data-v="240">Duża</button></div></div>
     <div class="opcja"><b>Ilu przeciwników?</b><div class="wybory" id="n-ile"><button class="wyb" data-v="1">1</button><button class="wyb" data-v="2">2</button><button class="wyb" data-v="3">3</button></div></div>
     <div class="opcja"><b>Jak trudni?</b><div id="n-komputery"></div><small class="wkrotce" id="n-trud-opis"></small></div>

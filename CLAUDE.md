@@ -115,6 +115,10 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   i jest taka sama dla wszystkich stron: przy 2 stronach połowa gracza odbita na drugą stronę, przy 3–4 ćwiartka obrócona 3 razy
   (`generujMape`, `kopieKom`). Mapa 192 z 1 komputerem musi zostać dokładnie taka jak dotąd (zapisy odtwarzają ją z `seed`).
   Stare zapisy z mapą 96 przechodzą do kopii wersji 13.
+- Rodzaje map: `MAPY` w `age2/dane.js` (nazwa, motyw, ile lasów), wybór w `S.mapaTyp` (stare zapisy: Dolina). Teren w tablicy
+  `TEREN` (1 woda, 2 skały, 3 bród, 4 lód, 5 polanka zamknięta lasem) robi `generujTeren` (część gracza, potem kopia jak zasoby);
+  woda i skały to `blok` 6, bród i lód 7 (chodzi się, nie buduje). Kolory i ozdoby motywów: `MOTYWY` w `age2/gra.js`.
+  Dolina ma zostać dokładnie taka jak dotąd (nowe rodzaje map nie mogą zmieniać losowania Doliny).
 - Strony: 0 = gracz, 1–3 = komputery (`S.strony`, rogi `ROGI`, kolory `KOLORY_STRON` w `age2/modele.js`), poziom każdego komputera
   w `S.trudnosci`, drużyny w `S.druzyna` (kto jest wrogiem: `wrogowie(a, b)`), przegrani w `S.odpadli`. Opcje nowej gry: `nowaGra(opcje)`.
 - Test bez klikania: `window.__haskap` (`krok(sekundy)`, `komputerKontraKomputer(trudnosc)` = komputer gra też za gracza).

@@ -58,6 +58,19 @@ export const JEDNOSTKI = {
 // naprawa przez rzemieślnika: pełna naprawa kosztuje połowę ceny budynku i trwa dwa razy dłużej niż jego budowa
 export const NAPRAWA = { koszt: 0.5, wolniej: 2 };
 
+// rodzaje map do wyboru przy nowej grze (nazwy i wygląd nasze); motyw = kolory ziemi, gatunki drzew i ozdoby;
+// lasy = ile lasów w porównaniu z Doliną
+export const MAPY = {
+  dolina: { nazwa: 'Dolina', emoji: '🌳', motyw: 'lato', lasy: 1, opis: 'Łąki, lasy i krzaki. Spokojna mapa na początek.' },
+  jezioro: { nazwa: 'Wielkie Jezioro', emoji: '🏞️', motyw: 'lato', lasy: 0.8, opis: 'Na środku wielkie jezioro. Do wroga idzie się dookoła brzegu; na brzegu ruda żelaza i kamień.' },
+  rzeka: { nazwa: 'Rzeka z brodami', emoji: '🌊', motyw: 'lato', lasy: 0.85, opis: 'Rzeka dzieli osady. Przejść można tylko przez płytkie brody, a te łatwo obsadzić.' },
+  przelecze: { nazwa: 'Skalne Przełęcze', emoji: '⛰️', motyw: 'lato', lasy: 0.9, opis: 'Każda osada stoi w skalnej kotlinie z dwoma wąskimi wyjściami. Dobra mapa do obrony.' },
+  puszcza: { nazwa: 'Gęsta Puszcza', emoji: '🌲', motyw: 'puszcza', lasy: 1, opis: 'Wszędzie las, tylko kręte przesieki i polany. Drewna nie zabraknie, ale wróg może przyjść z każdej strony.' },
+  tundra: { nazwa: 'Mroźna Tundra', emoji: '❄️', motyw: 'zima', lasy: 0.5, opis: 'Śnieg, świerki i zamarznięte jeziora, po których da się chodzić (ale nie budować). Mało lasu, więcej rudy i kamienia.' },
+  oaza: { nazwa: 'Oaza', emoji: '🏜️', motyw: 'piasek', lasy: 0.15, opis: 'Piaski i mało drzew. Palmy rosną przy oazach, najwięcej przy wielkiej oazie na środku.' },
+  bagna: { nazwa: 'Bagna', emoji: '🐸', motyw: 'bagno', lasy: 0.75, opis: 'Mnóstwo małych stawów i trzcin, dużo krzaków z jagodami. Drogi kręcą się między wodą.' },
+};
+
 // w: rozmiar w kratkach (budynek zajmuje w × w); ludnosc: o ile więcej mieszkańców; skup: jakie surowce przyjmuje
 // strzela: budynek sam strzela do wrogów; pole: można po nim chodzić, zbieracz zbiera na nim jagody bez końca
 export const BUDYNKI = {
