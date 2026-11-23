@@ -20,6 +20,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 - Mapa Mega na telefonie: w Dolinie Mega jest około 13 tysięcy drzew (4 razy więcej niż na Średniej), w Puszczy Mega około 26 tysięcy.
 - Bitwa komputer na komputer na Dolinie Mega trwała około 80 minut, na Jotunheim (Średnia) 61 minut, bez błędów.
 
+Zapis w repozytorium: `ea016fe`
+
 ## Wersja 27 (23.11.2026)
 
 **Dodane**
