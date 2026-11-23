@@ -17,6 +17,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 **Do sprawdzenia**
 - Bramy postawione wcześniej zostają takie, jakie były (3 kratki).
 
+Zapis w repozytorium: `dcc3402`
+
 ## Wersja 24 (23.11.2026)
 
 **Dodane**
