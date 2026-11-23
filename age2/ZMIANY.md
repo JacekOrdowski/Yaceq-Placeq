@@ -19,6 +19,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 **Do sprawdzenia**
 - Bitwy komputer na komputer trwały 36–41 minut; gracz, który nic nie robi, na łatwym przegrywa po 26–32 minutach.
 
+Zapis w repozytorium: `bab2957`
+
 ## Wersja 26 (23.11.2026)
 
 **Dodane**
