@@ -50,11 +50,11 @@ def main():
         if p == 'portrety.js':  # malowane portrety (od wersji 25) są tylko w głównym folderze gry
             t = t.replace("const FOLDER_PORTRETOW = 'portrety/';", "const FOLDER_PORTRETOW = '../../portrety/';")
         if p == 'index.html':  # tło ekranu startowego (od wersji 25)
-            t = t.replace("url('obrazy/", "url('../../obrazy/")
+            t = t.replace("url('obrazy/", "url('../../obrazy/").replace('src="ikony/', 'src="../../ikony/')
         if p in ('gra.js', 'modele.js'):
             t = zamien(t, "'../survival/three.module.min.js'", "'../../../survival/three.module.min.js'", p)
         if p == 'gra.js':
-            t = t.replace('src="ikony/${typ}.jpg"', 'src="../../ikony/${typ}.jpg"')  # malowane ikony (od wersji 26)
+            t = t.replace('src="ikony/', 'src="../../ikony/').replace('src=\\"ikony/', 'src=\\"../../ikony/')  # malowane ikony (od wersji 26)
             if "'../age2/muzyka/' +" in t:  # do wersji 22 muzyka z Age of Haskap, potem własna (polanie/muzyka/)
                 t = zamien(t, "'../age2/muzyka/' +", "'../../../age2/muzyka/' +", p)
             else:

@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 27;
+const WERSJA = 28;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 27, opis: 'Malowane ikony wszystkich ulepszeń i 12 mocy bogów w nocnym stylu. Do tego wszystko z wersji 26.' },
+  { nr: 28, opis: 'Malowane ikonki surowców (żywność, drewno, kamień, żelazo, srebro, łaska, ludność) w pasku u góry i w cenach. Do tego wszystko z wersji 27.' },
+  { nr: 27, opis: 'Malowane ikony wszystkich ulepszeń i 12 mocy bogów w nocnym stylu. Do tego wszystko z wersji 26.', adres: 'wersje/27/' },
   { nr: 26, opis: 'Malowane ikony wszystkich jednostek, stworów, bohaterów i budynków w tym samym nocnym stylu co portrety bogów. Do tego wszystko z wersji 25.', adres: 'wersje/26/' },
   { nr: 25, opis: 'Malowane portrety 12 bogów w mrocznym, nocnym stylu i gród nocą na ekranie startowym. Do tego wszystko z wersji 24.', adres: 'wersje/25/' },
   { nr: 24, opis: 'Mapka w lewym górnym rogu: schowana, pokazuje się po dotknięciu 🗺️ i jest o połowę większa. Do tego wszystko z wersji 23.', adres: 'wersje/24/' },
@@ -1142,6 +1143,7 @@ const IKONA_ULEPSZENIA = { zlote_piora: 'rarog', prastary_leszy: 'leszy', wilcza
   piesn_rusalek: 'rusalka', wrozba_konia: 'kon', upiorna_noc: 'strzyga', bies_z_nawii: 'bies', arkonska_druzyna: 'rycerz',
   mistrz_piechoty: 'ul_mistrz', mistrz_strzelcow: 'ul_mistrz', mistrz_jazdy: 'ul_mistrz' };
 const ikUl = id => IKONA_ULEPSZENIA[id] || (id.startsWith('aw_') ? id.slice(3) : 'ul_' + id);
+const ikSur = s => `<img class="ik ik-sur" src="ikony/sur_${s}.jpg" alt="" draggable="false">`;
 const ik = (typ, zapas) => IKONY.has(typ) ? `<img class="ik" src="ikony/${typ}.jpg" alt="" draggable="false">` : zapas;
 const emojiBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].emoji : (b.d.mur || b.d.brama) && poziomMuru(b.strona, b.typ) > 1 ? '🧱' : b.d.emoji;
 function modelBud(typ, poziom, strona, zamk = false) {
@@ -3345,7 +3347,7 @@ $('st-tak').onclick = () => {
 
 // ================= panel na dole =================
 function kosztHTML(k, strona = STRONA_GRACZA) {
-  return Object.entries(k).map(([s, v]) => `<span class="${S.zas[strona][s] >= v ? '' : 'brak'}">${EMOJI_SUR[s]}${v}</span>`).join('');
+  return Object.entries(k).map(([s, v]) => `<span class="${S.zas[strona][s] >= v ? '' : 'brak'}">${ikSur(s)}${v}</span>`).join('');
 }
 let panelKlucz = '';
 function odswiezPanel(wymus = false) {
@@ -3368,7 +3370,7 @@ function odswiezPanel(wymus = false) {
     // nic nie wybrane: panel zwinięty do jednego paska (podpowiedź o sterowaniu tylko przez pierwsze 3 minuty gry)
     h = `<div class="p-nic">👆 Dotknij osadnika albo budynku${S.czas < 180 ? '<br><small>Przesuwaj palcem mapę, dwoma palcami przybliżaj i obracaj, przytrzymaj palec, żeby zaznaczyć ramką.</small>' : ''}</div>`;
   } else if (pierwszy.rodzaj) {
-    h = `<div class="p-glowa"><span class="p-ik">${EMOJI_SUR[pierwszy.sur]}</span><div><b>${{ drzewo: 'Drzewo', krzak: 'Krzak z jagodami', kamien: 'Kamień', ruda: 'Ruda darniowa', zloto: 'Srebro' }[pierwszy.rodzaj]}</b><small data-ile>Zostało: ${Math.ceil(pierwszy.ile)}</small></div></div>`;
+    h = `<div class="p-glowa"><span class="p-ik">${pierwszy.typ === 'ruda' ? ik('sur_ruda', EMOJI_SUR[pierwszy.sur]) : ikSur(pierwszy.sur)}</span><div><b>${{ drzewo: 'Drzewo', krzak: 'Krzak z jagodami', kamien: 'Kamień', ruda: 'Ruda darniowa', zloto: 'Srebro' }[pierwszy.rodzaj]}</b><small data-ile>Zostało: ${Math.ceil(pierwszy.ile)}</small></div></div>`;
   } else if (jestBudynkiem(pierwszy)) {
     const b = pierwszy, moj = b.strona === STRONA_GRACZA;
     h = `<div class="p-glowa"><span class="p-ik">${ik(b.typ, emojiBud(b))}</span><div><b>${nazwaBud(b)}${moj ? '' : ' (komputer)'}</b><small data-hp>❤️ ${Math.ceil(b.hp)} / ${b.max}</small><div class="p-hp"><i data-hpb style="width:${b.hp / b.max * 100}%"></i></div></div><button class="p-x" data-a="odznacz">✖</button></div>`;
@@ -3407,8 +3409,8 @@ function odswiezPanel(wymus = false) {
         h += `<div class="p-opis">${dom ? `Kurs wozu do ${dom.d.nazwa.toLowerCase()} daje ${zyskKursu(b, dom)} 🪙 (im dalej, tym więcej)` : 'Wozy potrzebują spichlerza albo Grodu'}</div>`;
         for (const s of ['jagody', 'drewno', 'kamien', 'zelazo']) {
           const kup = cenaKupna(0, s), sp = cenaSprzedazy(0, s);
-          a += `<button class="akcja" data-a="kup:${s}" data-koszt='${JSON.stringify({ zloto: kup })}'><span class="ak-ik">${EMOJI_SUR[s]}</span><b>Kup 100</b><small>${NAZWY_SUR[s]}</small><span class="ak-koszt">${kosztHTML({ zloto: kup })}</span></button>`;
-          a += `<button class="akcja" data-a="sprz:${s}" data-koszt='${JSON.stringify({ [s]: HANDEL.ilosc })}'><span class="ak-ik">🪙</span><b>Sprzedaj 100 ${EMOJI_SUR[s]}</b><small>dostaniesz ${sp} 🪙</small><span class="ak-koszt">${kosztHTML({ [s]: HANDEL.ilosc })}</span></button>`;
+          a += `<button class="akcja" data-a="kup:${s}" data-koszt='${JSON.stringify({ zloto: kup })}'><span class="ak-ik">${ikSur(s)}</span><b>Kup 100</b><small>${NAZWY_SUR[s]}</small><span class="ak-koszt">${kosztHTML({ zloto: kup })}</span></button>`;
+          a += `<button class="akcja" data-a="sprz:${s}" data-koszt='${JSON.stringify({ [s]: HANDEL.ilosc })}'><span class="ak-ik">${ikSur('zloto')}</span><b>Sprzedaj 100 ${EMOJI_SUR[s]}</b><small>dostaniesz ${sp} 🪙</small><span class="ak-koszt">${kosztHTML({ [s]: HANDEL.ilosc })}</span></button>`;
         }
       }
       if (b.typ === 'wieza' && WIEZA_POZIOMY[(b.poziom || 1) + 1]) {

@@ -112,6 +112,10 @@ img.ik { display: block; object-fit: cover; border-radius: 9px; }
 .p-ik img.ik { width: 46px; height: 46px; border-radius: 11px; }
 .kol span:has(img.ik) { position: absolute; inset: 0; z-index: 0; }
 .kol img.ik { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; }
+/* surowce: małe okrągłe ikonki w pasku u góry i w cenach */
+img.ik.ik-sur { display: inline-block; vertical-align: middle; border-radius: 50%; }
+.chip img.ik-sur { width: 22px; height: 22px; margin-right: 1px; box-shadow: 0 0 0 1px rgba(255,255,255,0.25); }
+.ak-koszt img.ik-sur { width: 15px; height: 15px; margin-right: 1px; vertical-align: -3px; }
 .p-grupa img.ik { display: inline-block; width: 24px; height: 24px; border-radius: 6px; vertical-align: middle; margin-right: 2px; }
 .akcja b { font-size: 12px; font-weight: 900; line-height: 1.1; }
 .akcja small { font-size: 10px; font-weight: 800; color: var(--ink-soft); line-height: 1.15; flex: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
@@ -206,13 +210,13 @@ img.ik { display: block; object-fit: cover; border-radius: 9px; }
     <div class="hud-row">
       <button id="b-pauza" aria-label="Pauza">II</button>
       <div id="zasoby">
-        <div class="chip">🌾<span id="z-jagody">0</span></div>
-        <div class="chip">🪵<span id="z-drewno">0</span></div>
-        <div class="chip">🪨<span id="z-kamien">0</span></div>
-        <div class="chip">⛓️<span id="z-zelazo">0</span></div>
-        <div class="chip">🪙<span id="z-zloto">0</span></div>
-        <div class="chip">✨<span id="z-laska">0</span></div>
-        <div class="chip" id="c-lud">👥<span id="z-lud">0/0</span></div>
+        <div class="chip"><img class="ik ik-sur" src="ikony/sur_jagody.jpg" alt="żywność"><span id="z-jagody">0</span></div>
+        <div class="chip"><img class="ik ik-sur" src="ikony/sur_drewno.jpg" alt="drewno"><span id="z-drewno">0</span></div>
+        <div class="chip"><img class="ik ik-sur" src="ikony/sur_kamien.jpg" alt="kamień"><span id="z-kamien">0</span></div>
+        <div class="chip"><img class="ik ik-sur" src="ikony/sur_zelazo.jpg" alt="żelazo"><span id="z-zelazo">0</span></div>
+        <div class="chip"><img class="ik ik-sur" src="ikony/sur_zloto.jpg" alt="srebro"><span id="z-zloto">0</span></div>
+        <div class="chip"><img class="ik ik-sur" src="ikony/sur_laska.jpg" alt="łaska"><span id="z-laska">0</span></div>
+        <div class="chip" id="c-lud"><img class="ik ik-sur" src="ikony/sur_lud.jpg" alt="ludność"><span id="z-lud">0/0</span></div>
       </div>
     </div>
     <div class="hud-row2">

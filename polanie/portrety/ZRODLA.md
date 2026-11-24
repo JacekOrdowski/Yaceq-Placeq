@@ -14,3 +14,7 @@ kwadraty 160 × 160. Z trzech arkuszy odcięte dopisane przez Gemini podpisy.
 
 Tak samo: 8 arkuszy po 9 ikon z Gemini (`ul_...`, `moc_...`), pocięte na 160 × 160; z jednego arkusza odcięte podpisy.
 Ikona „Arkońskiej drużyny” (koń w hełmie z rogami, za bardzo nordycka) odrzucona: to ulepszenie bierze ikonę Pancernego.
+
+## Ikonki surowców (od wersji 28)
+
+Jeden arkusz 3 × 3 z Gemini, pocięty na 128 × 128, ciaśniej przycięty i lekko rozjaśniony (żeby był czytelny w małym rozmiarze).

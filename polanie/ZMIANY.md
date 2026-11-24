@@ -7,6 +7,14 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 28 (24.11.2026)
+
+**Dodane**
+- Malowane ikonki surowców w tym samym stylu (`ikony/sur_...`): kosz jagód z kłosem (żywność), kłody (drewno), kamień,
+  sztaby żelaza, srebrne monety i siekane srebro, złote iskry (łaska), trzy postacie (ludność), a do tego bryła rudy darniowej.
+  Są w okrągłych ramkach w pasku u góry, w cenach na przyciskach, na Targowisku i w nagłówku krzaka, drzewa czy skały.
+  W krótkich komunikatach zostają emoji.
+
 ## Wersja 27 (24.11.2026)
 
 **Dodane**
