@@ -23,6 +23,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
 **Do sprawdzenia**
 - Czy głośność utworów jest równa i czy bębny w bitwie nie są za głośne.
 
+Zapis w repozytorium: `34ac18b`
+
 ## Wersja 22 (24.11.2026)
 
 **Dodane**
