@@ -21,6 +21,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
 **Naprawione**
 - W oknie wyboru boga ikonka kosztu (kosz z jagodami) była ogromna: teraz jest mała, obok liczby.
 
+Zapis w repozytorium: `747542f`
+
 ## Wersja 30 (24.11.2026)
 
 **Dodane**
