@@ -14,6 +14,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
   różnie długich ruchów i prawa ręka długo trzymała pięść z przodu, więc na zmianę nie było widać. Teraz ruch jest złożony z czterech
   póz (garda, lewa wyciągnięta, garda, prawa wyciągnięta) równo rozłożonych w czasie.
 
+Zapis w repozytorium: `10c97db`
+
 ## Wersja 15 (24.11.2026)
 
 **Zmienione**
