@@ -14,6 +14,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
   w zaznaczeniu tylko ten rodzaj, następne dokładają kolejne rodzaje albo je zdejmują (wybrane są zielone, reszta przygaszona).
   Gdy zdejmie się wszystkie, znów zaznaczona jest cała grupa. Rozkazy (iść, atakować, tryb walki, stój) dostają tylko wybrani.
 
+Zapis w repozytorium: `58e6130`
+
 ## Wersja 21 (24.11.2026)
 
 **Zmienione**
