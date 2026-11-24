@@ -260,6 +260,57 @@ img.ik-przycisk { display: inline-block; width: 32px; height: 32px; border-radiu
 #baner b { font-family: var(--kron); font-weight: 900; color: var(--zloto); text-shadow: 0 2px 0 #000; }
 #baner small { color: var(--perg-c); }
 .okno input, .okno select { background: #1d1610; color: var(--perg); border: 1px solid #4d3a22; }
+
+/* ================= mroczny, słowiański wygląd w trakcie gry (od wersji 32): pasek u góry, przyciski z boku, panel na dole ================= */
+#gra-ui { color: var(--perg); }
+.chip { background: linear-gradient(180deg, rgba(30, 24, 18, 0.88), rgba(14, 11, 8, 0.9)); border: 1px solid rgba(226, 182, 96, 0.45); color: var(--perg);
+  font-family: var(--kron); font-weight: 700; font-size: 15px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); }
+.chip.pelno { background: linear-gradient(180deg, #8e2f1f, #5e1c12); border-color: #e0a05a; }
+#h-era { font-family: var(--kron); font-weight: 700; font-size: 12px; color: var(--zloto); }
+#b-pauza { background: radial-gradient(circle at 50% 35%, #4a3322, #1c130b); color: var(--zloto); border: 1px solid var(--zloto-c);
+  box-shadow: 0 3px 0 #0d0905, 0 0 10px rgba(0, 0, 0, 0.5); font-family: var(--kron); }
+#zadanie { background: linear-gradient(180deg, rgba(24, 30, 30, 0.9), rgba(12, 16, 17, 0.92)); color: var(--perg); border: 1px solid rgba(226, 182, 96, 0.45);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45); }
+.okr { background: linear-gradient(180deg, #3a2a1c, #1c130b); border: 1px solid var(--zloto-c); box-shadow: 0 4px 0 #0d0905, 0 2px 8px rgba(0, 0, 0, 0.4); color: var(--perg); }
+.okr img.ik-btn { width: 44px; height: 44px; margin: 2px auto; border-radius: 12px; }
+.okr.wl { background: linear-gradient(180deg, #3d5a2e, #1f3318); border-color: #a9c27a; box-shadow: 0 4px 0 #0d0905, 0 0 12px rgba(150, 210, 110, 0.4); }
+.okr.wl img.ik-btn { box-shadow: none; }
+.okr b { background: #1c130b; color: var(--perg); border: 1px solid var(--zloto-c); }
+#b-bezczynni.jest b { background: #b4482a; color: #fff; border-color: #e0a05a; }
+#b-moce.jest b { background: #e2b660; color: #2a1a05; border-color: #fff0c0; }
+#mini { background: rgba(10, 14, 15, 0.7); border: 1px solid rgba(226, 182, 96, 0.45); }
+/* panel na dole: ciemne drewno i noc ze złotą krawędzią */
+#panel, #stawianie { background: linear-gradient(180deg, rgba(26, 32, 32, 0.96), rgba(12, 15, 16, 0.98)); color: var(--perg);
+  border-top: 1px solid rgba(226, 182, 96, 0.6); box-shadow: 0 -2px 0 rgba(20, 14, 8, 0.9), 0 -8px 24px rgba(0, 0, 0, 0.5); }
+.p-nic, #st-tekst { color: var(--perg); }
+.p-nic small, .p-glowa small, .p-opis, .p-kolejka small[data-czeka] { color: var(--perg-c); }
+.p-glowa b { font-family: var(--kron); font-weight: 900; color: var(--zloto); letter-spacing: 0.3px; }
+.p-ik img.ik { box-shadow: 0 0 0 1px rgba(226, 182, 96, 0.6), 0 2px 6px rgba(0, 0, 0, 0.5); }
+.p-hp { background: #2a2219; }
+.p-hp i { background: linear-gradient(90deg, #4f9b3a, #8cc65a); }
+.p-x { background: radial-gradient(circle at 50% 35%, #4a3322, #1c130b); color: var(--zloto); border: 1px solid var(--zloto-c); box-shadow: 0 3px 0 #0d0905; }
+.p-x:active { box-shadow: 0 1px 0 #0d0905; }
+.akcja { background: linear-gradient(180deg, #33261a, #1c140d); border: 1px solid #5b4528; box-shadow: 0 3px 0 #0d0905; color: var(--perg); }
+.akcja:active { box-shadow: 0 1px 0 #0d0905; }
+.akcja b { color: #f3e3bd; }
+.akcja small { color: var(--perg-c); }
+.ak-ik img.ik { box-shadow: 0 0 0 1px rgba(226, 182, 96, 0.5), 0 2px 4px rgba(0, 0, 0, 0.5); }
+.ak-koszt { color: var(--perg); }
+.ak-koszt span.brak, .akcja.zablok small { color: #ff8a73; }
+.akcja.era { background: linear-gradient(180deg, #4a3518, #2a1d0c); border-color: var(--zloto); box-shadow: 0 3px 0 #0d0905, 0 0 10px rgba(226, 182, 96, 0.25); }
+.akcja.zburz { background: linear-gradient(180deg, #4a1d14, #2a0f0a); border-color: #9a4a35; box-shadow: 0 3px 0 #0d0905; }
+.akcja.zburz b { color: #ff9a80; } .akcja.zburz small { color: #d9a090; }
+.akcja.postawa.wybrana { background: linear-gradient(180deg, #2f4a24, #1a2b14); border-color: #a9c27a; box-shadow: 0 3px 0 #0d0905, 0 0 10px rgba(150, 210, 110, 0.3); }
+.akcja.maly:not(.zburz) { background: linear-gradient(180deg, #b4482a, #7a2614); border-color: #e0a05a; }
+.akcja.maly:not(.zburz) b { color: #fff3dc; }
+.kol { background: #1c140d; border: 1px solid #5b4528; }
+.kol i { background: linear-gradient(90deg, #4f9b3a, #8cc65a); }
+.p-grupa span, .p-grupa button { background: #1c140d; color: var(--perg); border: 1px solid #5b4528; box-shadow: none; }
+.p-grupa button.wybrana { background: linear-gradient(180deg, #3d5a2e, #1f3318); color: #eaffd0; border-color: #a9c27a; box-shadow: 0 0 8px rgba(150, 210, 110, 0.35); }
+#stawianie .przycisk { font-family: var(--kron); font-weight: 700; font-size: 17px; color: var(--perg); border-radius: 10px; border: 1px solid #e0a05a;
+  background: linear-gradient(180deg, #b4482a, #9b3520 55%, #6e2213); box-shadow: 0 4px 0 #5c1a0e; text-shadow: 0 1px 0 #000; }
+#stawianie .przycisk.drugi { background: linear-gradient(180deg, #4a3322, #2a1d13 55%, #1c130b); border-color: var(--zloto-c); box-shadow: 0 4px 0 #150e08; }
+#toast { background: linear-gradient(180deg, rgba(30, 24, 18, 0.95), rgba(14, 11, 8, 0.96)); color: var(--perg); border: 1px solid rgba(226, 182, 96, 0.55); }
 </style>
 </head>
 <body>

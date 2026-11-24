@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 31;
+const WERSJA = 32;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 31, opis: 'Mroczny, słowiański wygląd menu i wszystkich okien: ciemne drewno, złote obwódki, czcionka jak z kroniki, malowane godło gry. Do tego wszystko z wersji 30.' },
+  { nr: 32, opis: 'Mroczny, słowiański wygląd także w trakcie gry: pasek u góry, przyciski z boku, panel na dole i stawianie budynków. Do tego wszystko z wersji 31.' },
+  { nr: 31, opis: 'Mroczny, słowiański wygląd menu i wszystkich okien: ciemne drewno, złote obwódki, czcionka jak z kroniki, malowane godło gry. Do tego wszystko z wersji 30.', adres: 'wersje/31/' },
   { nr: 30, opis: 'Kopiowanie budynku: zaznacz osadnika i przytrzymaj palec 2 s na swoim budynku. Nowy wygląd pauzy, menu i przycisku Zburz. Do tego wszystko z wersji 29.', adres: 'wersje/30/' },
   { nr: 29, opis: 'Malowane ikony er, przycisku mocy bogów i przycisków z boku ekranu (wojsko, wolni osadnicy, ramka, gród, mapa). Do tego wszystko z wersji 28.', adres: 'wersje/29/' },
   { nr: 28, opis: 'Malowane ikonki surowców (żywność, drewno, kamień, żelazo, srebro, łaska, ludność) w pasku u góry i w cenach. Do tego wszystko z wersji 27.', adres: 'wersje/28/' },
