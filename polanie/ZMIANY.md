@@ -7,6 +7,14 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 20 (24.11.2026)
+
+**Zmienione**
+- Nowy wygląd Leszego (nasz własny, w duchu leśnych olbrzymów z gier i filmów): wysoki, chudy olbrzym z kory i korzeni,
+  korzenie zamiast stóp, długie ręce-konary aż do kolan z palcami z gałązek, drewniana twarz z groźnymi brwiami,
+  świecącymi zielonymi oczami i brodą z mchu, z głowy wyrastają rozłożyste gałęzie z liśćmi jak poroże. Na ramionach mech
+  i muchomory, pas z pnączy i kwiaty w kolorze strony. Jest wyraźnie wyższy od ludzi (pasek życia wyżej).
+
 ## Wersja 19 (24.11.2026)
 
 **Dodane**

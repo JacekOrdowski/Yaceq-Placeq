@@ -284,17 +284,57 @@ export const rarog = cache(strona => {
   return polacz(c);
 });
 // Leszy: duch puszczy, olbrzym z pnia i gałęzi, z mchem na głowie i świecącymi oczami
+// gałąź (walec) od punktu a do punktu b, grubość r0 przy a i r1 przy b
+const QG = new THREE.Quaternion(), EG = new THREE.Euler(), V0 = new THREE.Vector3(), V1 = new THREE.Vector3(), OSY = new THREE.Vector3(0, 1, 0);
+function galaz(a, b, r0, r1, kolor, s = 6) {
+  V0.set(b[0] - a[0], b[1] - a[1], b[2] - a[2]); const dl = V0.length(); V0.normalize();
+  QG.setFromUnitVectors(OSY, V0); EG.setFromQuaternion(QG);
+  return cz(cyl(r1, r0, dl, s), kolor, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, EG.x, EG.y, EG.z);
+}
+// Leszy: duch puszczy, nasz własny: wysoki, chudy olbrzym z kory i korzeni, zamiast stóp korzenie, długie ręce-konary
+// z palcami z gałązek, drewniana twarz ze świecącymi zielonymi oczami i brodą z mchu, z głowy wyrastają rozłożyste gałęzie
+// jak poroże, z liśćmi; na ramionach mech i grzyby, pas z pnączy i kwiaty w kolorze strony
 export const leszy = cache(strona => {
-  const k = KOLORY_STRON[strona], KORA = '#6b4527', KORA2 = '#5a3d26', MECH = '#4a8f3a';
-  const c = [
-    st(cz(cyl(0.13, 0.16, 0.75, 7), KORA2, -0.2, 0.37, 0), 1, 0.75, -1), st(cz(cyl(0.13, 0.16, 0.75, 7), KORA2, 0.2, 0.37, 0), 1, 0.75, 1),
-    cz(cyl(0.32, 0.36, 1.1, 9), KORA, 0, 1.25, 0), cz(cyl(0.34, 0.34, 0.12, 9), k, 0, 1.05, 0),
-    cz(kulaG(0.34, 10, 8), MECH, 0, 1.95, -0.02, 0, 0, 0, 1.1, 0.8, 1.1), cz(kulaG(0.22, 8, 6), '#5fa04a', 0.18, 2.12, 0.05), cz(kulaG(0.2, 8, 6), '#3f7a30', -0.2, 2.1, -0.05),
-    cz(kulaG(0.05, 6, 4), OCZY_ZAR, -0.12, 1.72, 0.3), cz(kulaG(0.05, 6, 4), OCZY_ZAR, 0.12, 1.72, 0.3),
-    cz(box(0.34, 0.3, 0.06), MECH, 0, 1.45, 0.32), cz(stozek(0.05, 0.35, 5), MECH, 0, 1.25, 0.32, Math.PI, 0, 0),
-  ];
-  for (const sx of [-1, 1]) c.push(st(cz(cyl(0.07, 0.1, 0.8, 6), KORA, sx * 0.48, 1.35, 0.05, 0, 0, sx * 0.5), 1, 1.65, sx * 0.6),
-    st(cz(cyl(0.03, 0.04, 0.45, 5), KORA2, sx * 0.72, 1.05, 0.15, 0.4, 0, sx * -0.3), 1, 1.65, sx * 0.6), cz(cyl(0.04, 0.05, 0.5, 5), KORA2, sx * 0.25, 2.2, -0.05, 0, 0, sx * -0.6), cz(kulaG(0.1, 6, 4), '#5fa04a', sx * 0.42, 2.38, -0.05));
+  const k = KOLORY_STRON[strona], KORA = '#5a3d26', KORA2 = '#4a3020', KORA3 = '#6b4a30', MECH = '#4a8f3a', MECH2 = '#6aa84a', LISC = '#5fa04a', TWARZ = '#9c8462', OKO = '#9dff6a';
+  const c = [];
+  // nogi z korzeni (kolano wyżej, stopa rozchodzi się w korzenie)
+  for (const sx of [-1, 1]) {
+    const zn = -sx, B = [sx * 0.2, 1.08, 0], K = [sx * 0.3, 0.58, 0.06], S = [sx * 0.26, 0.08, 0];
+    c.push(st(galaz(B, K, 0.13, 0.1, KORA), 1, 1.08, zn), st(galaz(K, S, 0.1, 0.12, KORA2), 1, 1.08, zn), st(cz(kulaG(0.12, 7, 5), KORA3, K[0], K[1], K[2]), 1, 1.08, zn));
+    for (const [dx, dz] of [[0.28, 0.22], [-0.05, 0.32], [0.3, -0.18], [-0.12, -0.25]]) c.push(st(galaz(S, [S[0] + sx * dx, 0.01, S[2] + dz], 0.07, 0.015, KORA2, 5), 1, 1.08, zn));
+  }
+  // tułów: skręcony pień, wąski w pasie, szerszy w piersi; bruzdy kory; żebra z gałęzi
+  c.push(galaz([0, 0.98, 0], [0.03, 1.45, 0.02], 0.22, 0.2, KORA), galaz([0.03, 1.45, 0.02], [0, 2.02, 0], 0.2, 0.3, KORA3), cz(kulaG(0.3, 9, 7), KORA, 0, 1.98, 0, 0, 0, 0, 1.25, 0.6, 0.85));
+  for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2; c.push(cz(box(0.025, 0.9, 0.03), KORA2, Math.sin(a) * 0.24, 1.55, Math.cos(a) * 0.2, 0, a, 0.05 * (i % 2 ? 1 : -1))); }
+  for (const y of [1.62, 1.76, 1.9]) for (const sx of [-1, 1]) c.push(cz(box(0.22, 0.04, 0.04), KORA3, sx * 0.13, y, 0.25, 0, sx * 0.35, sx * -0.25));
+  c.push(cz(cyl(0.25, 0.25, 0.08, 10), k, 0, 1.12, 0, 0, 0, 0.08), cz(kulaG(0.06, 6, 4), k, 0.16, 1.14, 0.2), cz(kulaG(0.05, 6, 4), '#ffd84a', 0.16, 1.17, 0.24));
+  // ramiona: długie konary aż do kolan, palce z gałązek; mech i grzyby na barkach, zwisające pnącza
+  for (const sx of [-1, 1]) {
+    const Bk = [sx * 0.4, 2.02, 0], L = [sx * 0.66, 1.48, 0.08], N = [sx * 0.7, 0.86, 0.14], zn = sx * 0.6;
+    c.push(cz(kulaG(0.14, 8, 6), KORA3, Bk[0], Bk[1], Bk[2]), st(galaz(Bk, L, 0.1, 0.08, KORA), 1, 2.02, zn), st(galaz(L, N, 0.08, 0.06, KORA2), 1, 2.02, zn),
+      st(cz(kulaG(0.08, 6, 5), KORA3, L[0], L[1], L[2]), 1, 2.02, zn));
+    for (const [dx, dz] of [[-0.06, 0.1], [0.02, 0.12], [0.1, 0.06], [0.08, -0.06]]) c.push(st(galaz(N, [N[0] + sx * dx, N[1] - 0.3, N[2] + dz], 0.025, 0.008, KORA2, 4), 1, 2.02, zn));
+    c.push(cz(kulaG(0.17, 8, 5), MECH, sx * 0.38, 2.12, 0, 0, 0, 0, 1.2, 0.45, 1.1), cz(kulaG(0.1, 7, 5), MECH2, sx * 0.48, 2.1, 0.1, 0, 0, 0, 1, 0.5, 1));
+    c.push(st(galaz([sx * 0.55, 1.85, 0.05], [sx * 0.58, 1.35, 0.1], 0.015, 0.01, MECH, 4), 2, 0, 0.08), st(galaz([sx * 0.62, 1.6, 0.1], [sx * 0.64, 1.2, 0.14], 0.012, 0.008, MECH2, 4), 2, 0, 0.08));
+  }
+  c.push(cz(cyl(0.012, 0.016, 0.1, 5), '#efe6d2', -0.42, 2.2, 0.06), cz(czapa(0.07, 1.4), '#c8281e', -0.42, 2.25, 0.06), cz(kulaG(0.012, 4, 3), '#ffffff', -0.39, 2.29, 0.1), cz(kulaG(0.012, 4, 3), '#ffffff', -0.45, 2.28, 0.03),
+    cz(cyl(0.01, 0.013, 0.07, 5), '#efe6d2', -0.33, 2.18, 0.12), cz(czapa(0.05, 1.4), '#c8281e', -0.33, 2.22, 0.12));
+  // głowa: wydłużona drewniana twarz, głębokie oczodoły ze świecącymi oczami, broda z mchu
+  c.push(galaz([0, 2.05, 0], [0, 2.3, 0.04], 0.09, 0.08, KORA2), cz(kulaG(0.21, 10, 8), TWARZ, 0, 2.48, 0.05, -0.15, 0, 0, 0.85, 1.3, 0.95),
+    cz(box(0.15, 0.045, 0.08), KORA2, -0.085, 2.585, 0.2, 0.1, 0, -0.3), cz(box(0.15, 0.045, 0.08), KORA2, 0.085, 2.585, 0.2, 0.1, 0, 0.3),
+    cz(kulaG(0.05, 6, 5), '#1a140e', -0.08, 2.51, 0.205), cz(kulaG(0.05, 6, 5), '#1a140e', 0.08, 2.51, 0.205),
+    cz(kulaG(0.026, 6, 5), OKO, -0.08, 2.51, 0.245), cz(kulaG(0.026, 6, 5), OKO, 0.08, 2.51, 0.245),
+    cz(stozek(0.05, 0.16, 5), TWARZ, 0, 2.42, 0.25, 1.4, 0, 0), cz(box(0.12, 0.02, 0.04), '#1a140e', 0, 2.33, 0.21));
+  for (let i = 0; i < 7; i++) { const x = (i - 3) * 0.045; c.push(st(cz(stozek(0.035, 0.32 + (i % 3) * 0.08, 5), i % 2 ? MECH : MECH2, x, 2.13 - (i % 3) * 0.04, 0.17 - Math.abs(x) * 0.4, Math.PI, 0, 0), 2, 0, 0.05)); }
+  // gałęzie jak poroże: dwa konary z odnogami, na końcach liście; kwiat w kolorze strony
+  for (const sx of [-1, 1]) {
+    const A = [sx * 0.1, 2.68, 0], M = [sx * 0.32, 2.95, -0.04], T = [sx * 0.58, 3.22, -0.08];
+    c.push(galaz(A, M, 0.05, 0.04, KORA3), galaz(M, T, 0.04, 0.02, KORA3), galaz(M, [sx * 0.3, 3.3, 0.06], 0.03, 0.015, KORA3, 5), galaz(M, [sx * 0.62, 2.92, 0.12], 0.03, 0.012, KORA3, 5),
+      galaz([sx * 0.45, 3.08, -0.06], [sx * 0.52, 3.36, -0.16], 0.02, 0.01, KORA3, 4));
+    for (const [x, y, z, r] of [[T[0], T[1], T[2], 0.13], [sx * 0.3, 3.32, 0.06, 0.11], [sx * 0.64, 2.94, 0.13, 0.1], [sx * 0.53, 3.38, -0.16, 0.09], [sx * 0.42, 3.05, -0.02, 0.08]])
+      c.push(st(cz(kulaG(r, 7, 5), LISC, x, y, z, 0, 0, 0, 1.2, 0.8, 1.1), 2, 0, 0.04), st(cz(kulaG(r * 0.7, 6, 4), MECH2, x + sx * r * 0.6, y + r * 0.3, z + r * 0.4), 2, 0, 0.04));
+    c.push(cz(kulaG(0.045, 6, 4), k, sx * 0.3, 3.36, 0.1), cz(kulaG(0.02, 5, 3), '#ffd84a', sx * 0.3, 3.38, 0.13));
+  }
   return polacz(c);
 });
 // Wilkołak: przygarbiony wilk na dwóch łapach

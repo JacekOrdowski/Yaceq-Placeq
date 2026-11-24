@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 19;
+const WERSJA = 20;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 19, opis: 'Zapisywanie i wczytywanie gry (do 8 zapisów), ulepszenia muru po dotknięciu muru, a bramy po dotknięciu bramy. Do tego wszystko z wersji 18.' },
+  { nr: 20, opis: 'Nowy Leszy: wysoki olbrzym z kory i korzeni, z gałęziami jak poroże, świecącymi oczami i brodą z mchu. Do tego wszystko z wersji 19.' },
+  { nr: 19, opis: 'Zapisywanie i wczytywanie gry (do 8 zapisów), ulepszenia muru po dotknięciu muru, a bramy po dotknięciu bramy. Do tego wszystko z wersji 18.', adres: 'wersje/19/' },
   { nr: 18, opis: 'Procenty budowy: przy częstokole tylko przy największym przybliżeniu, przy budynkach znikają przy oddalaniu, z daleka nie ma ich wcale. Do tego wszystko z wersji 17.', adres: 'wersje/18/' },
   { nr: 17, opis: 'Surowce nie przepadają przy zmianie pracy (osadnik najpierw je odnosi), krok zgrany z ciosem w biegu bokserskim. Do tego wszystko z wersji 16.', adres: 'wersje/17/' },
   { nr: 16, opis: 'Ciosy w biegu bokserskim równo na zmianę: lewa, prawa, lewa, prawa (każdy krok jeden cios). Do tego wszystko z wersji 15.', adres: 'wersje/16/' },
@@ -2915,7 +2916,7 @@ function rysujNakladke() {
   };
   // przy dużej zaznaczonej grupie paski tylko u rannych, żeby nie zlewały się w plamę
   const malaGrupa = wybrane.length <= 6;
-  for (const u of JED) if (wybrane.includes(u) && (malaGrupa || u.hp < u.max) || u.hp < u.max && S.czas - (u.trafiony || -99) < 4) pasek(u, (u.d.linia === 'renifer' || u.d.linia === 'kon' ? 2.2 : u.d.mit ? 2.6 : u.d.bohater ? 1.9 : 1.6) + (u.d.lata || 0), 26);
+  for (const u of JED) if (wybrane.includes(u) && (malaGrupa || u.hp < u.max) || u.hp < u.max && S.czas - (u.trafiony || -99) < 4) pasek(u, (u.d.linia === 'renifer' || u.d.linia === 'kon' ? 2.2 : u.d.mit ? (u.typ === 'leszy' ? 3.6 : 2.6) : u.d.bohater ? 1.9 : 1.6) + (u.d.lata || 0), 26);
   for (const b of BUD) if (wybrane.includes(b) || b.hp < b.max && (b.gotowy || S.czas - (b.trafiony || -99) < 4)) pasek(b, wysokoscBud(b) + 0.4, 18 + b.w * 9);
   // postęp budowy: przy częstokole i bramach tylko przy największym przybliżeniu, przy budynkach znika stopniowo przy oddalaniu,
   // a przy dużym oddaleniu nie ma go wcale (postęp widać też w okienku na dole po dotknięciu budowy)
