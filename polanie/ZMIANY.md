@@ -17,6 +17,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
   Awanse (np. „Awans: Łucznik”) i dary dla stworów pokazują ikonę tej jednostki albo stwora, a trzy ulepszenia
   „Mistrzowie...” wspólny dębowy wieniec. Ikony są na przyciskach ulepszeń, w kolejce i w oknie mocy bogów.
 
+Zapis w repozytorium: `22b2b3b`
+
 ## Wersja 26 (24.11.2026)
 
 **Dodane**
