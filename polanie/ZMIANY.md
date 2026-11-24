@@ -13,6 +13,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
 - Zagon prosa nie wygląda już jak krzaki z jagodami (zostały z Age of Haskap): trzy zaorane zagony, na każdym gęste źdźbła prosa
   z liśćmi i zwisającymi złotymi wiechami, lekko kołyszące się na wietrze. Płotek i strach na wróble zostały.
 
+Zapis w repozytorium: `b977923`
+
 ## Wersja 7 (24.11.2026)
 
 **Naprawione**
