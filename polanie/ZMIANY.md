@@ -18,6 +18,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
 - Pozostałe przyciski z boku ekranu też w tym stylu: wolni osadnicy (drzemiący osadnik), całe wojsko (topór i włócznia),
   zaznacz ramką (rama z palików), do Grodu (ikona Grodu) i mapa (skórzana mapa). Włączony przycisk ma zieloną obwódkę.
 
+Zapis w repozytorium: `bd207be`
+
 ## Wersja 28 (24.11.2026)
 
 **Dodane**
