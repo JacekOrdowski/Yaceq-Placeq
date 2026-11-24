@@ -4,3 +4,8 @@ Wygenerowane 24.11.2026 w Google Gemini na koncie właściciela gry, według sty
 Zmniejszone do 400 × 400 (portrety) i 720 punktów szerokości (tło `../obrazy/tlo-menu.jpg`).
 Na toporze Peruna usunięty ręcznie mały znak, który nie pasował do gry dla dzieci.
 Stare rysowane portrety (SVG w `../portrety.js`) zostają na zapas.
+
+## Ikony jednostek i budynków (od wersji 26, folder `../ikony/`)
+
+Wygenerowane tego samego dnia w Google Gemini, w tym samym stylu, jako 5 arkuszy po 9 ikon (siatka 3 × 3), pocięte na
+kwadraty 160 × 160. Z trzech arkuszy odcięte dopisane przez Gemini podpisy.

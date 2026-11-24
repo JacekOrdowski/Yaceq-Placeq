@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 25;
+const WERSJA = 26;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 25, opis: 'Malowane portrety 12 bogów w mrocznym, nocnym stylu i gród nocą na ekranie startowym. Do tego wszystko z wersji 24.' },
+  { nr: 26, opis: 'Malowane ikony wszystkich jednostek, stworów, bohaterów i budynków w tym samym nocnym stylu co portrety bogów. Do tego wszystko z wersji 25.' },
+  { nr: 25, opis: 'Malowane portrety 12 bogów w mrocznym, nocnym stylu i gród nocą na ekranie startowym. Do tego wszystko z wersji 24.', adres: 'wersje/25/' },
   { nr: 24, opis: 'Mapka w lewym górnym rogu: schowana, pokazuje się po dotknięciu 🗺️ i jest o połowę większa. Do tego wszystko z wersji 23.', adres: 'wersje/24/' },
   { nr: 23, opis: 'Nowa muzyka słowiańsko-pogańska: pieśni obrzędowe, fujarki, mroczny las i bębny wojenne w bitwie. Do tego wszystko z wersji 22.', adres: 'wersje/23/' },
   { nr: 22, opis: 'W zaznaczonej grupie można dotknąć rodzaju wojska (jednego albo kilku), żeby dowodzić tylko nimi. Do tego wszystko z wersji 21.', adres: 'wersje/22/' },
@@ -1129,6 +1130,11 @@ function maxHpBud(strona, typ, poziom = 1) {
   return Math.round((typ === 'wieza' ? WIEZA_POZIOMY[poziom].hp : BUDYNKI[typ].hp) * m);
 }
 const nazwaBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].nazwa : b.d.mur || b.d.brama ? MUR_POZIOMY[poziomMuru(b.strona, b.typ)][b.typ] : b.d.nazwa;
+// malowane ikony jednostek i budynków (Gemini, styl A z STYL.md) w folderze ikony/; brak pliku = zostaje emoji
+const IKONY = new Set(['osadnik', 'wojownik', 'tarczownik', 'obronca', 'wlocznik', 'pikinier', 'procarz', 'procarz2', 'kusznik', 'zwiadowca', 'jezdziec', 'rycerz',
+  'taran', 'katapulta', 'woz', 'rzemieslnik', 'krak', 'waligora', 'lech', 'rarog', 'leszy', 'wilkolak', 'planetnik', 'zmij', 'rusalka', 'kon', 'strzyga', 'bies',
+  'ratusz', 'dom', 'spichlerz', 'tartak', 'szopa', 'kopalnia', 'jarmark', 'pole', 'koszary', 'strzelnica', 'stajnia', 'kuznia', 'wieza', 'mur', 'brama', 'gontyna', 'warsztat']);
+const ik = (typ, zapas) => IKONY.has(typ) ? `<img class="ik" src="ikony/${typ}.jpg" alt="" draggable="false">` : zapas;
 const emojiBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].emoji : (b.d.mur || b.d.brama) && poziomMuru(b.strona, b.typ) > 1 ? '🧱' : b.d.emoji;
 function modelBud(typ, poziom, strona, zamk = false) {
   if ((typ === 'mur' || typ === 'brama') && strona != null && S) { const p = poziomMuru(strona, typ); return (p > 1 ? typ + p : typ) + (typ === 'brama' && zamk ? 'Z' : ''); }
@@ -3357,7 +3363,7 @@ function odswiezPanel(wymus = false) {
     h = `<div class="p-glowa"><span class="p-ik">${EMOJI_SUR[pierwszy.sur]}</span><div><b>${{ drzewo: 'Drzewo', krzak: 'Krzak z jagodami', kamien: 'Kamień', ruda: 'Ruda darniowa', zloto: 'Srebro' }[pierwszy.rodzaj]}</b><small data-ile>Zostało: ${Math.ceil(pierwszy.ile)}</small></div></div>`;
   } else if (jestBudynkiem(pierwszy)) {
     const b = pierwszy, moj = b.strona === STRONA_GRACZA;
-    h = `<div class="p-glowa"><span class="p-ik">${emojiBud(b)}</span><div><b>${nazwaBud(b)}${moj ? '' : ' (komputer)'}</b><small data-hp>❤️ ${Math.ceil(b.hp)} / ${b.max}</small><div class="p-hp"><i data-hpb style="width:${b.hp / b.max * 100}%"></i></div></div><button class="p-x" data-a="odznacz">✖</button></div>`;
+    h = `<div class="p-glowa"><span class="p-ik">${ik(b.typ, emojiBud(b))}</span><div><b>${nazwaBud(b)}${moj ? '' : ' (komputer)'}</b><small data-hp>❤️ ${Math.ceil(b.hp)} / ${b.max}</small><div class="p-hp"><i data-hpb style="width:${b.hp / b.max * 100}%"></i></div></div><button class="p-x" data-a="odznacz">✖</button></div>`;
     zburzHTML = moj && !(b.typ === 'ratusz' && BUD.filter(o => o.strona === 0 && o.typ === 'ratusz').length < 2)
       ? `<button class="akcja maly zburz" data-a="zburz"><span class="ak-ik">💥</span><b>Zburz</b><small>${!b.gotowy && b.postep < 0.02 ? 'wraca całość' : 'wraca połowa'}</small></button>` : '';
     if (moj && !b.gotowy) h += `<div class="p-opis">Plac budowy: zaznacz osadników i dotknij go, żeby budowali.</div>`;
@@ -3368,7 +3374,7 @@ function odswiezPanel(wymus = false) {
       const typy = typyBudynku(0, b.typ).filter(t => !brakJednostki(0, t));
       for (const t of typy) {
         const d = JEDNOSTKI[t], br = null;
-        a += `<button class="akcja${br ? ' zablok' : ''}" data-a="szkol:${t}" data-koszt='${JSON.stringify(d.koszt)}'><span class="ak-ik">${d.emoji}</span><b>${d.nazwa}</b><small>${br || d.opis}</small><span class="ak-koszt">${kosztHTML(d.koszt)}</span></button>`;
+        a += `<button class="akcja${br ? ' zablok' : ''}" data-a="szkol:${t}" data-koszt='${JSON.stringify(d.koszt)}'><span class="ak-ik">${ik(t, d.emoji)}</span><b>${d.nazwa}</b><small>${br || d.opis}</small><span class="ak-koszt">${kosztHTML(d.koszt)}</span></button>`;
       }
       { const aJ = a; a = aEra;
       if (b.typ === 'ratusz' && NOWA_ERA[S.era[0] + 1]) {
@@ -3407,7 +3413,7 @@ function odswiezPanel(wymus = false) {
         a += `<button class="akcja${br ? ' zablok' : ''}" data-a="ul:${id}" data-koszt='${JSON.stringify(d.koszt)}'><span class="ak-ik">${d.emoji}</span><b>${d.nazwa}</b><small>${br || d.opis}</small><span class="ak-koszt">${kosztHTML(d.koszt)}</span></button>`;
       }
       if (b.kolejka.length) {
-        h += `<div class="p-kolejka">` + b.kolejka.map((q, i) => `<button class="kol" data-a="anuluj:${i}" title="Anuluj"><span>${q.rodzaj === 'j' ? JEDNOSTKI[q.typ].emoji : q.rodzaj === 'u' ? ULEPSZENIA[q.typ].emoji : q.rodzaj === 'rozb' ? WIEZA_POZIOMY[(b.poziom || 1) + 1].emoji : BOGOWIE[q.typ] ? BOGOWIE[q.typ].emoji : EMOJI_ERY[S.era[0] + 1]}</span><i data-kol="${i}" style="width:${q.t / q.czas * 100}%"></i></button>`).join('') + `<small data-czeka></small></div>`;
+        h += `<div class="p-kolejka">` + b.kolejka.map((q, i) => `<button class="kol" data-a="anuluj:${i}" title="Anuluj"><span>${q.rodzaj === 'j' ? ik(q.typ, JEDNOSTKI[q.typ].emoji) : q.rodzaj === 'u' ? ULEPSZENIA[q.typ].emoji : q.rodzaj === 'rozb' ? WIEZA_POZIOMY[(b.poziom || 1) + 1].emoji : BOGOWIE[q.typ] ? BOGOWIE[q.typ].emoji : EMOJI_ERY[S.era[0] + 1]}</span><i data-kol="${i}" style="width:${q.t / q.czas * 100}%"></i></button>`).join('') + `<small data-czeka></small></div>`;
       }
     }
   } else {
@@ -3416,22 +3422,22 @@ function odswiezPanel(wymus = false) {
     // rodzaje w grupie: dotknięcie wybiera tylko ten rodzaj, kolejne dotknięcia dokładają albo zdejmują następne
     if (grupaZrodlo) grupaZrodlo = grupaZrodlo.filter(e => E.get(e.id) === e);
     const zrodlo = grupaZrodlo || (wrogi ? [] : moje), typyZr = {}; for (const u of zrodlo) typyZr[u.typ] = (typyZr[u.typ] || 0) + 1;
-    const chipy = Object.keys(typyZr).length > 1 ? `<div class="p-grupa">${Object.entries(typyZr).map(([t, n]) => `<button class="${grupaTypy.has(t) ? 'wybrana' : grupaTypy.size ? 'wyl' : ''}" data-a="grupa:${t}">${JEDNOSTKI[t].emoji}×${n}</button>`).join('')}</div>` : '';
+    const chipy = Object.keys(typyZr).length > 1 ? `<div class="p-grupa">${Object.entries(typyZr).map(([t, n]) => `<button class="${grupaTypy.has(t) ? 'wybrana' : grupaTypy.size ? 'wyl' : ''}" data-a="grupa:${t}">${ik(t, JEDNOSTKI[t].emoji)}×${n}</button>`).join('')}</div>` : '';
     if (chipy) {
       h = `<div class="p-glowa"><div>${chipy}<div class="p-opis">${grupaTypy.size ? 'Dotknij innej ikonki, żeby dołożyć albo zdjąć rodzaj. Wszystkie zdjęte = cała grupa.' : 'Dotknij ikonki, żeby wybrać tylko ten rodzaj (można kilka).'}</div></div><button class="p-x" data-a="odznacz">✖</button></div>`;
       if (sel.length === 1) { const u = pierwszy; h += `<div class="p-opis"><b>${u.d.emoji} ${u.d.nazwa}</b> · <span data-hp>❤️ ${Math.ceil(u.hp)} / ${u.max}</span></div>`; }
     } else if (sel.length === 1) {
       const u = pierwszy;
-      h = `<div class="p-glowa"><span class="p-ik">${u.d.emoji}</span><div><b>${u.d.nazwa}${wrogi ? ' (komputer)' : ''}</b><small data-hp>❤️ ${Math.ceil(u.hp)} / ${u.max} · ⚔️ ${atakJ(u)} · 🛡️ ${pancerzJ(u)}</small><div class="p-hp"><i data-hpb style="width:${u.hp / u.max * 100}%"></i></div></div><button class="p-x" data-a="odznacz">✖</button></div>`;
+      h = `<div class="p-glowa"><span class="p-ik">${ik(u.typ, u.d.emoji)}</span><div><b>${u.d.nazwa}${wrogi ? ' (komputer)' : ''}</b><small data-hp>❤️ ${Math.ceil(u.hp)} / ${u.max} · ⚔️ ${atakJ(u)} · 🛡️ ${pancerzJ(u)}</small><div class="p-hp"><i data-hpb style="width:${u.hp / u.max * 100}%"></i></div></div><button class="p-x" data-a="odznacz">✖</button></div>`;
     } else {
-      h = `<div class="p-glowa"><div class="p-grupa">${Object.entries(typy).map(([t, n]) => `<span>${JEDNOSTKI[t].emoji}×${n}</span>`).join('')}</div><button class="p-x" data-a="odznacz">✖</button></div>`;
+      h = `<div class="p-glowa"><div class="p-grupa">${Object.entries(typy).map(([t, n]) => `<span>${ik(t, JEDNOSTKI[t].emoji)}×${n}</span>`).join('')}</div><button class="p-x" data-a="odznacz">✖</button></div>`;
     }
     if (!wrogi) {
       if (moje.some(u => u.typ === 'osadnik')) {
         h += `<div class="p-opis">Dotknij krzaka, drzewa albo skały. Albo postaw:</div>`;
         for (const t of KOLEJNOSC_BUDYNKOW) {
           const d = BUDYNKI[t], br = brakBudynku(0, t);
-          a += `<button class="akcja${br ? ' zablok' : ''}" data-a="bud:${t}" data-koszt='${JSON.stringify(d.koszt)}'><span class="ak-ik">${d.emoji}</span><b>${d.nazwa}</b><small>${br || d.opis}</small><span class="ak-koszt">${kosztHTML(d.koszt)}</span></button>`;
+          a += `<button class="akcja${br ? ' zablok' : ''}" data-a="bud:${t}" data-koszt='${JSON.stringify(d.koszt)}'><span class="ak-ik">${ik(t, d.emoji)}</span><b>${d.nazwa}</b><small>${br || d.opis}</small><span class="ak-koszt">${kosztHTML(d.koszt)}</span></button>`;
         }
       } else if (moje.every(u => u.d.naprawia)) h += `<div class="p-opis">🔨 Sam szuka uszkodzonych budynków i je naprawia: połowa ceny budynku, dwa razy dłużej niż budowa. Dotknij budynku, żeby naprawił właśnie ten.</div>`;
       else h += `<div class="p-opis">Dotknij wroga, żeby atakować, albo ziemi, żeby iść. Tryb walki:</div>`;
