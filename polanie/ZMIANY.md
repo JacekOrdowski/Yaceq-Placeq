@@ -13,6 +13,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
 - Bieg bokserski przy Gontynie w równym rytmie: jeden krok to jedno uderzenie pięścią. Na początek 3 kroki na sekundę
   i 3 uderzenia na sekundę (lewa, prawa, lewa…), zmierzone w podglądzie. Rytm ustawia `KROKI_NA_SEKUNDE` w `postacie.js`.
 
+Zapis w repozytorium: `cf208cb`
+
 ## Wersja 14 (24.11.2026)
 
 **Zmienione**
