@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 12;
+const WERSJA = 13;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 12, opis: 'Portrety 12 bogów; wybór boga przy nowej erze w dużym oknie na środku ekranu (dwa portrety, moc, stwór i dar), portrety też przy wyborze boga na początek gry. Do tego wszystko z wersji 11.' },
+  { nr: 13, opis: 'Prawdziwy bieg bokserski przy Gontynie: trucht w miejscu i ciosy pięściami w powietrze na zmianę. Do tego wszystko z wersji 12.' },
+  { nr: 12, opis: 'Portrety 12 bogów; wybór boga przy nowej erze w dużym oknie na środku ekranu (dwa portrety, moc, stwór i dar), portrety też przy wyborze boga na początek gry. Do tego wszystko z wersji 11.', adres: 'wersje/12/' },
   { nr: 11, opis: 'Modlitwa w Gontynie to teraz bieg bokserski: osadnicy biegają tam i z powrotem przy Gontynie zamiast okładać powietrze pięściami. Do tego wszystko z wersji 10.', adres: 'wersje/11/' },
   { nr: 10, opis: 'Kolor strony na stroju (koszule chłopów, kaptury i kurtki łuczników) zamiast niebieskiej szarfy wyglądającej jak deska. Do tego wszystko z wersji 9.', adres: 'wersje/10/' },
   { nr: 9, opis: 'Realistyczne postacie także po oddaleniu kamery (do 120 naraz), bez powrotu do starych ludzików. Do tego wszystko z wersji 8.', adres: 'wersje/9/' },
@@ -1244,21 +1245,15 @@ function handel(u, dt) {
 function rozkazModl(u, b) { if (u.typ !== 'osadnik') return; u.zad = { typ: 'modl', bid: b.id }; u.sciezka = null; }
 function dodajLaske(strona, ile) { const z = S.zas[strona]; z.laska = Math.min(LASKA.maks, (z.laska || 0) + ile); }
 const tempoLaski = strona => LASKA.modlitwa * (bogMa(strona, 'weles') ? 1.25 : 1) * (bogMa(strona, 'lada') ? 1.2 : 1) * (S.ul[strona].kupala ? 1.2 : 1);
-const BIEG_MODL = 1.5; // jak szybko biegają tam i z powrotem przy Gontynie
 function modl(u, dt) {
   const b = E.get(u.zad.bid);
   if (!b || b.hp <= 0 || !b.gotowy) { u.zad = null; return; }
-  // osadnicy dochodzą do Gontyny i biegają przy niej jak bokserzy na treningu (bieg bokserski)
+  // osadnicy dochodzą do Gontyny i stają w kręgu wokół niej (bieg bokserski w miejscu)
   const a = (u.id * 2.39996) % (Math.PI * 2), r = b.w / 2 + 0.75, px = b.x + Math.sin(a) * r, pz = b.z + Math.cos(a) * r;
   if (Math.hypot(px - u.x, pz - u.z) < 0.9 || u.zad.stoi) {
     const z = u.zad; z.stoi = true; u.sciezka = null; u.pracuje = true;
-    // bieg tam i z powrotem obok Gontyny (wzdłuż jej boku), jak bokserzy na treningu; przeszkoda: wcześniej zawraca
-    if (z.kat == null) { z.kat = 0; z.cx = u.x; z.cz = u.z; z.tx = Math.cos(a); z.tz = -Math.sin(a); z.kier = 1; }
-    const DL = 1.3, krok = z.kier * BIEG_MODL / DL * dt;
-    const nk = Math.max(-1.5708, Math.min(1.5708, z.kat + krok)), nx = z.cx + z.tx * Math.sin(nk) * DL, nz = z.cz + z.tz * Math.sin(nk) * DL;
-    RUCH = u.strona;
-    if ((nk === z.kat || Math.abs(nk) >= 1.5708) || !wolneXZ(nx, nz)) z.kier = -z.kier;
-    else { const dx = nx - u.x, dz = nz - u.z; if (Math.hypot(dx, dz) > 0.0005) u.ry = Math.atan2(dx, dz); przesun(u, nx, nz); z.kat = nk; }
+    // bieg bokserski: stoją przy Gontynie twarzą do posągu, truchtają w miejscu i na zmianę biją pięściami powietrze
+    u.ry = Math.atan2(b.x - u.x, b.z - u.z);
     b.modlacy = (b.modlacy || 0) + 1;
     if (b.modlacy <= LASKA.modlacychNaGontyne) dodajLaske(u.strona, tempoLaski(u.strona) * dt);
     return;
@@ -2751,7 +2746,7 @@ function ruchLudzia(u, dt) {
     if (z.typ === 'zbieraj') { if (z.sur === 'drewno') { nazwa = 'TreeChopping_Loop'; narz = 'siekiera'; } else if (z.sur === 'jagody') nazwa = 'Farm_Harvest'; else { nazwa = 'TreeChopping_Loop'; narz = 'kilof'; } }
     else if (z.typ === 'farma') { nazwa = 'Farm_Harvest'; narz = 'sierp'; }
     else if (z.typ === 'buduj' || z.typ === 'naprawiaj') { nazwa = 'Fixing_Kneeling'; narz = 'mlotek'; }
-    else if (z.typ === 'modl') { nazwa = 'Jog_Fwd_Loop'; szyb = BIEG_MODL / 2.3; }
+    else if (z.typ === 'modl') nazwa = 'TRENING';
     else if (z.typ === 'atakuj') { nazwa = u.d.zasieg ? 'OverhandThrow' : L.opis.tarcza ? 'Sword_Regular_A' : 'Sword_Attack'; szyb = Math.min(2, Math.max(0.7, LUDZ.dlugosc(nazwa) / Math.max(0.6, u.d.odstep))); }
   } else if (u.idzie) {
     const v = predkosc(u);

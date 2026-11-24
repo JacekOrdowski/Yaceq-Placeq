@@ -184,18 +184,45 @@ export function stworz(typ, strona, w = 0) {
   cialo.traverse(m => { if (m.isMesh && m.material.map && /peasant|ranger/i.test(m.material.map.name || '')) m.material = materialStrony(m.material, strona); });
   const mixer = new THREE.AnimationMixer(cialo);
   const akcje = {};
-  let teraz = null;
+  let teraz = [], terazNazwa = null;
+  // graj('TRENING') = bieg bokserski: nogi truchtają w miejscu, a ręce na zmianę wyprowadzają ciosy (dwa ruchy naraz)
   function graj(nazwa, szybkosc = 1, raz = false) {
-    const klip = RUCHY[nazwa]; if (!klip) return;
-    let a = akcje[nazwa];
-    if (!a) { a = akcje[nazwa] = mixer.clipAction(klip); if (raz) { a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; } }
-    a.timeScale = szybkosc;
-    if (teraz === a) return;
-    a.reset().play();
-    if (teraz) a.crossFadeFrom(teraz, 0.22, false);
-    teraz = a;
+    if (terazNazwa === nazwa) { for (const a of teraz) a.timeScale = a.userData && a.userData.stala ? a.timeScale : szybkosc; return; }
+    const klipy = nazwa === 'TRENING' ? [czescRuchu('Jog_Fwd_Loop', false), ciosyNaZmiane()] : [RUCHY[nazwa]];
+    if (!klipy[0]) return;
+    const nowe = klipy.map((k, i) => {
+      let a = akcje[k.name];
+      if (!a) { a = akcje[k.name] = mixer.clipAction(k); if (raz) { a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; } }
+      a.timeScale = nazwa === 'TRENING' ? (i ? 1.15 : 0.75) : szybkosc;
+      a.userData = { stala: nazwa === 'TRENING' };
+      a.reset().fadeIn(0.22).play();
+      return a;
+    });
+    for (const a of teraz) if (!nowe.includes(a)) a.fadeOut(0.22);
+    teraz = nowe; terazNazwa = nazwa;
   }
   return { obj, mixer, graj, przedmioty, opis, typ, kosci };
+}
+// części ruchu: nogi (miednica, uda, łydki, stopy) albo góra ciała (kręgosłup, ręce, głowa)
+const NOGI = /^(root|pelvis|thigh|calf|foot|ball)/;
+const CZESCI = new Map();
+function czescRuchu(nazwa, gora) {
+  const k = nazwa + (gora ? '|gora' : '|dol');
+  if (!CZESCI.has(k)) { const c = RUCHY[nazwa]; CZESCI.set(k, new THREE.AnimationClip(k, c.duration, c.tracks.filter(t => NOGI.test(t.name) !== gora).map(t => t.clone()))); }
+  return CZESCI.get(k);
+}
+// prosty lewą, potem prosty prawą (góra ciała), sklejone w jeden powtarzany ruch
+function ciosyNaZmiane() {
+  if (CZESCI.has('ciosy')) return CZESCI.get('ciosy');
+  const a = czescRuchu('Punch_Jab', true), b = czescRuchu('Punch_Cross', true), d = a.duration, slady = [];
+  for (const t of a.tracks) {
+    const u = b.tracks.find(x => x.name === t.name);
+    if (!u) { slady.push(t.clone()); continue; }
+    const T = t.constructor;
+    slady.push(new T(t.name, [...t.times, ...Array.from(u.times, x => x + d + 0.001)], [...t.values, ...u.values]));
+  }
+  const c = new THREE.AnimationClip('ciosy', d + b.duration, slady);
+  CZESCI.set('ciosy', c); return c;
 }
 // ile trwa ruch (sekundy), np. żeby dopasować cios do odstępu między uderzeniami
 export const dlugosc = nazwa => RUCHY[nazwa] ? RUCHY[nazwa].duration : 1;
