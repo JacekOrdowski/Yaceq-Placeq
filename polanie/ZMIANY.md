@@ -16,6 +16,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
 - Wstążki na słupach przy Gontynie latały daleko od słupów (wyglądały jak deski w powietrzu). Teraz tylko lekko powiewają.
   To samo poprawione w skrzydłach Raroga i Żmija, ogonach koni, Wilkołaka i Biesa oraz chmurkach Płanetnika.
 
+Zapis w repozytorium: `bb4bd25`
+
 ## Wersja 2 (24.11.2026)
 
 **Dodane**
