@@ -8,10 +8,11 @@ import * as LUDZ from './postacie.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 7;
+const WERSJA = 8;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 7, opis: 'Ludzie idący naprzeciw siebie mijają się od razu (schodzą w prawo), płoty przy zagonach i budynkach bez dziwnych linii. Do tego wszystko z wersji 6.' },
+  { nr: 8, opis: 'Zagon prosa wygląda jak prawdziwe proso: gęste źdźbła z liśćmi i zwisającymi złotymi wiechami, które kołyszą się na wietrze. Do tego wszystko z wersji 7.' },
+  { nr: 7, opis: 'Ludzie idący naprzeciw siebie mijają się od razu (schodzą w prawo), płoty przy zagonach i budynkach bez dziwnych linii. Do tego wszystko z wersji 6.', adres: 'wersje/7/' },
   { nr: 6, opis: 'Realistyczne postacie z prawdziwym ruchem (osadnicy, piechota, łucznicy): rąbią, żną, budują na klęczkach, noszą, walczą, trenują boks przy Gontynie i padają; szarfa w kolorze strony, hełmy, tarcze. Do tego wszystko z wersji 5.', adres: 'wersje/6/' },
   { nr: 5, opis: 'Mniej napisów u góry: o nowej erze mówi tylko Gród (czego brakuje albo wybór boga), krótsze podpowiedzi. Do tego wszystko z wersji 4.', adres: 'wersje/5/' },
   { nr: 4, opis: 'Nowe, dokładniejsze postacie: prawdziwe proporcje, twarze z brwiami, nosem i ustami, brody, lniane koszule z haftem, onuce, hełmy z nosalem; przy Gontynie osadnicy trenują jak bokserzy (garda i ciosy). Do tego wszystko z wersji 3.', adres: 'wersje/4/' },

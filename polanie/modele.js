@@ -674,14 +674,24 @@ const BUD = {
     return c;
   },
   // plantacja haskapu: grządki, krzaki przy palikach, płotek z wikliny, strach na wróble
+  // Zagon prosa: zaorana ziemia w trzech zagonach, gęste źdźbła z liśćmi i zwisającymi złotymi wiechami (kołyszą się na wietrze)
   pole(k, d) {
     const c = [cz(box(2.9, 0.06, 2.9), ZIEMIA, 0, 0.03, 0)];
+    const los = n => { const x = Math.sin(n * 12.9898) * 43758.5453; return x - Math.floor(x); };
+    const LODYGA = ['#8fa64a', '#9db454', '#a8b85c'], LISC = ['#6f9a3c', '#7fa646'], WIECHA = ['#d9a441', '#e2b65a', '#c98f34', '#e8c06a'];
+    let n = 0;
     for (let i = -1; i <= 1; i++) {
-      c.push(cz(box(0.5, 0.06, 2.6), '#7a4d27', i * 0.9, 0.08, 0));
-      for (let j = -1; j <= 1; j++) {
-        const x = i * 0.9, z = j * 0.85;
-        c.push(cz(kula(0.26, 7), TRAWA, x, 0.3, z, 0, 0, 0, 1, 0.8, 1), cz(kula(0.18, 6), '#4ea055', x + 0.1, 0.42, z + 0.05), cz(cyl(0.015, 0.015, 0.6, 4), BAL2, x - 0.18, 0.3, z));
-        for (const [dx, dy, dz] of [[0.14, 0.42, 0.16], [-0.12, 0.36, 0.18], [0.02, 0.52, -0.12], [0.2, 0.3, -0.08]]) c.push(cz(kula(0.05, 5), '#3a4bb0', x + dx, dy, z + dz, 0, 0, 0, 0.8, 1.3, 0.8));
+      c.push(cz(box(0.62, 0.07, 2.7), '#7a4d27', i * 0.9, 0.08, 0));
+      for (let j = 0; j < 7; j++) for (let s2 = 0; s2 < 3; s2++) {
+        n++;
+        const x = i * 0.9 + (s2 - 1) * 0.17 + (los(n) - 0.5) * 0.08, z = -1.15 + j * 0.38 + (los(n + 7) - 0.5) * 0.12;
+        const h = 0.48 + los(n + 3) * 0.26, pochyl = (los(n + 5) - 0.5) * 0.25, w = 0.022 + los(n + 9) * 0.008;
+        // źdźbło, dwa liście, zwisająca wiecha (od wierzchołka w dół, na bok)
+        c.push(st(cz(box(0.025, h, 0.025), LODYGA[n % 3], x, 0.11 + h / 2, z, pochyl, 0, 0), 2, 0, w),
+          st(cz(box(0.012, 0.24, 0.06), LISC[n % 2], x + 0.03, 0.22 + h * 0.3, z, 0, 0, -0.7), 2, 0, w),
+          st(cz(box(0.012, 0.22, 0.06), LISC[(n + 1) % 2], x - 0.03, 0.18 + h * 0.5, z, 0, 0, 0.75), 2, 0, w),
+          st(cz(stozek(0.05, 0.26, 5), WIECHA[n % 4], x + 0.04 + pochyl * 0.1, 0.06 + h + 0.02, z + pochyl * h * 0.5, Math.PI - 0.5 + pochyl, n, 0), 2, 0, w * 1.3),
+          st(cz(kula(0.04, 5), WIECHA[(n + 2) % 4], x + 0.01 + pochyl * 0.1, 0.11 + h, z + pochyl * h * 0.5, 0, 0, 0, 1, 1.3, 1), 2, 0, w * 1.2));
       }
     }
     c.push(...plot(-1.4, -1.4, 1.4, -1.4, 0.32), ...plot(-1.4, -1.4, -1.4, 1.4, 0.32));

@@ -7,6 +7,12 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 8 (24.11.2026)
+
+**Zmienione**
+- Zagon prosa nie wygląda już jak krzaki z jagodami (zostały z Age of Haskap): trzy zaorane zagony, na każdym gęste źdźbła prosa
+  z liśćmi i zwisającymi złotymi wiechami, lekko kołyszące się na wietrze. Płotek i strach na wróble zostały.
+
 ## Wersja 7 (24.11.2026)
 
 **Naprawione**
