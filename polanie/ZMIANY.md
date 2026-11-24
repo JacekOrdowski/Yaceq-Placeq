@@ -21,6 +21,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
   kiełek „Nowa gra”, pionki i kości „Inne gry”, drzwi chaty „Menu”). Te same ikonki są w menu głównym.
 - Przycisk „Zburz”: malowana ikona rozwalonej chaty z młotem i czytelny ciemnoczerwony napis (był prawie niewidoczny).
 
+Zapis w repozytorium: `c59f3f3`
+
 ## Wersja 29 (24.11.2026)
 
 **Dodane**
