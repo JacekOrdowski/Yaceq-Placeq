@@ -57,56 +57,90 @@ const CIEMNIEJ = ['#214f9c', '#9c2620', '#a8740f', '#62309c'];
 
 function cache(f) { const m = new Map(); return (...a) => { const k = a.join('|'); if (!m.has(k)) m.set(k, f(...a)); return m.get(k); }; }
 
-// ---------- postacie (zaokrąglone, z twarzą) ----------
-const kaps = (r, h, s = 8) => new THREE.CapsuleGeometry(r, h, 3, s);
+// ---------- postacie: prawdziwe proporcje (głowa to około 1/7 wzrostu), twarz z brwiami, nosem i ustami,
+// lniana koszula z haftem, pas, portki, onuce i skórzane buty; fryzura „pod garnek”, u niektórych broda ----------
+const kaps = (r, h, s = 8) => new THREE.CapsuleGeometry(r, h, 2, s);
 const kulaG = (r, ws = 12, hs = 8) => new THREE.SphereGeometry(r, ws, hs);
 const czapa = (r, th) => new THREE.SphereGeometry(r, 12, 6, 0, Math.PI * 2, 0, th);
-const WLOSY = ['#5b3a22', '#8a5a2b', '#2e2018', '#c98e4a'], OCZY = '#1d2330', POLICZKI = '#f29a8c', SPODNIE = '#6b4a30';
-// głowa z oczami, noskiem, rumieńcami i włosami (patrzy w stronę +z)
-function glowaZ(x, y, z, wlosy = WLOSY[0], r = 0.165) {
-  return [
-    cz(kulaG(r), SKORA, x, y, z),
-    cz(czapa(r + 0.008, 1.25), wlosy, x, y + 0.004, z - 0.014),
-    cz(kulaG(r * 0.15, 6, 4), OCZY, x - r * 0.35, y + r * 0.08, z + r * 0.9),
-    cz(kulaG(r * 0.15, 6, 4), OCZY, x + r * 0.35, y + r * 0.08, z + r * 0.9),
-    cz(kulaG(r * 0.17, 6, 4), '#e8a77a', x, y - r * 0.18, z + r * 1.0),
-    cz(kulaG(r * 0.18, 6, 4), POLICZKI, x - r * 0.58, y - r * 0.25, z + r * 0.76, 0, 0, 0, 1, 0.6, 0.5),
-    cz(kulaG(r * 0.18, 6, 4), POLICZKI, x + r * 0.58, y - r * 0.25, z + r * 0.76, 0, 0, 0, 1, 0.6, 0.5),
-  ];
-}
-function nakrycie(rodzaj, k, ciemny, y = 0.9, z = 0) {
-  if (rodzaj === 'kapelusz') return [cz(cyl(0.27, 0.27, 0.02, 16), SLOMA, 0, y + 0.1, z), cz(czapa(0.15, Math.PI / 2), SLOMA, 0, y + 0.1, z), cz(cyl(0.153, 0.153, 0.035, 14), k, 0, y + 0.125, z)];
-  if (rodzaj === 'helm') return [cz(czapa(0.182, 1.5), METAL, 0, y + 0.005, z), cz(box(0.025, 0.06, 0.24), ciemny, 0, y + 0.17, z), cz(box(0.025, 0.09, 0.02), METAL, 0, y - 0.01, z + 0.175)];
-  if (rodzaj === 'kaptur') return [cz(new THREE.SphereGeometry(0.2, 12, 8, 0, Math.PI * 2, 0, 1.95), ciemny, 0, y + 0.01, z - 0.03, -0.35, 0, 0)];
-  return [];
-}
-// ludzik: buty, nogi, tunika z paskiem, ręce, głowa z twarzą; prawa ręka może być osobno (zbieracz)
-function czlowiek(k, ciemny, glowa = 'kapelusz', prawa = true, wlosy = WLOSY[0]) {
+const WLOSY = ['#5b3a22', '#8a5a2b', '#2e2018', '#c98e4a', '#d9c08a', '#9a9a9a'], OCZY = '#1d2330', POLICZKI = '#f29a8c', SPODNIE = '#6b4a30';
+const BUTY = '#4a3020', ONUCE = '#d8ccb0', RZEMYK = '#6b4527', HAFT = '#efe3c4', USTA = '#a8584a', BIALKO = '#f6f3ee';
+// głowa (patrzy w stronę +z): lekko podłużna, szczęka, uszy, oczy z białkami, brwi, nos, usta, włosy; broda: pełna broda z wąsami
+function glowaZ(x, y, z, wlosy = WLOSY[0], r = 0.11, broda = false) {
   const c = [
-    st(cz(kulaG(0.062, 8, 6), CIEMNE, -0.085, 0.045, 0.03, 0, 0, 0, 1, 0.7, 1.5), 1, 0.32, -1), st(cz(kulaG(0.062, 8, 6), CIEMNE, 0.085, 0.045, 0.03, 0, 0, 0, 1, 0.7, 1.5), 1, 0.32, 1),
-    st(cz(kaps(0.058, 0.2), SPODNIE, -0.085, 0.2, 0), 1, 0.32, -1), st(cz(kaps(0.058, 0.2), SPODNIE, 0.085, 0.2, 0), 1, 0.32, 1),
-    cz(cyl(0.16, 0.22, 0.2, 14), k, 0, 0.4, 0),
-    cz(kaps(0.165, 0.2, 12), k, 0, 0.58, 0, 0, 0, 0, 1, 1, 0.85),
-    cz(cyl(0.172, 0.172, 0.045, 14), BRAZ, 0, 0.47, 0, 0, 0, 0, 1, 1, 0.86),
-    st(cz(kaps(0.05, 0.22), k, -0.215, 0.56, 0, 0, 0, -0.18), 1, 0.68, 0.7), st(cz(kulaG(0.05, 8, 6), SKORA, -0.245, 0.4, 0.01), 1, 0.68, 0.7),
-    ...glowaZ(0, 0.9, 0, wlosy),
-    ...nakrycie(glowa, k, ciemny),
+    cz(kulaG(r, 12, 9), SKORA, x, y, z, 0, 0, 0, 0.94, 1.08, 1),
+    cz(kulaG(r * 0.78, 10, 6), SKORA, x, y - r * 0.38, z + r * 0.16, 0, 0, 0, 1, 0.78, 0.92),
+    cz(czapa(r * 1.07, 1.35), wlosy, x, y + r * 0.06, z - r * 0.1, -0.12, 0, 0),
+    cz(box(r * 1.55, r * 0.28, r * 0.32), wlosy, x, y + r * 0.6, z + r * 0.66, -0.35, 0, 0),
+    cz(kulaG(r * 0.2, 5, 4), SKORA, x - r * 0.93, y - r * 0.05, z), cz(kulaG(r * 0.2, 5, 4), SKORA, x + r * 0.93, y - r * 0.05, z),
+    cz(kulaG(r * 0.17, 6, 4), BIALKO, x - r * 0.36, y + r * 0.14, z + r * 0.83), cz(kulaG(r * 0.17, 6, 4), BIALKO, x + r * 0.36, y + r * 0.14, z + r * 0.83),
+    cz(kulaG(r * 0.1, 5, 4), OCZY, x - r * 0.36, y + r * 0.14, z + r * 0.97), cz(kulaG(r * 0.1, 5, 4), OCZY, x + r * 0.36, y + r * 0.14, z + r * 0.97),
+    cz(box(r * 0.44, r * 0.09, r * 0.1), wlosy, x - r * 0.37, y + r * 0.38, z + r * 0.88, 0, 0, 0.12), cz(box(r * 0.44, r * 0.09, r * 0.1), wlosy, x + r * 0.37, y + r * 0.38, z + r * 0.88, 0, 0, -0.12),
+    cz(kulaG(r * 0.19, 6, 5), '#e8a77a', x, y - r * 0.08, z + r * 1.0, 0.3, 0, 0, 0.85, 1.25, 1),
+    cz(kulaG(r * 0.16, 6, 4), POLICZKI, x - r * 0.55, y - r * 0.22, z + r * 0.74, 0, 0, 0, 1, 0.6, 0.5), cz(kulaG(r * 0.16, 6, 4), POLICZKI, x + r * 0.55, y - r * 0.22, z + r * 0.74, 0, 0, 0, 1, 0.6, 0.5),
   ];
-  if (prawa) c.push(st(cz(kaps(0.05, 0.2), k, 0.225, 0.58, 0.05, -0.55, 0, 0.12), 1, 0.68, -0.4), st(cz(kulaG(0.05, 8, 6), SKORA, 0.25, 0.47, 0.14), 1, 0.68, -0.4));
+  if (broda) c.push(cz(kulaG(r * 0.72, 10, 6), wlosy, x, y - r * 0.62, z + r * 0.38, 0.25, 0, 0, 1.02, 0.95, 0.78),
+    cz(box(r * 0.7, r * 0.14, r * 0.16), wlosy, x, y - r * 0.32, z + r * 0.9, 0, 0, 0));
+  else c.push(cz(box(r * 0.42, r * 0.07, r * 0.06), USTA, x, y - r * 0.42, z + r * 0.9));
   return c;
 }
-// zbieracz bez prawej ręki: ręka z narzędziem to osobna część, która się rusza (ramie3D)
-export const osadnik = cache(strona => polacz(czlowiek(KOLORY_STRON[strona], CIEMNIEJ[strona], 'kapelusz', false, WLOSY[strona ? 2 : 1])));
+// nakrycia głowy: słomkowy kapelusz, stożkowy hełm z nosalem i kolczym czepcem, kaptur z peleryną
+function nakrycie(rodzaj, k, ciemny, y = 0.98, z = 0) {
+  if (rodzaj === 'kapelusz') return [cz(cyl(0.175, 0.185, 0.016, 14), SLOMA, 0, y + 0.1, z - 0.03, -0.22, 0, 0), cz(cyl(0.1, 0.112, 0.06, 16), SLOMA, 0, y + 0.135, z - 0.04, -0.22, 0, 0), cz(czapa(0.1, Math.PI / 2), SLOMA, 0, y + 0.16, z - 0.045, -0.22, 0, 0), cz(cyl(0.114, 0.114, 0.022, 16), k, 0, y + 0.12, z - 0.035, -0.22, 0, 0)];
+  if (rodzaj === 'helm') return [cz(stozek(0.122, 0.2, 14), METAL, 0, y + 0.15, z - 0.005), cz(cyl(0.124, 0.124, 0.03, 14), '#8f949c', 0, y + 0.055, z - 0.005),
+    cz(box(0.022, 0.1, 0.02), '#8f949c', 0, y + 0.0, z + 0.118), cz(kula(0.022, 6), METAL, 0, y + 0.255, z),
+    cz(new THREE.CylinderGeometry(0.12, 0.14, 0.12, 14, 1, true, 0.9, Math.PI * 2 - 1.8), '#8f949c', 0, y - 0.03, z - 0.005), cz(box(0.024, 0.05, 0.2), ciemny, 0, y + 0.14, z, 0, 0, 0)];
+  if (rodzaj === 'kaptur') return [cz(new THREE.SphereGeometry(0.135, 16, 10, 0, Math.PI * 2, 0, 1.95), ciemny, 0, y + 0.015, z - 0.025, -0.35, 0, 0), cz(stozek(0.2, 0.16, 16), ciemny, 0, y - 0.13, z - 0.01)];
+  return [];
+}
+// człowiek (wzrost około 1,1): buty, onuce z rzemykami, portki, lniana koszula do kolan w kolorze strony z haftowanym brzegiem,
+// pas ze sprzączką, ramiona z łokciami i dłońmi, szyja, głowa; prawa ręka może być osobno (osadnik), bezRak: bez obu rąk (trening)
+function czlowiek(k, ciemny, glowa = 'kapelusz', prawa = true, wlosy = WLOSY[0], broda = false, bezRak = false) {
+  const N0 = 0.52, c = [];
+  for (const sx of [-1, 1]) {
+    const x = sx * 0.075, zn = -sx;
+    c.push(st(cz(kulaG(0.052, 8, 5), BUTY, x, 0.035, 0.03, 0, 0, 0, 1, 0.68, 1.75), 1, N0, zn),
+      st(cz(kaps(0.045, 0.18, 8), ONUCE, x, 0.17, 0), 1, N0, zn),
+      st(cz(cyl(0.048, 0.048, 0.014, 8), RZEMYK, x, 0.12, 0, 0.25, 0, 0), 1, N0, zn), st(cz(cyl(0.048, 0.048, 0.014, 8), RZEMYK, x, 0.21, 0, -0.25, 0, 0), 1, N0, zn),
+      st(cz(kaps(0.058, 0.17, 8), SPODNIE, x, 0.36, 0), 1, N0, zn));
+  }
+  c.push(cz(cyl(0.145, 0.19, 0.24, 14), k, 0, 0.42, 0, 0, 0, 0, 1, 1, 0.88),
+    cz(cyl(0.192, 0.192, 0.03, 14), HAFT, 0, 0.31, 0, 0, 0, 0, 1, 1, 0.88), cz(cyl(0.194, 0.194, 0.01, 14), ciemny, 0, 0.33, 0, 0, 0, 0, 1, 1, 0.88),
+    cz(kaps(0.145, 0.17, 12), k, 0, 0.66, 0, 0, 0, 0, 1.14, 1, 0.78),
+    cz(cyl(0.155, 0.158, 0.045, 14), RZEMYK, 0, 0.535, 0, 0, 0, 0, 1.06, 1, 0.82), cz(box(0.05, 0.04, 0.02), METAL, 0, 0.535, 0.13),
+    cz(cyl(0.07, 0.085, 0.03, 14), HAFT, 0, 0.83, 0), cz(box(0.03, 0.1, 0.012), HAFT, 0, 0.77, 0.115),
+    cz(cyl(0.048, 0.054, 0.08, 10), SKORA, 0, 0.86, 0),
+    ...glowaZ(0, 0.98, 0, wlosy, 0.11, broda), ...nakrycie(glowa, k, ciemny));
+  // ramiona: bark, ramię, łokieć, przedramię z haftowanym mankietem, dłoń (lewa zawsze, prawa gdy prawa = true)
+  const reka = (sx, zn) => [
+    st(cz(kulaG(0.06, 8, 6), k, sx * 0.17, 0.77, 0), 1, 0.77, zn),
+    st(cz(kaps(0.045, 0.15, 8), k, sx * 0.205, 0.66, 0, 0, 0, sx * 0.1), 1, 0.77, zn),
+    st(cz(kaps(0.04, 0.13, 8), k, sx * 0.22, 0.5, 0.025, -0.12, 0, sx * 0.04), 1, 0.77, zn),
+    st(cz(cyl(0.044, 0.044, 0.025, 8), HAFT, sx * 0.222, 0.43, 0.03), 1, 0.77, zn),
+    st(cz(kulaG(0.042, 6, 5), SKORA, sx * 0.224, 0.39, 0.035, 0, 0, 0, 0.9, 1.15, 1), 1, 0.77, zn)];
+  if (!bezRak) c.push(...reka(-1, 0.7));
+  if (prawa && !bezRak) c.push(...reka(1, -0.4));
+  return c;
+}
+// osadnik bez prawej ręki: ręka z narzędziem to osobna część, która się rusza (ramie3D); w: wariant (włosy, broda)
+const WARIANTY = [[1, true], [4, false], [0, true], [3, false], [2, true], [5, true]];
+export const osadnik = cache((strona, w = 0, trening = 0) => { const [wl, br] = WARIANTY[(w + strona * 2) % WARIANTY.length]; return polacz(czlowiek(KOLORY_STRON[strona], CIEMNIEJ[strona], 'kapelusz', false, WLOSY[wl], br, !!trening)); });
 // prawa ręka z narzędziem; punkt obrotu (0, 0, 0) to bark, ręka zwisa w dół, narzędzie wskazuje do przodu
 // narzędzia: 'reka' (sama ręka), 'zrywa' (jagoda w dłoni), 'mlotek', 'siekiera', 'kilof'
 export const ramie3D = cache((narz, strona) => {
-  const k = KOLORY_STRON[strona], dl = -0.34;
-  const c = [cz(kaps(0.05, 0.22), k, 0, -0.16, 0), cz(kulaG(0.052, 8, 6), SKORA, 0, dl, 0)];
+  const k = KOLORY_STRON[strona], dl = -0.36;
+  const c = [cz(kulaG(0.06, 8, 6), k, -0.03, 0, 0), cz(kaps(0.045, 0.15, 8), k, 0, -0.11, 0), cz(kaps(0.04, 0.13, 8), k, 0, -0.27, 0.01), cz(cyl(0.044, 0.044, 0.025, 8), HAFT, 0, -0.335, 0.012),
+    cz(kulaG(0.044, 6, 5), SKORA, 0, dl, 0.012, 0, 0, 0, 0.9, 1.15, 1)];
   if (narz === 'zrywa') c.push(cz(kula(0.06, 6), '#3a4bb0', 0, dl - 0.02, 0.05));
   if (narz === 'mlotek') c.push(cz(cyl(0.022, 0.022, 0.34, 6), BRAZ, 0, dl, 0.15, Math.PI / 2, 0, 0), cz(box(0.07, 0.15, 0.08), '#555b63', 0, dl, 0.31));
   if (narz === 'siekiera') c.push(cz(cyl(0.022, 0.022, 0.55, 6), BRAZ, 0, dl, 0.22, Math.PI / 2, 0, 0), cz(box(0.03, 0.17, 0.12), METAL, 0, dl + 0.07, 0.44));
   if (narz === 'kilof') c.push(cz(cyl(0.022, 0.022, 0.55, 6), BRAZ, 0, dl, 0.22, Math.PI / 2, 0, 0), cz(box(0.04, 0.42, 0.05), '#555b63', 0, dl, 0.47), cz(stozek(0.03, 0.08, 4), METAL, 0, dl + 0.25, 0.47), cz(stozek(0.03, 0.08, 4), METAL, 0, dl - 0.25, 0.47, Math.PI, 0, 0));
   return polacz(c);
+});
+// ręka w gardzie do treningu (bark w (0, 0, 0)): ramię w dół i do przodu, przedramię w górę, pięść owinięta rzemieniem przy brodzie
+export const piesc3D = cache(strona => {
+  const k = KOLORY_STRON[strona];
+  return polacz([cz(kulaG(0.06, 8, 6), k, 0, 0, 0), cz(kaps(0.045, 0.13, 8), k, 0, -0.08, 0.06, 0.7, 0, 0), cz(kaps(0.04, 0.12, 8), k, 0, -0.06, 0.2, -0.6, 0, 0),
+    cz(kulaG(0.058, 10, 8), '#8a5a32', 0, 0.03, 0.26, 0, 0, 0, 1, 1, 1.1), cz(cyl(0.05, 0.05, 0.03, 10), HAFT, 0, -0.02, 0.23, -0.6, 0, 0)]);
 });
 // koszyk przy lewym boku zbieracza (gdy zrywa jagody)
 export const koszBok = cache(() => polacz([cz(cyl(0.13, 0.1, 0.16, 8), SLOMA, 0, 0, 0), cz(kula(0.1, 6), '#3a4bb0', 0, 0.07, 0, 0, 0, 0, 1, 0.45, 1), cz(box(0.02, 0.18, 0.2), SLOMA, 0, 0.12, 0)]));
@@ -129,7 +163,7 @@ export const tarczownik = cache(strona => {
 });
 export const obronca = cache(strona => {
   const k = KOLORY_STRON[strona], d = CIEMNIEJ[strona];
-  return polacz([...czlowiek(METAL, d, 'helm'), cz(box(0.5, 0.18, 0.3), k, 0, 0.55, 0), cz(stozek(0.06, 0.25, 6), k, 0, 1.25, 0),
+  return polacz([...czlowiek(METAL, d, 'helm', true, WLOSY[0], true), cz(kaps(0.15, 0.17, 16), k, 0, 0.645, 0.003, 0, 0, 0, 1.19, 1.03, 0.82), cz(cyl(0.165, 0.17, 0.05, 16), HAFT, 0, 0.5, 0, 0, 0, 0, 1.12, 1, 0.84), cz(stozek(0.05, 0.18, 6), k, 0, 1.3, 0),
     cz(box(0.05, 0.75, 0.09), METAL, 0.3, 0.95, 0.14, 0.5, 0, 0), cz(box(0.2, 0.05, 0.08), BRAZ, 0.3, 0.62, 0.0, 0.5, 0, 0),
     cz(box(0.07, 0.62, 0.48), d, -0.29, 0.6, 0.06), cz(kula(0.1, 6), '#3a4bb0', -0.34, 0.65, 0.06)]);
 });
@@ -172,10 +206,11 @@ function jazda(strona, zwierze, zbroja) {
   // jeździec siedzi w siodle
   const b = 1.08 * s;
   c.push(cz(kaps(0.055, 0.22), SPODNIE, -0.2, b - 0.08, 0.05, 0.5, 0, -0.35), cz(kaps(0.055, 0.22), SPODNIE, 0.2, b - 0.08, 0.05, 0.5, 0, 0.35),
-    cz(kaps(0.15, 0.16, 12), zbroja ? METAL : k, 0, b + 0.24, -0.04, 0, 0, 0, 1, 1, 0.85),
+    cz(kaps(0.14, 0.16, 14), zbroja ? METAL : k, 0, b + 0.24, -0.04, 0, 0, 0, 1.12, 1, 0.8), cz(cyl(0.15, 0.15, 0.04, 14), RZEMYK, 0, b + 0.12, -0.04, 0, 0, 0, 1.08, 1, 0.84),
+    cz(cyl(0.046, 0.052, 0.08, 10), SKORA, 0, b + 0.44, -0.03),
     cz(kaps(0.048, 0.2), zbroja ? METAL : k, -0.2, b + 0.22, 0.1, -0.9, 0, -0.2), cz(kulaG(0.048, 8, 6), SKORA, -0.22, b + 0.14, 0.24),
-    ...glowaZ(0, b + 0.56, -0.02, WLOSY[strona ? 2 : 3], 0.15));
-  if (zbroja) c.push(cz(stozek(0.17, 0.3, 10), METAL, 0, b + 0.68, -0.02), cz(box(0.025, 0.12, 0.02), METAL, 0, b + 0.55, 0.13), cz(box(0.04, 0.38, 0.28), d, -0.25, b + 0.25, -0.05),
+    ...glowaZ(0, b + 0.56, -0.02, WLOSY[strona ? 2 : 3], 0.11, zbroja));
+  if (zbroja) c.push(...nakrycie('helm', k, d, b + 0.56, -0.02), cz(box(0.04, 0.38, 0.28), d, -0.25, b + 0.25, -0.05),
     cz(cyl(0.025, 0.025, 1.5), BRAZ, 0.24, b + 0.3, 0.25, Math.PI / 2 - 0.15, 0, 0), cz(stozek(0.045, 0.16, 6), METAL, 0.24, b + 0.41, 1.0, Math.PI / 2 - 0.15, 0, 0),
     cz(kaps(0.048, 0.2), METAL, 0.2, b + 0.22, 0.08, -0.9, 0, 0.2));
   else c.push(...nakrycie('kaptur', k, d, b + 0.56, -0.02), cz(kaps(0.048, 0.2), k, 0.2, b + 0.22, 0.08, -0.9, 0, 0.2), cz(cyl(0.02, 0.02, 0.7), BRAZ, 0.22, b + 0.3, 0.2, 1.0, 0, 0));
@@ -220,8 +255,8 @@ export const woz = cache(strona => {
 // rzemieślnik: kaptur, skórzany fartuch, pas z narzędziami; prawa ręka z młotkiem to osobna część (jak u zbieracza)
 export const rzemieslnik = cache(strona => {
   const k = KOLORY_STRON[strona], d = CIEMNIEJ[strona], SKORA_F = '#7a5030';
-  return polacz([...czlowiek(k, d, 'kaptur', false, WLOSY[3]),
-    cz(box(0.26, 0.36, 0.03), SKORA_F, 0, 0.42, 0.2), cz(box(0.2, 0.12, 0.03), SKORA_F, 0, 0.66, 0.17),
+  return polacz([...czlowiek(k, d, 'kaptur', false, WLOSY[3], true),
+    cz(box(0.26, 0.36, 0.03), SKORA_F, 0, 0.42, 0.18), cz(box(0.2, 0.12, 0.03), SKORA_F, 0, 0.66, 0.125),
     cz(box(0.07, 0.09, 0.05), '#5e3d22', -0.17, 0.42, 0.13), cz(cyl(0.015, 0.015, 0.16, 5), '#555b63', -0.17, 0.5, 0.13),
     cz(box(0.09, 0.08, 0.05), '#5e3d22', 0.15, 0.42, 0.15), cz(box(0.05, 0.13, 0.03), METAL, 0.15, 0.5, 0.15)]);
 });
@@ -281,7 +316,7 @@ export const wilkolak = cache(strona => {
 export const planetnik = cache(strona => {
   const k = KOLORY_STRON[strona], PLASZCZ = '#5f6b7a', CHMURA = '#e4eaf2';
   const c = [cz(stozek(0.32, 0.95, 12), PLASZCZ, 0, 0.47, 0), cz(kaps(0.16, 0.2, 10), PLASZCZ, 0, 0.95, 0), cz(cyl(0.2, 0.22, 0.06, 12), k, 0, 0.72, 0),
-    ...glowaZ(0, 1.22, 0, '#d8dde3', 0.15), ...nakrycie('kaptur', PLASZCZ, '#4a5563', 1.22, 0), cz(stozek(0.1, 0.3, 6), '#eef2f6', 0, 1.0, 0.13, Math.PI, 0, 0),
+    ...glowaZ(0, 1.2, 0, '#d8dde3', 0.12, true), ...nakrycie('kaptur', PLASZCZ, '#4a5563', 1.2, 0), cz(stozek(0.09, 0.3, 8), '#eef2f6', 0, 1.0, 0.1, Math.PI, 0, 0),
     cz(cyl(0.025, 0.025, 1.5, 6), BRAZ, 0.3, 0.8, 0.12), cz(kulaG(0.08, 8, 6), '#bfe6ff', 0.3, 1.58, 0.12)];
   for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; c.push(st(cz(kulaG(0.17 + (i % 2) * 0.05, 8, 6), CHMURA, Math.cos(a) * 0.42, 1.55 + (i % 3) * 0.08, Math.sin(a) * 0.42), 2, 0, 0.04)); }
   return polacz(c);
@@ -303,9 +338,9 @@ export const zmij = cache(strona => {
 export const rusalka = cache(strona => {
   const k = KOLORY_STRON[strona], SUKNIA = '#9fd8c8', WLOSY_R = '#3f7f5f';
   const c = [cz(stozek(0.3, 0.8, 12), SUKNIA, 0, 0.4, 0), cz(kaps(0.14, 0.18, 10), SUKNIA, 0, 0.78, 0), cz(cyl(0.15, 0.15, 0.04, 12), k, 0, 0.7, 0),
-    ...glowaZ(0, 1.06, 0, WLOSY_R, 0.15), cz(kaps(0.13, 0.45, 8), WLOSY_R, 0, 0.82, -0.1),
-    cz(new THREE.TorusGeometry(0.15, 0.03, 5, 12), '#4a8f3a', 0, 1.18, 0, Math.PI / 2, 0, 0)];
-  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; c.push(cz(kulaG(0.035, 5, 4), ['#ffffff', '#ffd84a', '#ff9ccc'][i % 3], Math.cos(a) * 0.15, 1.2, Math.sin(a) * 0.15)); }
+    cz(cyl(0.045, 0.05, 0.08, 10), SKORA, 0, 1.0, 0), ...glowaZ(0, 1.12, 0, WLOSY_R, 0.115), cz(kaps(0.1, 0.42, 8), WLOSY_R, 0, 0.88, -0.09),
+    cz(new THREE.TorusGeometry(0.115, 0.025, 6, 14), '#4a8f3a', 0, 1.21, 0, Math.PI / 2, 0, 0)];
+  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; c.push(cz(kulaG(0.03, 6, 4), ['#ffffff', '#ffd84a', '#ff9ccc'][i % 3], Math.cos(a) * 0.115, 1.23, Math.sin(a) * 0.115)); }
   for (const sx of [-1, 1]) c.push(st(cz(kaps(0.045, 0.24, 6), '#cfeee4', sx * 0.2, 0.82, 0.05, -0.4, 0, sx * -0.2), 1, 0.95, sx * 0.6), cz(kulaG(0.05, 6, 4), '#7fd0ff', sx * 0.24, 0.68, 0.18));
   return polacz(c);
 });
@@ -346,24 +381,23 @@ const ZLOTO = '#f2c94c', CZERWIEN = '#c8281e';
 // Krak: książę w złotej koronie, czerwony płaszcz, miecz
 export const krak = cache(strona => {
   const k = KOLORY_STRON[strona], d = CIEMNIEJ[strona];
-  const c = [...czlowiek(k, d, '', true, '#8a5a2b'), cz(box(0.42, 0.62, 0.05), CZERWIEN, 0, 0.62, -0.2, 0.08, 0, 0),
-    cz(cyl(0.16, 0.15, 0.09, 12), ZLOTO, 0, 1.08, 0)];
-  for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; c.push(cz(stozek(0.035, 0.1, 4), ZLOTO, Math.cos(a) * 0.14, 1.17, Math.sin(a) * 0.14)); }
-  c.push(cz(box(0.05, 0.75, 0.09), METAL, 0.3, 0.95, 0.14, 0.5, 0, 0), cz(box(0.22, 0.05, 0.08), ZLOTO, 0.3, 0.62, 0.0, 0.5, 0, 0), cz(kaps(0.1, 0.08, 8), '#8a5a2b', 0, 0.78, 0.13));
+  const c = [...czlowiek(k, d, '', true, '#8a5a2b', true), cz(box(0.4, 0.66, 0.035), CZERWIEN, 0, 0.5, -0.15, 0.1, 0, 0), cz(cyl(0.05, 0.05, 0.04, 8), ZLOTO, 0.15, 0.8, 0.08),
+    cz(cyl(0.118, 0.112, 0.06, 16), ZLOTO, 0, 1.075, -0.005)];
+  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; c.push(cz(stozek(0.028, 0.08, 4), ZLOTO, Math.cos(a) * 0.105, 1.14, Math.sin(a) * 0.105), cz(kula(0.016, 5), CZERWIEN, Math.cos(a) * 0.117, 1.075, Math.sin(a) * 0.117)); }
+  c.push(cz(box(0.04, 0.62, 0.07), METAL, 0.3, 0.78, 0.15, 0.5, 0, 0), cz(box(0.18, 0.04, 0.06), ZLOTO, 0.27, 0.53, 0.03, 0.5, 0, 0), cz(kula(0.03, 6), ZLOTO, 0.26, 0.48, -0.0));
   return polacz(c);
 });
 // Waligóra: wielki siłacz z maczugą z pnia
 export const waligora = cache(strona => {
   const k = KOLORY_STRON[strona], d = CIEMNIEJ[strona];
-  const c = przesunCz([...czlowiek(k, d, '', true, '#c98e4a'), cz(box(0.36, 0.3, 0.05), '#7a5030', 0, 0.55, 0.17), cz(kaps(0.1, 0.1, 8), '#c98e4a', 0, 0.78, 0.13),
+  const c = przesunCz([...czlowiek('#7a5030', d, '', true, '#c98e4a', true), cz(box(0.3, 0.09, 0.03), k, 0, 0.7, 0.12, 0, 0, 0.6), cz(box(0.3, 0.09, 0.03), k, 0, 0.7, -0.12, 0, 0, -0.6),
     cz(cyl(0.07, 0.12, 1.0, 7), '#6b4527', 0.32, 0.95, 0.2, 0.6, 0, 0), cz(kula(0.05, 5), '#4a8f3a', 0.32, 1.35, 0.5)], 0, 0, 0, 1.3);
   return polacz(c);
 });
 // Lech: hełm z nosalem, czerwona tarcza z białym orłem, włócznia, czerwony płaszcz
 export const lech = cache(strona => {
   const k = KOLORY_STRON[strona], d = CIEMNIEJ[strona], BIALY = '#f4f4f0';
-  const c = [...czlowiek(k, d, '', true, '#5b3a22'), cz(box(0.42, 0.62, 0.05), CZERWIEN, 0, 0.62, -0.2, 0.08, 0, 0),
-    cz(stozek(0.18, 0.3, 10), METAL, 0, 1.12, 0), cz(box(0.025, 0.12, 0.02), METAL, 0, 0.92, 0.17), cz(kaps(0.09, 0.08, 8), '#5b3a22', 0, 0.78, 0.13),
+  const c = [...czlowiek(k, d, 'helm', true, '#5b3a22', true), cz(box(0.4, 0.66, 0.035), CZERWIEN, 0, 0.5, -0.15, 0.1, 0, 0), cz(cyl(0.05, 0.05, 0.04, 8), ZLOTO, -0.15, 0.8, 0.08),
     cz(cyl(0.025, 0.025, 1.7), BRAZ, 0.28, 0.95, 0.08), cz(stozek(0.05, 0.2, 6), METAL, 0.28, 1.9, 0.08),
     cz(box(0.06, 0.62, 0.46), CZERWIEN, -0.3, 0.62, 0.06),
     cz(kulaG(0.06, 6, 4), BIALY, -0.34, 0.72, 0.06), cz(box(0.02, 0.06, 0.3), BIALY, -0.34, 0.66, 0.06), cz(box(0.02, 0.16, 0.08), BIALY, -0.34, 0.55, 0.06),

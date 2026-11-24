@@ -7,6 +7,20 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 4 (24.11.2026)
+
+**Zmienione**
+- Nowe, dokładniejsze postacie (osadnicy, wojsko, jeźdźcy, bohaterowie, Rusałka, Płanetnik):
+  prawdziwe proporcje (głowa około 1/7 wzrostu, szyja, ramiona z łokciami i dłońmi), twarz z białkami oczu, brwiami,
+  nosem i ustami, fryzura „pod garnek”, u części osadników brody (6 wariantów wyglądu), lniana koszula z haftowanym brzegiem
+  i kołnierzem, pas ze sprzączką, portki, onuce z rzemykami, skórzane buty. Słomkowy kapelusz zsunięty do tyłu, żeby było widać twarz.
+- Hełmy wojska: stożkowe, z nosalem i kolczym czepcem, jak u dawnych Słowian. Drużynnik ma kaftan w kolorze strony na kolczudze.
+- Trening przy Gontynie: osadnicy trzymają obie ręce w gardzie i na zmianę wyprowadzają proste ciosy przed siebie, biegając w miejscu
+  (zamiast machania jedną ręką w górę i w dół).
+
+**Do sprawdzenia**
+- Postacie mają około 1,5 razy więcej trójkątów niż wcześniej: sprawdzić, czy na telefonie gra nie zwalnia przy dużych bitwach.
+
 ## Wersja 3 (24.11.2026)
 
 **Zmienione**

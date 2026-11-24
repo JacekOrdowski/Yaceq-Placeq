@@ -7,10 +7,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 3;
+const WERSJA = 4;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 3, opis: 'Modlitwa w Gontynie wygląda jak trening boksera (bieg w miejscu i ciosy); wstążki przy Gontynie i skrzydła stworów nie odlatują już od nich. Do tego wszystko z wersji 2.' },
+  { nr: 4, opis: 'Nowe, dokładniejsze postacie: prawdziwe proporcje, twarze z brwiami, nosem i ustami, brody, lniane koszule z haftem, onuce, hełmy z nosalem; przy Gontynie osadnicy trenują jak bokserzy (garda i ciosy). Do tego wszystko z wersji 3.' },
+  { nr: 3, opis: 'Modlitwa w Gontynie wygląda jak trening boksera (bieg w miejscu i ciosy); wstążki przy Gontynie i skrzydła stworów nie odlatują już od nich. Do tego wszystko z wersji 2.', adres: 'wersje/3/' },
   { nr: 2, opis: 'Nowa era na przycisku u góry ekranu (pisze, czego brakuje), w budynkach tylko to, co już można zrobić, czasy szkolenia jak w grach o bogach i erach, 27 nowych ulepszeń (od bogów, tarcze, mistrzowie linii), bohaterowie rosną z erami. Do tego wszystko z wersji 1.', adres: 'wersje/2/' },
   { nr: 1, opis: 'Pierwsza wersja: Polanie, 3 bogów głównych i 9 pomniejszych, łaska z modlitwy w Gontynie, 12 mocy bogów, 9 stworów, 3 bohaterów, 9 krain z ziem polskich.', adres: 'wersje/1/' },
 ];
@@ -1031,7 +1032,7 @@ function nowaJednostka(strona, typ, x, z, id) {
   const d = JEDNOSTKI[typ];
   const max = maxHpJ(strona, typ);
   const u = { id: id || S.nextId++, strona, typ, d, x, z, ry: strona ? 0.8 : -2.4, hp: max, max, zad: null, sciezka: null, niesie: { sur: null, ile: 0 }, cd: 0, skan: Math.random() * 0.5, t: Math.random() * 10 };
-  u.mesh = new THREE.Mesh(MOD.JEDNOSTKI3D[typ](strona), MAT);
+  u.mesh = new THREE.Mesh(typ === 'osadnik' ? MOD.osadnik(strona, u.id % 6) : MOD.JEDNOSTKI3D[typ](strona), MAT);
   u.faza = Math.random() * 6; u.amp = 0; u.kolo = 0;
   u.mesh.onBeforeRender = () => { const sh = MAT.userData.sh; if (!sh) return; sh.uniforms.uFaza.value = u.faza; sh.uniforms.uAmp.value = u.amp; sh.uniforms.uKolo.value = u.kolo; MAT.uniformsNeedUpdate = true; };
   u.mesh.position.set(x, 0, z); scena.add(u.mesh);
@@ -2676,7 +2677,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
 function ruszReka(u, dt) {
   const z = u.zad, nz = z ? (z.typ === 'zbieraj' ? NARZ_PRACY.zbieraj[z.sur] : NARZ_PRACY[z.typ]) : null;
   const narz = u.d.naprawia ? 'mlotek' : nz && !(z.faza === 'niesie' && nz === 'zrywa') ? nz : 'reka';
-  if (!u.ramie) { u.ramie = new THREE.Group(); u.ramie.position.set(0.215, 0.7, 0); u.mesh.add(u.ramie); }
+  if (!u.ramie) { u.ramie = new THREE.Group(); u.ramie.position.set(0.19, 0.77, 0); u.mesh.add(u.ramie); }
   if (u.narz !== narz) {
     if (u.ramieM) u.ramie.remove(u.ramieM);
     u.ramieM = new THREE.Mesh(MOD.ramie3D(narz, u.strona), MAT); u.ramie.add(u.ramieM); u.narz = narz;
@@ -2685,10 +2686,21 @@ function ruszReka(u, dt) {
   if (kosz && !u.koszBok) { u.koszBok = new THREE.Mesh(MOD.koszBok(), MAT); u.koszBok.position.set(-0.31, 0.34, 0.06); u.mesh.add(u.koszBok); }
   if (u.koszBok) u.koszBok.visible = kosz;
   let rx = 0, rz = 0;
-  if (u.pracuje && z && z.typ === 'modl') {
-    // szybkie proste ciosy przed siebie
-    const p = (u.t * 2.8 + (u.id % 5) * 0.2) % 1; rx = p < 0.25 ? lerp(-0.4, -1.6, p / 0.25) : lerp(-1.6, -0.4, (p - 0.25) / 0.75); rz = -0.15;
-  } else if (u.pracuje) {
+  // trening boksera przy Gontynie: obie ręce w gardzie, na zmianę szybki prosty cios przed siebie
+  const trening = u.typ === 'osadnik' && u.pracuje && z && z.typ === 'modl';
+  if (trening !== !!u.piesci) {
+    if (trening) {
+      u.mesh.geometry = MOD.osadnik(u.strona, u.id % 6, 1); u.piesci = [];
+      for (const sx of [-1, 1]) { const g = new THREE.Mesh(MOD.piesc3D(u.strona), MAT); g.position.set(sx * 0.17, 0.77, 0); u.mesh.add(g); u.piesci.push(g); }
+    } else { u.mesh.geometry = MOD.osadnik(u.strona, u.id % 6); for (const g of u.piesci) u.mesh.remove(g); u.piesci = null; }
+  }
+  u.ramie.visible = !trening;
+  if (trening) {
+    const p = (u.t * 1.6 + (u.id % 5) * 0.37) % 1, f = (ph) => { const q = (p - ph + 1) % 1; return q < 0.12 ? q / 0.12 : q < 0.3 ? 1 - (q - 0.12) / 0.18 : 0; };
+    u.piesci.forEach((g, i) => { const c = f(i * 0.5); g.position.z = c * 0.17; g.position.y = 0.77 + c * 0.02; g.rotation.x = c * 0.35; g.rotation.y = (i ? -1 : 1) * c * 0.25; });
+    return;
+  }
+  if (u.pracuje) {
     if (narz === 'siekiera') { const p = (u.t * 1.5) % 1; rx = p < 0.22 ? lerp(-2.4, -0.25, p / 0.22) : lerp(-0.25, -2.4, (p - 0.22) / 0.78); rz = -0.45; if (u.pp < 0.22 && p >= 0.22 && naEkranie(u)) { EF.wiory(u.x + Math.sin(u.ry) * 0.5, 0.6, u.z + Math.cos(u.ry) * 0.5, '#e0c08a'); odglos('siekiera', u.x, u.z, 0.55, 40); } u.pp = p; }
     else if (narz === 'kilof') { const p = (u.t * 1.2) % 1; rx = p < 0.2 ? lerp(-2.8, 0.05, p / 0.2) : lerp(0.05, -2.8, (p - 0.2) / 0.8); if (u.pp < 0.2 && p >= 0.2 && naEkranie(u)) { const k = u.zad && u.zad.sur === 'zloto' ? '#ffd84a' : u.zad && u.zad.sur === 'zelazo' ? '#c4622d' : '#b3ada3'; EF.wiory(u.x + Math.sin(u.ry) * 0.55, 0.3, u.z + Math.cos(u.ry) * 0.55, k, 5); EF.iskry(u.x + Math.sin(u.ry) * 0.55, 0.3, u.z + Math.cos(u.ry) * 0.55, 2); odglos('kilof', u.x, u.z, 0.55, 40); } u.pp = p; }
     else if (narz === 'mlotek') { const p = (u.t * 2.4) % 1; rx = p < 0.3 ? lerp(-1.9, -0.55, p / 0.3) : lerp(-0.55, -1.9, (p - 0.3) / 0.7); if (u.pp < 0.3 && p >= 0.3 && naEkranie(u)) odglos('mlotek', u.x, u.z, 0.4, 60); u.pp = p; }
@@ -2734,7 +2746,7 @@ function rysuj(dt) {
       const n = u.niesie.ile > 0.5 ? Math.min(8, Math.ceil(u.niesie.ile / 3)) : 0, s = n ? u.niesie.sur + n : null;
       if (s !== u.pokazane) {
         if (u.koszyk) { m.remove(u.koszyk); u.koszyk = null; }
-        if (s) { u.koszyk = new THREE.Mesh(MOD.stos(u.niesie.sur, n), MAT); u.koszyk.position.set(0, 0.5, -0.27); m.add(u.koszyk); }
+        if (s) { u.koszyk = new THREE.Mesh(MOD.stos(u.niesie.sur, n), MAT); u.koszyk.position.set(0, 0.55, -0.2); m.add(u.koszyk); }
         u.pokazane = s;
       }
     }
