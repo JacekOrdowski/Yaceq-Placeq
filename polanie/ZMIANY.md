@@ -22,6 +22,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
 **Do sprawdzenia**
 - Czy portrety i tło dobrze wyglądają na telefonie (gra pobiera około 0,6 MB obrazków więcej).
 
+Zapis w repozytorium: `cb2bd6e`
+
 ## Wersja 24 (24.11.2026)
 
 **Zmienione**
