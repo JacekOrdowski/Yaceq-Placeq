@@ -20,6 +20,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
 - W Grodzie zamiast dwóch małych przycisków z bogami jest jeden: „Era 2: Czasy Grodów: dotknij i wybierz boga”.
 - Przy nowej grze bogowie główni (Perun, Weles, Swaróg) mają portrety.
 
+Zapis w repozytorium: `14fc88e`
+
 ## Wersja 11 (24.11.2026)
 
 **Zmienione**
