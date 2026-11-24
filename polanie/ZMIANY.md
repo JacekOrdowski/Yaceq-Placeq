@@ -17,6 +17,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
 **Usunięte**
 - Przycisk ery u góry ekranu (z wersji 2).
 
+Zapis w repozytorium: `80ba926`
+
 ## Wersja 4 (24.11.2026)
 
 **Zmienione**
