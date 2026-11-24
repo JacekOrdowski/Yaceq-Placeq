@@ -7,6 +7,19 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 12 (24.11.2026)
+
+**Dodane**
+- Portrety wszystkich 12 bogów (nasze własne rysunki): Perun z piorunami i hełmem, Weles z rogami i wężem, Swaróg z młotem w kuźni,
+  Dażbóg na tle słońca, Mokosz w chuście z kłosami, Jaryło w wianku, Strzybóg w wichurze, Swarożyc w płomieniach, Łada z warkoczami
+  i kwiatami, Świętowit z kilkoma twarzami i rogiem, Marzanna w śniegu, Trzygłów z trzema głowami (`portrety.js`).
+- Wybór boga przy nowej erze w dużym oknie na środku ekranu (jak w grach o bogach i erach): dwa portrety obok siebie,
+  a pod każdym moc, stwór, dar i cena. Gra stoi, dopóki nie wybierzesz; można też wrócić do gry i wybrać później.
+
+**Zmienione**
+- W Grodzie zamiast dwóch małych przycisków z bogami jest jeden: „Era 2: Czasy Grodów: dotknij i wybierz boga”.
+- Przy nowej grze bogowie główni (Perun, Weles, Swaróg) mają portrety.
+
 ## Wersja 11 (24.11.2026)
 
 **Zmienione**

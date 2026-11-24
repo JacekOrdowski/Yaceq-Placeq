@@ -146,6 +146,19 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .wyb[disabled] { flex: 0 0 auto; padding: 10px 14px; opacity: 1; }
 .n-komp { margin-top: 6px; }
 .mapy .wyb { flex: 1 1 40%; font-size: 14px; padding: 9px 6px; }
+/* bogowie: portrety przy wyborze boga głównego i okno wyboru boga przy nowej erze */
+.bog-wyb svg { display: block; width: 72px; height: 90px; margin: 0 auto 4px; }
+.karta.bogowie { width: min(620px, 100%); padding: 16px 12px 12px; }
+.bg-lista { display: flex; gap: 10px; justify-content: center; align-items: stretch; }
+.bg-karta { flex: 1 1 0; max-width: 280px; display: flex; flex-direction: column; background: #fff8e6; border-radius: 18px; padding: 10px; box-shadow: 0 4px 0 #e8cf8f; text-align: center; }
+.bg-karta svg { width: 100%; max-width: 200px; aspect-ratio: 200 / 250; margin: 0 auto 6px; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25)); }
+.bg-karta b { font-family: var(--display); font-weight: 400; font-size: 26px; color: var(--berry); line-height: 1; }
+.bg-karta i { display: block; font-style: normal; font-size: 13px; font-weight: 800; color: var(--ink-soft); margin: 2px 0 6px; }
+.bg-karta ul { list-style: none; margin: 0 0 8px; padding: 0; text-align: left; font-size: 13px; font-weight: 800; line-height: 1.3; flex: 1; }
+.bg-karta li { margin-bottom: 4px; }
+.bg-karta .przycisk { margin: 0; }
+.bg-koszt { font-weight: 900; margin: 6px 0 10px; }
+@media (max-width: 420px) { .bg-karta { padding: 8px 6px; } .bg-karta b { font-size: 21px; } .bg-karta ul { font-size: 12px; } }
 .n-komp > span { display: block; font-size: 14px; font-weight: 900; margin-bottom: 4px; }
 .wkrotce { display: block; margin-top: 6px; font-size: 12px; font-weight: 800; color: var(--ink-soft); }
 .wybory .wkrotce { display: inline; margin-top: 0; }
@@ -262,6 +275,15 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
     <div id="k-stat"></div>
     <button class="przycisk" id="k-nowa">Zagraj jeszcze raz</button>
     <button class="przycisk drugi" id="k-menu">Menu</button>
+  </div>
+</div>
+
+<div class="okno" id="o-bogowie" hidden>
+  <div class="karta bogowie">
+    <h2 id="bg-tytul">Nowa era</h2>
+    <p id="bg-opis">Wybierz boga, który poprowadzi twoje plemię</p>
+    <div class="bg-lista" id="bg-lista"></div>
+    <button class="przycisk drugi" id="bg-wroc" style="margin-top:12px">Jeszcze nie: wróć do gry</button>
   </div>
 </div>
 

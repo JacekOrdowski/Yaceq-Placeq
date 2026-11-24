@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 PLIKI_TEKST = ['index.html', 'gra.js', 'dane.js', 'modele.js', 'manifest.webmanifest']
-PLIKI_TEKST.append('postacie.js')  # od wersji 6: realistyczne postacie
+PLIKI_TEKST += ['postacie.js', 'portrety.js']  # od wersji 6 i 12
 PLIKI_BIN = ['ikona-180.png', 'ikona-192.png', 'ikona-512.png']
 
 

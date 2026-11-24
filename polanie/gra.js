@@ -5,13 +5,15 @@
 import * as THREE from '../survival/three.module.min.js';
 import * as MOD from './modele.js';
 import * as LUDZ from './postacie.js';
+import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 11;
+const WERSJA = 12;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 11, opis: 'Modlitwa w Gontynie to teraz bieg bokserski: osadnicy biegają tam i z powrotem przy Gontynie zamiast okładać powietrze pięściami. Do tego wszystko z wersji 10.' },
+  { nr: 12, opis: 'Portrety 12 bogów; wybór boga przy nowej erze w dużym oknie na środku ekranu (dwa portrety, moc, stwór i dar), portrety też przy wyborze boga na początek gry. Do tego wszystko z wersji 11.' },
+  { nr: 11, opis: 'Modlitwa w Gontynie to teraz bieg bokserski: osadnicy biegają tam i z powrotem przy Gontynie zamiast okładać powietrze pięściami. Do tego wszystko z wersji 10.', adres: 'wersje/11/' },
   { nr: 10, opis: 'Kolor strony na stroju (koszule chłopów, kaptury i kurtki łuczników) zamiast niebieskiej szarfy wyglądającej jak deska. Do tego wszystko z wersji 9.', adres: 'wersje/10/' },
   { nr: 9, opis: 'Realistyczne postacie także po oddaleniu kamery (do 120 naraz), bez powrotu do starych ludzików. Do tego wszystko z wersji 8.', adres: 'wersje/9/' },
   { nr: 8, opis: 'Zagon prosa wygląda jak prawdziwe proso: gęste źdźbła z liśćmi i zwisającymi złotymi wiechami, które kołyszą się na wietrze. Do tego wszystko z wersji 7.', adres: 'wersje/8/' },
@@ -3323,11 +3325,8 @@ function odswiezPanel(wymus = false) {
           h += `<div class="p-opis">🔒 Do ery ${nast} (${ERY[nast]}) brakuje: ${braki.join(', ')}</div>`;
           a += `<button class="akcja era zablok" data-a="era-brak"><span class="ak-ik">${EMOJI_ERY[nast]}</span><b>Era ${nast}: ${ERY[nast]}</b><small>Brakuje: ${braki.join(', ')}</small><span class="ak-koszt">${kosztHTML(ne.koszt)}</span></button>`;
         } else {
-          h += `<div class="p-opis">⬆️ Możesz przejść do ery ${nast}: ${ERY[nast]}. Wybierz boga:</div>`;
-          for (const id of bogowieEry(0)) {
-            const bg = BOGOWIE[id], st = JEDNOSTKI[bg.stwor], mc = MOCE[bg.moc];
-            a += `<button class="akcja era bog" data-a="era:${id}" data-koszt='${JSON.stringify(ne.koszt)}'><span class="ak-ik">${bg.emoji}</span><b>Era ${nast} z bogiem ${bg.nazwa}</b><small>${bg.kim}. Moc: ${mc.emoji} ${mc.nazwa}. Stwór: ${st.emoji} ${st.nazwa}. ${bg.bonus}</small><span class="ak-koszt">${kosztHTML(ne.koszt)}</span></button>`;
-          }
+          h += `<div class="p-opis">⬆️ Możesz przejść do ery ${nast}: ${ERY[nast]}</div>`;
+          a += `<button class="akcja era" data-a="era-wybor" data-koszt='${JSON.stringify(ne.koszt)}'><span class="ak-ik">${EMOJI_ERY[nast]}</span><b>Era ${nast}: ${ERY[nast]}</b><small>Dotknij i wybierz boga (${bogowieEry(0).map(i => BOGOWIE[i].emoji + ' ' + BOGOWIE[i].nazwa).join(' albo ')})</small><span class="ak-koszt">${kosztHTML(ne.koszt)}</span></button>`;
         }
       }
       a += aJ; }
@@ -3413,6 +3412,7 @@ $('panel').addEventListener('click', e => {
   audio();
   const [akcja, arg] = b.dataset.a.split(':'), cel = wybrane[0];
   if (akcja === 'odznacz') { zaznacz([]); dzwiek('klik'); return; }
+  if (akcja === 'era-wybor') { dzwiek('tak'); pokazWyborBoga(); return; }
   if (akcja === 'era-brak') { toast('🔒 Do nowej ery brakuje: ' + (brakiEry(0) || []).join(', ')); dzwiek('blad'); return; }
   if (akcja === 'moce-zamknij') { pokazMoce = false; trybMocy = null; dzwiek('klik'); odswiezPanel(true); odswiezHud(); return; }
   if (akcja === 'moc') {
@@ -3515,7 +3515,7 @@ $('b-moce').onclick = () => {
 $('b-obszar').onclick = () => { audio(); trybObszar = !trybObszar; $('b-obszar').classList.toggle('wl', trybObszar); if (trybObszar) toast('Przeciągnij palcem ramkę wokół swoich ludzi'); };
 
 // ================= okna =================
-const OKNA = ['o-menu', 'o-nowa', 'o-pauza', 'o-koniec', 'o-wersje'];
+const OKNA = ['o-menu', 'o-nowa', 'o-pauza', 'o-koniec', 'o-wersje', 'o-bogowie'];
 function pokazOkno(id) { for (const o of OKNA) $(o).hidden = o !== id; $('gra-ui').hidden = !!id; }
 function ukryjOkna() { pokazOkno(null); }
 function ustawPrzelaczniki() { for (const [id, k] of [['m-muz', 'muzyka'], ['m-dzw', 'dzwieki'], ['p-muz', 'muzyka'], ['p-dzw', 'dzwieki']]) { $(id).textContent = zapis[k] ? 'wł.' : 'wył.'; $(id).classList.toggle('wl', zapis[k]); } }
@@ -3556,7 +3556,7 @@ function rysujNowa() {
   const o = nowaOpc;
   $('n-mapa').innerHTML = [...Object.keys(MAPY), 'losowa'].map(k => `<button class="wyb${k === o.mapa ? ' wybrany' : ''}" data-v="${k}">${k === 'losowa' ? '🎲 Losowa' : MAPY[k].emoji + ' ' + MAPY[k].nazwa}</button>`).join('');
   $('n-mapa-opis').textContent = o.mapa === 'losowa' ? 'Niespodzianka: gra sama wybierze jedną z map.' : MAPY[o.mapa].opis;
-  $('n-bog').innerHTML = BOGOWIE_GLOWNI.map(k => `<button class="wyb${k === o.bog ? ' wybrany' : ''}" data-v="${k}">${BOGOWIE[k].emoji} ${BOGOWIE[k].nazwa}</button>`).join('');
+  $('n-bog').innerHTML = BOGOWIE_GLOWNI.map(k => `<button class="wyb bog-wyb${k === o.bog ? ' wybrany' : ''}" data-v="${k}">${portret(k)}${BOGOWIE[k].emoji} ${BOGOWIE[k].nazwa}</button>`).join('');
   { const g = BOGOWIE[o.bog], m = MOCE[g.moc]; $('n-bog-opis').textContent = `${g.nazwa}: ${g.kim}. ${g.bonus} Moc: ${m.emoji} ${m.nazwa} (${m.opis.toLowerCase()}).`; }
   for (const b of $('n-rozmiar').children) b.classList.toggle('wybrany', +b.dataset.v === o.rozmiar);
   for (const b of $('n-ile').children) b.classList.toggle('wybrany', +b.dataset.v === o.przeciwnicy.length);
@@ -3587,6 +3587,28 @@ $('n-start').onclick = () => {
 };
 $('n-wroc').onclick = () => { dzwiek('klik'); pokazMenu(); };
 $('m-wersje').onclick = () => { dzwiek('klik'); pokazWersje(); };
+// ---------- wybór boga przy nowej erze: okno na środku ekranu z portretami (gra stoi, dopóki nie wybierzesz) ----------
+function pokazWyborBoga() {
+  const nast = S.era[0] + 1, ne = NOWA_ERA[nast]; if (!ne) return;
+  $('bg-tytul').textContent = `${EMOJI_ERY[nast]} Era ${nast}: ${ERY[nast]}`;
+  $('bg-opis').textContent = 'Wybierz boga, który poprowadzi twoje plemię. Da ci moc, stwora i dar.';
+  $('bg-lista').innerHTML = bogowieEry(0).map(id => {
+    const bg = BOGOWIE[id], st = JEDNOSTKI[bg.stwor], mc = MOCE[bg.moc];
+    return `<div class="bg-karta">${portret(id)}<b>${bg.nazwa}</b><i>${bg.kim}</i>
+      <ul><li>${mc.emoji} <u>Moc:</u> ${mc.nazwa}: ${mc.opis.toLowerCase()}</li><li>${st.emoji} <u>Stwór:</u> ${st.nazwa}</li><li>🎁 <u>Dar:</u> ${bg.bonus}</li></ul>
+      <div class="bg-koszt">${kosztHTML(ne.koszt)}</div><button class="przycisk" data-bog="${id}">Wybieram</button></div>`;
+  }).join('');
+  pauza = true; zapiszGre(); pokazOkno('o-bogowie');
+}
+$('bg-lista').addEventListener('click', e => {
+  const b = e.target.closest('[data-bog]'); if (!b) return;
+  audio();
+  const gr = BUD.find(o => o.strona === STRONA_GRACZA && o.typ === 'ratusz' && o.gotowy && o.kolejka.length < 5);
+  const bl = gr ? dodajDoKolejki(gr, 'era', b.dataset.bog) : 'Nie masz wolnego Grodu';
+  startuj();
+  if (bl) { toast(bl); dzwiek('blad'); } else { const bg = BOGOWIE[b.dataset.bog]; toast(`${bg.emoji} ${bg.nazwa}: Gród zaczyna przechodzić do nowej ery`); dzwiek('era'); }
+});
+$('bg-wroc').onclick = () => { dzwiek('klik'); startuj(); };
 for (const id of ['m-muz', 'p-muz']) $(id).onclick = () => { audio(); zapis.muzyka = !zapis.muzyka; zapiszDysk(); ustawPrzelaczniki(); if (zapis.muzyka) odblokujMuzyke(); else ciszaMuzyki(); };
 for (const id of ['m-dzw', 'p-dzw']) $(id).onclick = () => { audio(); zapis.dzwieki = !zapis.dzwieki; zapiszDysk(); ustawPrzelaczniki(); dzwiek('klik'); };
 $('b-pauza').onclick = () => {
