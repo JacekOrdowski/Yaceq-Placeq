@@ -16,6 +16,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
 - Bieg bokserski: krok zgrany z ciosem. Lewa pięść wychodzi w chwili, gdy lewa stopa staje na ziemi, prawa z prawą
   (zmierzone: różnica najwyżej 0,02 s), 3 kroki i 3 ciosy na sekundę.
 
+Zapis w repozytorium: `4627583`
+
 ## Wersja 16 (24.11.2026)
 
 **Zmienione**
