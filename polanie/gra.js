@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 15;
+const WERSJA = 16;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 15, opis: 'Bieg bokserski w równym rytmie: jeden krok to jedno uderzenie, 3 kroki i 3 uderzenia na sekundę. Do tego wszystko z wersji 14.' },
+  { nr: 16, opis: 'Ciosy w biegu bokserskim równo na zmianę: lewa, prawa, lewa, prawa (każdy krok jeden cios). Do tego wszystko z wersji 15.' },
+  { nr: 15, opis: 'Bieg bokserski w równym rytmie: jeden krok to jedno uderzenie, 3 kroki i 3 uderzenia na sekundę. Do tego wszystko z wersji 14.', adres: 'wersje/15/' },
   { nr: 14, opis: 'Bieg bokserski dookoła Gontyny: osadnicy biegną jeden za drugim w kółko wokół budynku i w biegu na zmianę biją pięściami powietrze. Do tego wszystko z wersji 13.', adres: 'wersje/14/' },
   { nr: 13, opis: 'Prawdziwy bieg bokserski przy Gontynie: trucht w miejscu i ciosy pięściami w powietrze na zmianę. Do tego wszystko z wersji 12.', adres: 'wersje/13/' },
   { nr: 12, opis: 'Portrety 12 bogów; wybór boga przy nowej erze w dużym oknie na środku ekranu (dwa portrety, moc, stwór i dar), portrety też przy wyborze boga na początek gry. Do tego wszystko z wersji 11.', adres: 'wersje/12/' },

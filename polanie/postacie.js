@@ -214,17 +214,19 @@ function czescRuchu(nazwa, gora) {
   if (!CZESCI.has(k)) { const c = RUCHY[nazwa]; CZESCI.set(k, new THREE.AnimationClip(k, c.duration, c.tracks.filter(t => NOGI.test(t.name) !== gora).map(t => t.clone()))); }
   return CZESCI.get(k);
 }
-// prosty lewą, potem prosty prawą (góra ciała), sklejone w jeden powtarzany ruch
+// ciosy na zmianę (góra ciała): garda → prosty lewą → garda → prosty prawą → garda, równo rozłożone w czasie,
+// więc przy rytmie biegu jeden krok to jedno uderzenie. Pozy wzięte z ruchów Quaterniusa: garda na początku,
+// najdalej wyciągnięta lewa w Punch_Jab (0,23 s), prawa w Punch_Cross (0,30 s)
 function ciosyNaZmiane() {
   if (CZESCI.has('ciosy')) return CZESCI.get('ciosy');
-  const a = czescRuchu('Punch_Jab', true), b = czescRuchu('Punch_Cross', true), d = a.duration, slady = [];
+  const a = czescRuchu('Punch_Jab', true), b = czescRuchu('Punch_Cross', true), slady = [];
+  const poza = (t, czas) => Array.from(t.createInterpolant().evaluate(czas));
   for (const t of a.tracks) {
-    const u = b.tracks.find(x => x.name === t.name);
-    if (!u) { slady.push(t.clone()); continue; }
-    const T = t.constructor;
-    slady.push(new T(t.name, [...t.times, ...Array.from(u.times, x => x + d + 0.001)], [...t.values, ...u.values]));
+    const u = b.tracks.find(x => x.name === t.name) || t;
+    const G = poza(t, 0), Lw = poza(t, 0.23), Pr = poza(u, 0.30);
+    slady.push(new t.constructor(t.name, [0, 0.25, 0.5, 0.75, 1], [...G, ...Lw, ...G, ...Pr, ...G]));
   }
-  const c = new THREE.AnimationClip('ciosy', d + b.duration, slady);
+  const c = new THREE.AnimationClip('ciosy', 1, slady);
   CZESCI.set('ciosy', c); return c;
 }
 // ile trwa ruch (sekundy), np. żeby dopasować cios do odstępu między uderzeniami
