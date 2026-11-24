@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 30;
+const WERSJA = 31;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 30, opis: 'Kopiowanie budynku: zaznacz osadnika i przytrzymaj palec 2 s na swoim budynku. Nowy wygląd pauzy, menu i przycisku Zburz. Do tego wszystko z wersji 29.' },
+  { nr: 31, opis: 'Mroczny, słowiański wygląd menu i wszystkich okien: ciemne drewno, złote obwódki, czcionka jak z kroniki, malowane godło gry. Do tego wszystko z wersji 30.' },
+  { nr: 30, opis: 'Kopiowanie budynku: zaznacz osadnika i przytrzymaj palec 2 s na swoim budynku. Nowy wygląd pauzy, menu i przycisku Zburz. Do tego wszystko z wersji 29.', adres: 'wersje/30/' },
   { nr: 29, opis: 'Malowane ikony er, przycisku mocy bogów i przycisków z boku ekranu (wojsko, wolni osadnicy, ramka, gród, mapa). Do tego wszystko z wersji 28.', adres: 'wersje/29/' },
   { nr: 28, opis: 'Malowane ikonki surowców (żywność, drewno, kamień, żelazo, srebro, łaska, ludność) w pasku u góry i w cenach. Do tego wszystko z wersji 27.', adres: 'wersje/28/' },
   { nr: 27, opis: 'Malowane ikony wszystkich ulepszeń i 12 mocy bogów w nocnym stylu. Do tego wszystko z wersji 26.', adres: 'wersje/27/' },
@@ -3779,6 +3780,7 @@ addEventListener('pagehide', () => zapiszGre());
 
 // logo w menu: krzak haskapu i korona
 function rysujLogo() {
+  if (!$('logo').getContext) return; // od wersji 31 malowane godło zamiast rysunku
   const cv = $('logo'), c = cv.getContext('2d'), W = cv.width;
   c.clearRect(0, 0, W, W);
   const g = c.createRadialGradient(W / 2, W * 0.35, W * 0.05, W / 2, W / 2, W * 0.5); g.addColorStop(0, '#fff6d8'); g.addColorStop(0.6, '#9cc4e8'); g.addColorStop(1, '#3d6ea8');

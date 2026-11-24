@@ -8,8 +8,8 @@
   "id": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#3d6ea8",
-  "theme_color": "#3d6ea8",
+  "background_color": "#101617",
+  "theme_color": "#101617",
   "icons": [
     { "src": "ikona-180.png", "sizes": "180x180", "type": "image/png" },
     { "src": "ikona-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

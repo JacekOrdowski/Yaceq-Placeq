@@ -7,12 +7,12 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Age of Polan">
-<meta name="theme-color" content="#3d6ea8">
+<meta name="theme-color" content="#101617">
 <link rel="apple-touch-icon" href="ikona-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="ikona-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Age of Polan</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Lilita+One&family=Nunito:wght@700;800;900&display=swap">
 <style>
 :root {
   --ink: #213047; --ink-soft: #5a6b84; --paper: #ffffff; --green: #3fbf5f; --green-deep: #23883c;
@@ -121,7 +121,8 @@ img.ik { display: block; object-fit: cover; border-radius: 9px; }
 .kol span:has(img.ik) { position: absolute; inset: 0; z-index: 0; }
 .kol img.ik { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; }
 /* surowce: małe okrągłe ikonki w pasku u góry i w cenach */
-img.ik.ik-sur { display: inline-block; vertical-align: middle; border-radius: 50%; }
+img.ik.ik-sur { display: inline-block; vertical-align: middle; border-radius: 50%; width: 20px; height: 20px; margin-right: 2px; }
+.bg-koszt img.ik-sur { width: 24px; height: 24px; vertical-align: -6px; }
 .chip img.ik-sur { width: 22px; height: 22px; margin-right: 1px; box-shadow: 0 0 0 1px rgba(255,255,255,0.25); }
 .ak-koszt img.ik-sur { width: 15px; height: 15px; margin-right: 1px; vertical-align: -3px; }
 .p-grupa img.ik { display: inline-block; width: 24px; height: 24px; border-radius: 6px; vertical-align: middle; margin-right: 2px; }
@@ -211,6 +212,54 @@ img.ik-przycisk { display: inline-block; width: 32px; height: 32px; border-radiu
 #k-stat { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; font-weight: 900; font-size: 14px; }
 #k-stat span { background: #eef4fb; border-radius: 10px; padding: 4px 8px; }
 @media (min-width: 700px) { #panel { left: 50%; right: auto; width: 680px; transform: translateX(-50%); } #stawianie { left: 50%; right: auto; width: 520px; transform: translateX(-50%); } }
+
+/* ================= mroczny, słowiański wygląd okien (od wersji 31; styl A z STYL.md) =================
+   ciemne drewno i noc, złote obwódki, pergaminowy tekst, nagłówki czcionką jak z dawnej kroniki */
+:root { --kron: "Cinzel", "Trajan Pro", Georgia, serif; --zloto: #e2b660; --zloto-c: #a77d35; --perg: #efe0bd; --perg-c: #b9a582;
+  --drewno: #2a1d13; --drewno-c: #150e08; --zar: #9b3520; --zar-c: #5c1a0e; --mech: #3d5a2e; --mech-c: #1f3318; }
+.okno { background: rgba(6, 12, 14, 0.72); }
+.okno .karta { background: linear-gradient(180deg, rgba(22, 30, 30, 0.9), rgba(12, 16, 17, 0.93)); color: var(--perg);
+  border: 1px solid rgba(226, 182, 96, 0.55); border-radius: 18px;
+  box-shadow: 0 0 0 4px rgba(20, 14, 8, 0.85), 0 0 0 5px rgba(226, 182, 96, 0.25), 0 18px 50px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(0, 0, 0, 0.5);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+#o-menu .karta, #o-wersje .karta, #o-nowa .karta, #o-pauza .karta { background: linear-gradient(180deg, rgba(18, 26, 27, 0.78), rgba(10, 14, 15, 0.9)); }
+.okno .karta h1, .okno .karta h2 { font-family: var(--kron); font-weight: 900; color: var(--zloto); text-shadow: 0 2px 0 #000, 0 0 18px rgba(226, 182, 96, 0.25); letter-spacing: 1px; }
+.okno .karta h1 { font-size: 34px; line-height: 1.05; margin-top: 6px; }
+.okno .karta h1 span { color: #e98a3c; font-size: 46px; letter-spacing: 3px; text-shadow: 0 2px 0 #000, 0 0 22px rgba(233, 138, 60, 0.45); }
+.okno .karta h2 { font-size: 26px; }
+.okno .karta p, .okno .drobne, .okno .wkrotce, .okno .pozycja small, .okno .bg-karta i { color: var(--perg-c); }
+.okno .karta p { font-weight: 700; }
+#logo { display: block; width: 132px; height: 132px; margin: -2px auto 0; border-radius: 50%; box-shadow: 0 0 0 2px rgba(226, 182, 96, 0.5), 0 0 30px rgba(120, 170, 220, 0.25), 0 8px 20px rgba(0, 0, 0, 0.7); }
+/* przyciski: ciemne drewno ze złotą obwódką; najważniejszy: żar, nowa gra: mech */
+.okno .przycisk { font-family: var(--kron); font-weight: 700; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.5px; color: var(--perg); border-radius: 10px;
+  background: linear-gradient(180deg, #4a3322, var(--drewno) 55%, #1c130b); border: 1px solid var(--zloto-c); box-shadow: 0 4px 0 var(--drewno-c), inset 0 1px 0 rgba(255, 220, 160, 0.18);
+  text-shadow: 0 1px 0 #000; }
+.okno .przycisk:not(.drugi):not(.pomar) { background: linear-gradient(180deg, #b4482a, var(--zar) 55%, #6e2213); border-color: #e0a05a; box-shadow: 0 4px 0 var(--zar-c), 0 0 16px rgba(220, 110, 50, 0.25), inset 0 1px 0 rgba(255, 210, 160, 0.3); }
+.okno .przycisk.pomar { background: linear-gradient(180deg, #567a3f, var(--mech) 55%, #24391b); border-color: #a9c27a; box-shadow: 0 4px 0 var(--mech-c), inset 0 1px 0 rgba(220, 255, 180, 0.2); }
+.okno .przycisk#pa-zapisz { background: linear-gradient(180deg, #34566e, #213a4c 55%, #15262f) !important; border-color: #8fb4cc; box-shadow: 0 4px 0 #0c171d !important; }
+.okno .przycisk:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--drewno-c); }
+.okno img.ik-przycisk { border-radius: 50%; box-shadow: 0 0 0 1px rgba(226, 182, 96, 0.6), 0 2px 4px rgba(0, 0, 0, 0.5); }
+.okno .przelacz { color: var(--perg); font-weight: 800; }
+.okno .przelacz button { background: #1c140d; color: var(--perg-c); border: 1px solid #5b4528; }
+.okno .przelacz button.wl { background: #23361b; color: #cfe8a8; border-color: #8fae5a; }
+/* wybory w nowej grze, lista wersji i zapisów, karty bogów */
+.okno .opcja > b, .okno .n-komp > span { color: var(--zloto); font-family: var(--kron); font-weight: 700; letter-spacing: 0.5px; }
+.okno .wyb { background: #1d1610; color: var(--perg); border: 1px solid #4d3a22; box-shadow: 0 3px 0 #0d0905; }
+.okno .wyb.wybrany { background: linear-gradient(180deg, #4a3320, #2c1e12); border-color: var(--zloto); color: #ffe7b0; box-shadow: 0 3px 0 #0d0905, 0 0 12px rgba(226, 182, 96, 0.3); }
+.okno .lista .pozycja { background: rgba(30, 22, 15, 0.85); border: 1px solid #4d3a22; }
+.okno .pozycja .nr { color: var(--zloto); font-family: var(--kron); }
+.okno .pozycja b { color: var(--perg); }
+.okno .bg-karta { background: linear-gradient(180deg, #2b2016, #17110b); border: 1px solid var(--zloto-c); box-shadow: 0 4px 0 #0d0905; color: var(--perg); }
+.okno .bg-karta b { font-family: var(--kron); font-weight: 900; color: var(--zloto); }
+.okno .bg-karta u { color: #f0c987; }
+.okno button.maly { background: linear-gradient(180deg, #b4482a, var(--zar) 55%, #6e2213); color: var(--perg); border: 1px solid #e0a05a; border-radius: 9px;
+  box-shadow: 0 3px 0 var(--zar-c); font-family: var(--kron); font-weight: 700; text-shadow: 0 1px 0 #000; }
+.okno button.maly[style] { background: #2a1410 !important; color: #e9a08f !important; border-color: #7a3a2c; }
+.okno .pozycja .nr { font-size: 22px; }
+#baner { background: linear-gradient(180deg, rgba(22, 30, 30, 0.94), rgba(12, 16, 17, 0.96)); border: 1px solid rgba(226, 182, 96, 0.6); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+#baner b { font-family: var(--kron); font-weight: 900; color: var(--zloto); text-shadow: 0 2px 0 #000; }
+#baner small { color: var(--perg-c); }
+.okno input, .okno select { background: #1d1610; color: var(--perg); border: 1px solid #4d3a22; }
 </style>
 </head>
 <body>
@@ -263,7 +312,7 @@ img.ik-przycisk { display: inline-block; width: 32px; height: 32px; border-radiu
 
 <div class="okno" id="o-menu" hidden>
   <div class="karta">
-    <canvas id="logo" width="240" height="240"></canvas>
+    <img id="logo" src="obrazy/godlo.jpg" alt="Age of Polan">
     <h1>Age of<span>Polan</span></h1>
     <p>Zbuduj gród Polan, wybierz bogów (Perun, Weles, Swaróg…), zdobądź ich łaskę, przyzwij stwory z dawnych wierzeń i pokonaj wrogie plemię!</p>
     <p id="m-stara" hidden>🗺️ Mapa jest teraz 2 razy większa. Twoja poprzednia gra (na małej mapie) czeka w: Inne wersje gry → Wersja 13.</p>

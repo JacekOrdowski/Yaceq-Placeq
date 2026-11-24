@@ -7,6 +7,20 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 31 (24.11.2026)
+
+**Zmienione**
+- Menu i wszystkie okna (nowa gra, pauza, wybór wersji, zapisane gry, wybór boga, koniec gry) w mrocznym, słowiańskim stylu
+  zamiast jasnego „bajkowego”: ciemne, półprzezroczyste tło z gródem nocą, złote obwódki, pergaminowy tekst,
+  nagłówki i przyciski czcionką Cinzel (jak z dawnej kroniki). Najważniejszy przycisk ma kolor żaru, „Nowa gra” kolor mchu,
+  pozostałe ciemnego drewna.
+- Zamiast rysunku z piorunem: malowane godło gry z Gemini (rzeźbiony drewniany krąg z liśćmi dębu, w środku gród nocą,
+  księżyc i błyskawica Peruna, `obrazy/godlo.jpg`). Z tego godła są też nowe ikony gry na ekranie telefonu.
+- Duży napis na środku ekranu (np. nowa era) też w tym stylu.
+
+**Naprawione**
+- W oknie wyboru boga ikonka kosztu (kosz z jagodami) była ogromna: teraz jest mała, obok liczby.
+
 ## Wersja 30 (24.11.2026)
 
 **Dodane**
