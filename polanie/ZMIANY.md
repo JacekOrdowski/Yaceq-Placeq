@@ -14,6 +14,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
   biegają tam i z powrotem wzdłuż jej boków (zwalniają i zawracają na końcach). Gdy coś stoi na drodze (skała, drzewo, ktoś inny),
   zawracają wcześniej. Łaska zbiera się tak samo jak dotąd.
 
+Zapis w repozytorium: `87462df`
+
 ## Wersja 10 (24.11.2026)
 
 **Zmienione**
