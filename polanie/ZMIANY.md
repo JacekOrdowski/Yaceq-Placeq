@@ -7,6 +7,15 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 18 (24.11.2026)
+
+**Zmienione**
+- Napisy z postępem budowy (🔨 0%) nie zaśmiecają już ekranu:
+  - przy częstokole i bramach widać je tylko przy największym przybliżeniu (każdy kawałek muru ma swój napis),
+  - przy budynkach bledną przy oddalaniu kamery i znikają przy średnim oddaleniu,
+  - przy dużym oddaleniu nie ma ich wcale. Postęp widać też w okienku na dole po dotknięciu budowy.
+  Odległości ustawia `PROC_BUD` i `PROC_MUR` w `gra.js`.
+
 ## Wersja 17 (24.11.2026)
 
 **Naprawione**

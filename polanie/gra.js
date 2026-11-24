@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 17;
+const WERSJA = 18;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 17, opis: 'Surowce nie przepadają przy zmianie pracy (osadnik najpierw je odnosi), krok zgrany z ciosem w biegu bokserskim. Do tego wszystko z wersji 16.' },
+  { nr: 18, opis: 'Procenty budowy: przy częstokole tylko przy największym przybliżeniu, przy budynkach znikają przy oddalaniu, z daleka nie ma ich wcale. Do tego wszystko z wersji 17.' },
+  { nr: 17, opis: 'Surowce nie przepadają przy zmianie pracy (osadnik najpierw je odnosi), krok zgrany z ciosem w biegu bokserskim. Do tego wszystko z wersji 16.', adres: 'wersje/17/' },
   { nr: 16, opis: 'Ciosy w biegu bokserskim równo na zmianę: lewa, prawa, lewa, prawa (każdy krok jeden cios). Do tego wszystko z wersji 15.', adres: 'wersje/16/' },
   { nr: 15, opis: 'Bieg bokserski w równym rytmie: jeden krok to jedno uderzenie, 3 kroki i 3 uderzenia na sekundę. Do tego wszystko z wersji 14.', adres: 'wersje/15/' },
   { nr: 14, opis: 'Bieg bokserski dookoła Gontyny: osadnicy biegną jeden za drugim w kółko wokół budynku i w biegu na zmianę biją pięściami powietrze. Do tego wszystko z wersji 13.', adres: 'wersje/14/' },
@@ -2635,6 +2636,8 @@ const EL = 0.98; // nachylenie kamery
 // oddalanie: do D_DALEKO kamera się pochyla (widać horyzont z górami i wulkanami), dalej znów patrzy coraz bardziej z góry,
 // aż na samym końcu (dMaks) widać całą mapę
 const D_BLISKO = 13, D_DALEKO = 72, EL_GORA = 1.32;
+// odległość kamery, przy której napisy z postępem budowy zaczynają znikać i całkiem znikają: [od, do]
+const PROC_BUD = [24, 40], PROC_MUR = [13.5, 16];
 const do01 = v => Math.max(0, Math.min(1, v));
 // za D_DALEKO kamera unosi się powoli tak, żeby z każdym oddaleniem widać było coraz dalej (a z każdym przybliżeniem bliżej);
 // wcześniej unosiła się za szybko i przybliżanie od daleka prawie nic nie zmieniało na ekranie
@@ -2910,11 +2913,17 @@ function rysujNakladke() {
   const malaGrupa = wybrane.length <= 6;
   for (const u of JED) if (wybrane.includes(u) && (malaGrupa || u.hp < u.max) || u.hp < u.max && S.czas - (u.trafiony || -99) < 4) pasek(u, (u.d.linia === 'renifer' || u.d.linia === 'kon' ? 2.2 : u.d.mit ? 2.6 : u.d.bohater ? 1.9 : 1.6) + (u.d.lata || 0), 26);
   for (const b of BUD) if (wybrane.includes(b) || b.hp < b.max && (b.gotowy || S.czas - (b.trafiony || -99) < 4)) pasek(b, wysokoscBud(b) + 0.4, 18 + b.w * 9);
-  // postęp budowy
-  for (const b of BUD) if (!b.gotowy) {
+  // postęp budowy: przy częstokole i bramach tylko przy największym przybliżeniu, przy budynkach znika stopniowo przy oddalaniu,
+  // a przy dużym oddaleniu nie ma go wcale (postęp widać też w okienku na dole po dotknięciu budowy)
+  const jawnoscProc = (od, doo) => Math.max(0, Math.min(1, (doo - kam.d) / (doo - od)));
+  const aBud = jawnoscProc(PROC_BUD[0], PROC_BUD[1]), aMur = jawnoscProc(PROC_MUR[0], PROC_MUR[1]);
+  if (aBud > 0 || aMur > 0) for (const b of BUD) if (!b.gotowy) {
+    const al = b.d.mur || b.d.brama ? aMur : aBud; if (al <= 0) continue;
     const [x, y, z] = naEkran(b.x, 0.3, b.z); if (z > 1) continue;
+    c.globalAlpha = al;
     c.font = '800 13px Nunito, sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,0.6)'; c.fillStyle = '#fff';
     const t = '🔨 ' + Math.floor(b.postep * 100) + '%'; c.strokeText(t, x, y); c.fillText(t, x, y);
+    c.globalAlpha = 1;
   }
   // punkt zbiórki wybranego budynku
   const b = wybrane[0];
