@@ -14,6 +14,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
   (nogi biegną, ręce boksują). Skały i drzewa przy Gontynie obiegają szerszym łukiem (`petlaGontyny`); gdy droga jest
   całkiem zastawiona (np. staw na Bagnach), zawracają. Na zwykłych mapach okrążenie trwa około 12 sekund.
 
+Zapis w repozytorium: `f6bae91`
+
 ## Wersja 13 (24.11.2026)
 
 **Zmienione**
