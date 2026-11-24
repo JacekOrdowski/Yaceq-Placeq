@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Age of Polan">
+<meta name="theme-color" content="#3d6ea8">
+<link rel="apple-touch-icon" href="ikona-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="ikona-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Age of Polan (wersja 4)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700;800;900&display=swap">
+<style>
+:root {
+  --ink: #213047; --ink-soft: #5a6b84; --paper: #ffffff; --green: #3fbf5f; --green-deep: #23883c;
+  --orange: #ff8a3d; --orange-deep: #c9561a; --blue: #2f6fd6; --red: #d8382f; --berry: #3a4bb0; --gold: #ffcf3a;
+  --display: "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Nunito", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; overflow: hidden; background: #9fd3f0; }
+body { font-family: var(--body); color: var(--ink); -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent; overscroll-behavior: none; touch-action: none; }
+#scena { position: fixed; inset: 0; }
+#scena canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+#nakladka { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+/* ---------- pasek u góry ---------- */
+#hud { position: fixed; left: 0; right: 0; top: 0; z-index: 10; pointer-events: none;
+  padding: calc(env(safe-area-inset-top, 0px) + 8px) max(8px, env(safe-area-inset-right, 0px)) 0 max(8px, env(safe-area-inset-left, 0px)); }
+.hud-row { display: flex; align-items: center; gap: 6px; }
+#b-pauza { pointer-events: auto; width: 42px; height: 42px; border-radius: 50%; background: #fff; box-shadow: 0 3px 0 #c3ccda; font-size: 18px; font-weight: 900; flex: none; }
+#zasoby { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; }
+.chip { display: flex; align-items: center; gap: 3px; height: 28px; padding: 0 8px 0 5px; border-radius: 14px; background: rgba(33, 48, 71, 0.78);
+  color: #fff; font-family: var(--display); font-size: 16px; letter-spacing: 0.3px; }
+.chip.pelno { background: rgba(216, 56, 47, 0.9); }
+.hud-row2 { display: flex; gap: 6px; margin-top: 5px; align-items: flex-start; }
+#h-era { font-size: 13px; height: 24px; font-family: var(--body); font-weight: 900; }
+#zadanie { flex: 1; background: rgba(255, 255, 255, 0.92); border-radius: 12px; padding: 4px 9px; font-size: 13px; font-weight: 800; line-height: 1.25;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.12); }
+
+/* ---------- przyciski z boku ---------- */
+#boczne { position: fixed; right: max(8px, env(safe-area-inset-right, 0px)); bottom: calc(var(--panel-h, 200px) + 14px); z-index: 10;
+  display: flex; flex-direction: column; gap: 7px; }
+.okr { width: 50px; height: 50px; border-radius: 16px; background: #fff; box-shadow: 0 4px 0 #c3ccda; font-size: 22px; position: relative; }
+.okr b { position: absolute; right: -5px; top: -6px; min-width: 20px; height: 20px; border-radius: 10px; background: var(--ink); color: #fff; font-size: 12px;
+  font-family: var(--body); font-weight: 900; display: grid; place-items: center; padding: 0 4px; }
+#b-bezczynni.jest b { background: var(--orange); animation: puls 1s infinite; }
+#b-era { display: block; margin: 5px auto 0; max-width: 520px; width: 100%; padding: 6px 12px; border-radius: 14px; font-family: var(--body); font-size: 13px; font-weight: 900;
+  line-height: 1.25; text-align: center; background: rgba(33, 48, 71, 0.82); color: #fff; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25); pointer-events: auto; }
+#b-era.gotowa { background: #3fbf5f; box-shadow: 0 3px 0 #23883c; animation: pulsEra 1.2s infinite; }
+@keyframes pulsEra { 50% { filter: brightness(1.25); transform: scale(1.03); } }
+#b-era.trwa { background: #ff8a3d; box-shadow: 0 3px 0 #c9561a; }
+#b-era.brak { background: rgba(255, 255, 255, 0.92); color: #5a6b84; box-shadow: 0 3px 0 #c3ccda; }
+#b-moce.jest b { background: #f2b51c; color: #3b2a00; }
+.akcja.bog { min-width: 230px; }
+.okr.wl { background: #c9f7d5; box-shadow: 0 4px 0 #7fcf95; }
+@keyframes puls { 50% { transform: scale(1.18); } }
+#mini { position: fixed; left: max(8px, env(safe-area-inset-left, 0px)); bottom: calc(var(--panel-h, 200px) + 14px); z-index: 10;
+  width: 120px; height: 120px; border-radius: 14px; background: rgba(33, 48, 71, 0.55); box-shadow: 0 3px 10px rgba(0,0,0,0.25); touch-action: none; }
+
+/* ---------- panel na dole ---------- */
+#panel, #stawianie { position: fixed; left: 0; right: 0; bottom: 0; z-index: 11; background: rgba(255, 255, 255, 0.96);
+  border-radius: 20px 20px 0 0; box-shadow: 0 -4px 18px rgba(0,0,0,0.18);
+  padding: 9px max(10px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 9px) max(10px, env(safe-area-inset-left, 0px)); }
+/* okienko rośnie, gdy jest kolejka: przyciski na dole zawsze widać w całości */
+#panel { min-height: 200px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; }
+.p-nic { text-align: center; font-weight: 800; line-height: 1.4; }
+/* nic nie wybrane: panel zwinięty do paska */
+#panel.zwiniety { min-height: 0; }
+#panel.zwiniety #p-akcje { display: none; }
+.p-nic small { color: var(--ink-soft); }
+.p-glowa { display: flex; align-items: center; gap: 9px; }
+.p-glowa > div { flex: 1; min-width: 0; }
+.p-glowa b { display: block; font-size: 16px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-glowa small { font-size: 12px; color: var(--ink-soft); font-weight: 800; }
+.p-ik { font-size: 30px; width: 38px; text-align: center; }
+.p-hp { height: 6px; background: #e4e9f0; border-radius: 3px; overflow: hidden; margin-top: 2px; }
+.p-hp i { display: block; height: 100%; background: var(--green); }
+.p-x { position: absolute; top: 9px; right: 10px; width: 102px; height: 102px; border-radius: 50%; background: #e2e8f0; font-size: 50px; line-height: 1; font-weight: 900; color: var(--ink); flex: none; box-shadow: 0 3px 0 #c5cfdc; }
+/* duży krzyżyk stoi w rogu panelu, obok nazwy i opisu (nie ściska rzędu przycisków) */
+#panel > div:has(.p-x) { padding-right: 106px; min-height: 102px; box-sizing: border-box; }
+.p-x:active { transform: translateY(2px); box-shadow: 0 1px 0 #c5cfdc; }
+.p-grupa { display: flex; flex-wrap: wrap; gap: 6px; font-weight: 900; font-size: 16px; }
+.p-grupa span { background: #eef2f7; border-radius: 10px; padding: 2px 7px; }
+.p-opis { font-size: 12px; color: var(--ink-soft); font-weight: 800; line-height: 1.25; }
+.p-kolejka { display: flex; gap: 5px; align-items: center; }
+.kol { position: relative; width: 34px; height: 34px; border-radius: 9px; background: #eef2f7; overflow: hidden; font-size: 18px; }
+.kol span { position: relative; z-index: 1; }
+.kol i { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--green); }
+.p-kolejka small { font-size: 12px; font-weight: 900; color: var(--red); }
+#p-akcje { display: flex; gap: 7px; overflow-x: auto; overflow-y: hidden; flex: 1 0 auto; min-height: 66px; padding-bottom: 2px; touch-action: pan-x; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+#p-akcje::-webkit-scrollbar { display: none; }
+.akcja { flex: none; width: 104px; border-radius: 14px; background: #eef4fb; box-shadow: 0 3px 0 #c9d3e2; padding: 5px 6px; text-align: left;
+  display: flex; flex-direction: column; gap: 1px; align-self: stretch; }
+.akcja.maly { width: 62px; align-items: center; justify-content: center; text-align: center; }
+.akcja:active { transform: translateY(2px); box-shadow: 0 1px 0 #c9d3e2; }
+.akcja.era { background: #fff4d6; box-shadow: 0 3px 0 #e8cf8f; }
+.akcja.zburz { background: #ffe3de; box-shadow: 0 3px 0 #f0b3a8; }
+.akcja.postawa.wybrana { background: #d9f7e1; box-shadow: 0 3px 0 #8fd6a3; }
+.ak-ik { font-size: 20px; line-height: 1.1; }
+.akcja b { font-size: 12px; font-weight: 900; line-height: 1.1; }
+.akcja small { font-size: 10px; font-weight: 800; color: var(--ink-soft); line-height: 1.15; flex: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.ak-koszt { display: flex; flex-wrap: wrap; gap: 3px; font-size: 11px; font-weight: 900; }
+.ak-koszt span.brak { color: var(--red); }
+.akcja.zablok, .akcja.drogo { opacity: 0.55; }
+.akcja.zablok small { color: var(--red); }
+#stawianie { display: flex; flex-direction: column; gap: 9px; }
+#st-tekst { text-align: center; font-weight: 900; font-size: 15px; }
+.st-przyciski { display: flex; gap: 10px; }
+
+/* ---------- komunikaty ---------- */
+#toast { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 112px); transform: translateX(-50%); z-index: 20; pointer-events: none;
+  background: rgba(33, 48, 71, 0.9); color: #fff; font-weight: 900; font-size: 15px; padding: 8px 14px; border-radius: 14px; max-width: 86vw; text-align: center; }
+#toast.pokaz { animation: wjazd 0.25s; }
+#baner { position: fixed; left: 50%; top: 32%; transform: translate(-50%, -50%); z-index: 20; pointer-events: none; text-align: center;
+  background: rgba(255, 255, 255, 0.95); border-radius: 22px; padding: 14px 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+#baner b { display: block; font-family: var(--display); font-size: 30px; color: var(--berry); font-weight: 400; }
+#baner small { font-weight: 800; color: var(--ink-soft); font-size: 14px; }
+#baner.pokaz { animation: wjazd 0.35s; }
+@keyframes wjazd { from { opacity: 0; transform: translate(-50%, -12px); } }
+
+/* ---------- okna ---------- */
+.okno { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(20, 40, 60, 0.45); padding: 16px; overflow: auto; }
+.karta { width: min(420px, 100%); background: #fff; border-radius: 26px; padding: 20px 18px 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.3); text-align: center; box-sizing: border-box; }
+.karta h1 { margin: 4px 0 2px; font-family: var(--display); font-weight: 400; font-size: 42px; line-height: 0.95; color: var(--berry); }
+.karta h1 span { display: block; color: var(--orange); font-size: 34px; }
+.karta h2 { margin: 0 0 8px; font-family: var(--display); font-weight: 400; font-size: 30px; color: var(--berry); }
+.karta p { margin: 6px 0 12px; font-weight: 800; color: var(--ink-soft); line-height: 1.35; }
+#logo { width: 120px; height: 120px; }
+.przycisk { display: block; width: 100%; padding: 13px 10px; border-radius: 18px; font-family: var(--display); font-size: 22px; margin-top: 10px;
+  background: var(--green); color: #fff; box-shadow: 0 5px 0 var(--green-deep); }
+.przycisk:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--green-deep); }
+.przycisk.drugi { background: #e9eef6; color: var(--ink); box-shadow: 0 5px 0 #c3ccda; }
+.przycisk.pomar { background: var(--orange); box-shadow: 0 5px 0 var(--orange-deep); }
+.przycisk:disabled { opacity: 0.5; }
+.st-przyciski .przycisk { margin-top: 0; }
+.przelacz { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-weight: 900; font-size: 17px; }
+.przelacz button { min-width: 64px; padding: 8px 12px; border-radius: 14px; background: #e9eef6; font-weight: 900; }
+.przelacz button.wl { background: #c9f7d5; }
+.drobne { margin-top: 12px; font-size: 13px; color: var(--ink-soft); font-weight: 800; }
+.opcja { margin-top: 12px; text-align: left; }
+.opcja > b { display: block; font-size: 15px; font-weight: 900; margin-bottom: 6px; }
+.wybory { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.wyb { flex: 1 1 0; min-width: 64px; padding: 10px 6px; border-radius: 14px; background: #eef4fb; box-shadow: 0 3px 0 #c9d3e2; font-weight: 900; font-size: 15px; color: var(--ink); }
+.wyb.wybrany { background: #fff4d6; box-shadow: 0 3px 0 #e8cf8f; }
+.wyb[disabled] { flex: 0 0 auto; padding: 10px 14px; opacity: 1; }
+.n-komp { margin-top: 6px; }
+.mapy .wyb { flex: 1 1 40%; font-size: 14px; padding: 9px 6px; }
+.n-komp > span { display: block; font-size: 14px; font-weight: 900; margin-bottom: 4px; }
+.wkrotce { display: block; margin-top: 6px; font-size: 12px; font-weight: 800; color: var(--ink-soft); }
+.wybory .wkrotce { display: inline; margin-top: 0; }
+.trudnosc { display: flex; gap: 12px; align-items: center; text-align: left; width: 100%; padding: 12px; margin-top: 10px; border-radius: 18px; background: #eef4fb; box-shadow: 0 4px 0 #c9d3e2; }
+.trudnosc.wybrany { background: #fff4d6; box-shadow: 0 4px 0 #e8cf8f; }
+.trudnosc .ik { font-size: 32px; }
+.trudnosc b { display: block; font-size: 19px; font-weight: 900; }
+.trudnosc small { display: block; font-size: 13px; font-weight: 800; color: var(--ink-soft); }
+.lista .pozycja { display: flex; gap: 10px; align-items: center; text-align: left; padding: 10px; border-radius: 16px; background: #eef4fb; margin-top: 8px; }
+.pozycja .nr { font-family: var(--display); font-size: 24px; width: 34px; text-align: center; color: var(--berry); }
+.pozycja .tekst { flex: 1; } .pozycja b { display: block; } .pozycja small { color: var(--ink-soft); font-weight: 800; }
+.maly { padding: 8px 14px; border-radius: 14px; background: var(--green); color: #fff; font-weight: 900; box-shadow: 0 3px 0 var(--green-deep); }
+#k-stat { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; font-weight: 900; font-size: 14px; }
+#k-stat span { background: #eef4fb; border-radius: 10px; padding: 4px 8px; }
+@media (min-width: 700px) { #panel { left: 50%; right: auto; width: 680px; transform: translateX(-50%); } #stawianie { left: 50%; right: auto; width: 520px; transform: translateX(-50%); } }
+</style>
+</head>
+<body>
+<div id="scena"></div>
+<canvas id="nakladka"></canvas>
+
+<div id="gra-ui">
+  <div id="hud">
+    <div class="hud-row">
+      <button id="b-pauza" aria-label="Pauza">II</button>
+      <div id="zasoby">
+        <div class="chip">🌾<span id="z-jagody">0</span></div>
+        <div class="chip">🪵<span id="z-drewno">0</span></div>
+        <div class="chip">🪨<span id="z-kamien">0</span></div>
+        <div class="chip">⛓️<span id="z-zelazo">0</span></div>
+        <div class="chip">🪙<span id="z-zloto">0</span></div>
+        <div class="chip">✨<span id="z-laska">0</span></div>
+        <div class="chip" id="c-lud">👥<span id="z-lud">0/0</span></div>
+      </div>
+    </div>
+    <div class="hud-row2">
+      <div class="chip" id="h-era">🪵 Era 1: Czasy Plemion</div>
+      <div id="zadanie"></div>
+    </div>
+    <button id="b-era" class="brak">🔒 Era 2</button>
+  </div>
+  <div id="boczne">
+    <button class="okr" id="b-moce" aria-label="Moce bogów">⚡<b>0</b></button>
+    <button class="okr" id="b-bezczynni" aria-label="Wolni osadnicy">🧑‍🌾<b>0</b></button>
+    <button class="okr" id="b-wojsko" aria-label="Całe wojsko">⚔️<b>0</b></button>
+    <button class="okr" id="b-obszar" aria-label="Zaznacz ramką">⬚</button>
+    <button class="okr" id="b-dom" aria-label="Do Grodu">🏯</button>
+  </div>
+  <canvas id="mini"></canvas>
+  <div id="panel">
+    <div id="p-info"></div>
+    <div id="p-akcje"></div>
+  </div>
+  <div id="stawianie" hidden>
+    <div id="st-tekst"></div>
+    <div class="st-przyciski">
+      <button class="przycisk drugi" id="st-obroc" hidden style="flex: 0 0 64px;">🔄</button>
+      <button class="przycisk drugi" id="st-anuluj">Anuluj</button>
+      <button class="przycisk" id="st-tak">Postaw tutaj</button>
+    </div>
+  </div>
+  <div id="toast" hidden></div>
+  <div id="baner" hidden><b></b><small></small></div>
+</div>
+
+<div class="okno" id="o-menu" hidden>
+  <div class="karta">
+    <canvas id="logo" width="240" height="240"></canvas>
+    <h1>Age of<span>Polan</span></h1>
+    <p>Zbuduj gród Polan, wybierz bogów (Perun, Weles, Swaróg…), zdobądź ich łaskę, przyzwij stwory z dawnych wierzeń i pokonaj wrogie plemię!</p>
+    <p id="m-stara" hidden>🗺️ Mapa jest teraz 2 razy większa. Twoja poprzednia gra (na małej mapie) czeka w: Inne wersje gry → Wersja 13.</p>
+    <div class="drobne" id="m-wygrane"></div>
+    <button class="przycisk" id="m-dalej">Graj dalej</button>
+    <button class="przycisk pomar" id="m-nowa">Nowa gra</button>
+    <div class="przelacz">Muzyka <button id="m-muz">wł.</button></div>
+    <div class="przelacz">Dźwięki <button id="m-dzw">wł.</button></div>
+    <button class="przycisk drugi" data-inne-gry>Inne gry</button>
+    <button class="przycisk drugi" id="m-wersje" hidden>Inne wersje gry</button>
+    <div class="drobne" id="m-wersja"></div>
+  </div>
+</div>
+
+<div class="okno" id="o-nowa" hidden>
+  <div class="karta">
+    <h2>Nowa gra</h2>
+    <p>Każdy zaczyna w swoim rogu; mapa jest dla wszystkich taka sama.</p>
+    <div class="opcja"><b>Twój bóg</b><div class="wybory" id="n-bog"></div><small class="wkrotce" id="n-bog-opis"></small></div>
+    <div class="opcja"><b>Kraina</b><div class="wybory mapy" id="n-mapa"></div><small class="wkrotce" id="n-mapa-opis"></small></div>
+    <div class="opcja"><b>Wielkość mapy</b><div class="wybory" id="n-rozmiar"><button class="wyb" data-v="144">Mała</button><button class="wyb" data-v="192">Średnia</button><button class="wyb" data-v="240">Duża</button><button class="wyb" data-v="384">Mega</button></div></div>
+    <div class="opcja"><b>Ilu przeciwników?</b><div class="wybory" id="n-ile"><button class="wyb" data-v="1">1</button><button class="wyb" data-v="2">2</button><button class="wyb" data-v="3">3</button></div></div>
+    <div class="opcja"><b>Jak trudni?</b><div id="n-komputery"></div><small class="wkrotce" id="n-trud-opis"></small></div>
+    <div class="opcja" id="n-sojusz-w"><b>Kto z kim walczy?</b><div class="wybory" id="n-sojusz"><button class="wyb" data-v="kazdy">⚔️ Każdy na każdego</button><button class="wyb" data-v="razem">🤝 Komputery razem na ciebie</button></div></div>
+    <button class="przycisk" id="n-start">Zaczynamy!</button>
+    <button class="przycisk drugi" id="n-wroc">Wróć</button>
+  </div>
+</div>
+
+<div class="okno" id="o-pauza" hidden>
+  <div class="karta">
+    <h2>Pauza</h2>
+    <p id="pa-info"></p>
+    <button class="przycisk" id="pa-dalej">Graj dalej</button>
+    <div class="przelacz">Muzyka <button id="p-muz">wł.</button></div>
+    <div class="przelacz">Dźwięki <button id="p-dzw">wł.</button></div>
+    <button class="przycisk pomar" id="pa-nowa">Nowa gra</button>
+    <button class="przycisk drugi" data-inne-gry>Inne gry</button>
+    <button class="przycisk drugi" id="pa-menu">Menu</button>
+  </div>
+</div>
+
+<div class="okno" id="o-koniec" hidden>
+  <div class="karta">
+    <h2 id="k-tytul"></h2>
+    <p id="k-tekst"></p>
+    <div id="k-stat"></div>
+    <button class="przycisk" id="k-nowa">Zagraj jeszcze raz</button>
+    <button class="przycisk drugi" id="k-menu">Menu</button>
+  </div>
+</div>
+
+<div class="okno" id="o-wersje" hidden>
+  <div class="karta">
+    <h2>Wybierz wersję gry</h2>
+    <p>Każda wersja ma swój własny zapis postępu.</p>
+    <div class="lista" id="w-lista"></div>
+  </div>
+</div>
+
+<script type="module" src="gra.js"></script>
+<script src="../../../gry.js"></script>
+</body>
+</html>

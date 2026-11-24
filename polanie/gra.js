@@ -7,10 +7,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 4;
+const WERSJA = 5;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 4, opis: 'Nowe, dokładniejsze postacie: prawdziwe proporcje, twarze z brwiami, nosem i ustami, brody, lniane koszule z haftem, onuce, hełmy z nosalem; przy Gontynie osadnicy trenują jak bokserzy (garda i ciosy). Do tego wszystko z wersji 3.' },
+  { nr: 5, opis: 'Mniej napisów u góry: o nowej erze mówi tylko Gród (czego brakuje albo wybór boga), krótsze podpowiedzi. Do tego wszystko z wersji 4.' },
+  { nr: 4, opis: 'Nowe, dokładniejsze postacie: prawdziwe proporcje, twarze z brwiami, nosem i ustami, brody, lniane koszule z haftem, onuce, hełmy z nosalem; przy Gontynie osadnicy trenują jak bokserzy (garda i ciosy). Do tego wszystko z wersji 3.', adres: 'wersje/4/' },
   { nr: 3, opis: 'Modlitwa w Gontynie wygląda jak trening boksera (bieg w miejscu i ciosy); wstążki przy Gontynie i skrzydła stworów nie odlatują już od nich. Do tego wszystko z wersji 2.', adres: 'wersje/3/' },
   { nr: 2, opis: 'Nowa era na przycisku u góry ekranu (pisze, czego brakuje), w budynkach tylko to, co już można zrobić, czasy szkolenia jak w grach o bogach i erach, 27 nowych ulepszeń (od bogów, tarcze, mistrzowie linii), bohaterowie rosną z erami. Do tego wszystko z wersji 1.', adres: 'wersje/2/' },
   { nr: 1, opis: 'Pierwsza wersja: Polanie, 3 bogów głównych i 9 pomniejszych, łaska z modlitwy w Gontynie, 12 mocy bogów, 9 stworów, 3 bohaterów, 9 krain z ziem polskich.', adres: 'wersje/1/' },
@@ -1696,16 +1697,6 @@ function brakiEry(strona) {
   if (!BUD.some(b => b.strona === strona && b.typ === 'ratusz' && b.gotowy)) l.push('gotowego Grodu');
   return l;
 }
-function odswiezPrzyciskEry() {
-  const el = $('b-era'), nast = S.era[0] + 1, ne = NOWA_ERA[nast];
-  const trwa = BUD.map(b => b.strona === 0 && b.kolejka.find(q => q.rodzaj === 'era')).find(q => q);
-  let tekst, kl;
-  if (!ne) { tekst = `⚡ Najwyższa era: ${ERY[S.era[0]]}`; kl = 'koniec'; }
-  else if (trwa) { tekst = `⏳ ${BOGOWIE[trwa.typ] ? BOGOWIE[trwa.typ].emoji + ' ' : ''}Era ${nast}: ${ERY[nast]} · ${Math.floor(trwa.t / trwa.czas * 100)}%`; kl = 'trwa'; }
-  else { const b = brakiEry(0); if (b.length) { tekst = `🔒 Era ${nast}: ${ERY[nast]} · brakuje: ${b.join(', ')}`; kl = 'brak'; } else { tekst = `⬆️ Era ${nast}: ${ERY[nast]} · dotknij, żeby wybrać boga!`; kl = 'gotowa'; } }
-  if (el.textContent !== tekst) el.textContent = tekst;
-  el.className = kl;
-}
 function dodajDoKolejki(b, rodzaj, typ) {
   if (b.kolejka.length >= 5) return 'Kolejka jest pełna';
   let koszt, czas;
@@ -1843,7 +1834,7 @@ function cenyWracaja(dt) { for (let s = 0; s < ileStron(); s++) { const c = ceny
 
 // ================= moce bogów =================
 // każda moc działa raz w grze; moce z celem trzeba wskazać na mapie (gracz: dotknięciem, komputer: sam wybiera)
-let pokazMoce = false, trybMocy = null, pokazEre = false;
+let pokazMoce = false, trybMocy = null;
 const WIDOK_CZAROW = []; // błyskawice, ogniste kule, aury (tylko wygląd, nie trafia do zapisu)
 const GEO_PIORUN = new THREE.CylinderGeometry(0.09, 0.16, 26, 6).translate(0, 13, 0);
 const MAT_PIORUN = new THREE.MeshBasicMaterial({ color: '#e8f4ff', transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
@@ -2904,7 +2895,7 @@ function wskaz(px, py) {
   return naj;
 }
 function zaznacz(lista) {
-  if (lista.length) { pokazMoce = false; pokazEre = false; }
+  if (lista.length) pokazMoce = false;
   for (const e of wybrane) if (e.pierscien) e.pierscien.visible = false;
   wybrane = lista.filter(e => e && (E.get(e.id) === e));
   if (wybrane.length) S.pomoc.zaznaczyl = true;
@@ -3211,18 +3202,12 @@ function odswiezPanel(wymus = false) {
   wybrane = wybrane.filter(e => E.get(e.id) === e);
   const p = $('p-akcje'), info = $('p-info');
   const sel = wybrane, pierwszy = sel[0];
-  const klucz = (pokazEre ? 'E' + S.era[0] : '') + (pokazMoce ? 'M' + S.moce[0].map(m => m.uzyta ? 1 : 0).join('') : '') + sel.map(e => e.id).join(',') + '|' + S.era[0] + '|' + (pierwszy && jestBudynkiem(pierwszy) ? pierwszy.gotowy + ':' + (pierwszy.poziom || 1) + ':' + (pierwszy.zamk ? 1 : 0) + ':' + pierwszy.kolejka.map(q => q.typ).join('.') + ':' + Object.keys(S.ul[0]).join('.') : '');
+  const kEra = wybrane.length === 1 && wybrane[0].typ === 'ratusz' && wybrane[0].strona === 0 ? (brakiEry(0) || []).join(',') : '';
+  const klucz = kEra + (pokazMoce ? 'M' + S.moce[0].map(m => m.uzyta ? 1 : 0).join('') : '') + sel.map(e => e.id).join(',') + '|' + S.era[0] + '|' + (pierwszy && jestBudynkiem(pierwszy) ? pierwszy.gotowy + ':' + (pierwszy.poziom || 1) + ':' + (pierwszy.zamk ? 1 : 0) + ':' + pierwszy.kolejka.map(q => q.typ).join('.') + ':' + Object.keys(S.ul[0]).join('.') : '');
   if (!wymus && klucz === panelKlucz) { aktualizujPanel(); return; }
   panelKlucz = klucz;
   let h = '', a = '', zburzHTML = '';
-  if (!sel.length && pokazEre) {
-    const ne = NOWA_ERA[S.era[0] + 1];
-    h = `<div class="p-glowa"><span class="p-ik">${EMOJI_ERY[S.era[0] + 1]}</span><div><b>Era ${S.era[0] + 1}: ${ERY[S.era[0] + 1]}</b><small>Wybierz boga, który poprowadzi twoje plemię</small></div><button class="p-x" data-a="era-zamknij">✖</button></div>`;
-    if (ne) for (const id of bogowieEry(0)) {
-      const bg = BOGOWIE[id], st = JEDNOSTKI[bg.stwor], mc = MOCE[bg.moc];
-      a += `<button class="akcja era bog" data-a="era:${id}" data-koszt='${JSON.stringify(ne.koszt)}'><span class="ak-ik">${bg.emoji}</span><b>${bg.nazwa}</b><small>${bg.kim}. Moc: ${mc.emoji} ${mc.nazwa}. Stwór: ${st.emoji} ${st.nazwa}. ${bg.bonus}</small><span class="ak-koszt">${kosztHTML(ne.koszt)}</span></button>`;
-    }
-  } else if (!sel.length && pokazMoce) {
+  if (!sel.length && pokazMoce) {
     h = `<div class="p-glowa"><span class="p-ik">⚡</span><div><b>Moce bogów</b><small>Każdej mocy możesz użyć tylko raz w grze</small></div><button class="p-x" data-a="moce-zamknij">✖</button></div>`;
     for (const m of S.moce[0]) {
       const d = MOCE[m.id], bg = Object.values(BOGOWIE).find(b => b.moc === m.id);
@@ -3241,13 +3226,29 @@ function odswiezPanel(wymus = false) {
     if (moj && !b.gotowy) h += `<div class="p-opis">Plac budowy: zaznacz osadników i dotknij go, żeby budowali.</div>`;
     else if (moj) {
       h += `<div class="p-opis">${b.d.opis}${b.d.pole ? (wolnePole(b) ? ' · nikt tu nie pracuje' : ' · pracuje tu osadnik') : ''}${produkuje(b) ? ' · dotknij ziemi, żeby wskazać, dokąd mają iść nowi' : ''}</div>`;
-      // pokazujemy tylko to, co da się zrobić już teraz (brak surowców widać po kolorze ceny)
+      // pokazujemy tylko to, co da się zrobić już teraz (brak surowców widać po kolorze ceny); w Grodzie najpierw nowa era
+      const aEra = a; a = '';
       const typy = typyBudynku(0, b.typ).filter(t => !brakJednostki(0, t));
       for (const t of typy) {
         const d = JEDNOSTKI[t], br = null;
         a += `<button class="akcja${br ? ' zablok' : ''}" data-a="szkol:${t}" data-koszt='${JSON.stringify(d.koszt)}'><span class="ak-ik">${d.emoji}</span><b>${d.nazwa}</b><small>${br || d.opis}</small><span class="ak-koszt">${kosztHTML(d.koszt)}</span></button>`;
       }
-      if (b.typ === 'ratusz' && NOWA_ERA[S.era[0] + 1]) h += `<div class="p-opis">⬆️ Nowa era: przycisk na górze ekranu</div>`;
+      { const aJ = a; a = aEra;
+      if (b.typ === 'ratusz' && NOWA_ERA[S.era[0] + 1]) {
+        const nast = S.era[0] + 1, ne = NOWA_ERA[nast], trwa = b.kolejka.find(q => q.rodzaj === 'era'), braki = brakiEry(0);
+        if (trwa) h += `<div class="p-opis">⏳ ${BOGOWIE[trwa.typ] ? BOGOWIE[trwa.typ].emoji + ' ' + BOGOWIE[trwa.typ].nazwa + ': ' : ''}przechodzisz do ery ${nast}: ${ERY[nast]}</div>`;
+        else if (braki.length) {
+          h += `<div class="p-opis">🔒 Do ery ${nast} (${ERY[nast]}) brakuje: ${braki.join(', ')}</div>`;
+          a += `<button class="akcja era zablok" data-a="era-brak"><span class="ak-ik">${EMOJI_ERY[nast]}</span><b>Era ${nast}: ${ERY[nast]}</b><small>Brakuje: ${braki.join(', ')}</small><span class="ak-koszt">${kosztHTML(ne.koszt)}</span></button>`;
+        } else {
+          h += `<div class="p-opis">⬆️ Możesz przejść do ery ${nast}: ${ERY[nast]}. Wybierz boga:</div>`;
+          for (const id of bogowieEry(0)) {
+            const bg = BOGOWIE[id], st = JEDNOSTKI[bg.stwor], mc = MOCE[bg.moc];
+            a += `<button class="akcja era bog" data-a="era:${id}" data-koszt='${JSON.stringify(ne.koszt)}'><span class="ak-ik">${bg.emoji}</span><b>Era ${nast} z bogiem ${bg.nazwa}</b><small>${bg.kim}. Moc: ${mc.emoji} ${mc.nazwa}. Stwór: ${st.emoji} ${st.nazwa}. ${bg.bonus}</small><span class="ak-koszt">${kosztHTML(ne.koszt)}</span></button>`;
+          }
+        }
+      }
+      a += aJ; }
       if (b.d.gontyna) {
         const ilu = JED.filter(u => u.strona === 0 && u.zad && u.zad.typ === 'modl' && u.zad.bid === b.id).length;
         h += `<div class="p-opis">🙏 Modli się: ${ilu} (liczy się do ${LASKA.modlacychNaGontyne}) · ✨ ${(Math.min(ilu, LASKA.modlacychNaGontyne) * tempoLaski(0) * 60).toFixed(0)} łaski na minutę · zaznacz osadników i dotknij Gontyny, żeby się modlili</div>`;
@@ -3302,7 +3303,7 @@ function odswiezPanel(wymus = false) {
     }
   }
   a += zburzHTML;
-  info.innerHTML = h; p.innerHTML = a; p.scrollLeft = 0; $('panel').classList.toggle('zwiniety', !sel.length && !pokazMoce && !pokazEre);
+  info.innerHTML = h; p.innerHTML = a; p.scrollLeft = 0; $('panel').classList.toggle('zwiniety', !sel.length && !pokazMoce);
   aktualizujPanel();
 }
 function aktualizujPanel() {
@@ -3330,13 +3331,7 @@ $('panel').addEventListener('click', e => {
   audio();
   const [akcja, arg] = b.dataset.a.split(':'), cel = wybrane[0];
   if (akcja === 'odznacz') { zaznacz([]); dzwiek('klik'); return; }
-  if (akcja === 'era-zamknij') { pokazEre = false; dzwiek('klik'); odswiezPanel(true); return; }
-  if (akcja === 'era' && pokazEre) {
-    const gr = BUD.find(o => o.strona === STRONA_GRACZA && o.typ === 'ratusz' && o.gotowy && o.kolejka.length < 5);
-    const bl = gr ? dodajDoKolejki(gr, 'era', arg) : 'Nie masz wolnego Grodu';
-    if (bl) { toast(bl); dzwiek('blad'); } else { pokazEre = false; toast(`${BOGOWIE[arg].emoji} ${BOGOWIE[arg].nazwa}: Gród zaczyna przechodzić do nowej ery`); dzwiek('tak'); }
-    odswiezPanel(true); odswiezHud(); return;
-  }
+  if (akcja === 'era-brak') { toast('🔒 Do nowej ery brakuje: ' + (brakiEry(0) || []).join(', ')); dzwiek('blad'); return; }
   if (akcja === 'moce-zamknij') { pokazMoce = false; trybMocy = null; dzwiek('klik'); odswiezPanel(true); odswiezHud(); return; }
   if (akcja === 'moc') {
     const m = S.moce[0].find(o => o.id === arg); if (!m || m.uzyta) { dzwiek('blad'); return; }
@@ -3382,7 +3377,6 @@ function odswiezHud() {
   const z = S.zas[0];
   for (const s of SUROWCE) $('z-' + s).textContent = Math.floor(z[s]);
   $('z-laska').textContent = Math.floor(z.laska || 0);
-  odswiezPrzyciskEry();
   const lud = ludnosc(0), lim = limitLudnosci(0);
   $('z-lud').textContent = `${lud}/${lim}`; $('c-lud').classList.toggle('pelno', lud >= lim && lim < MAKS_LUDNOSC);
   $('h-era').textContent = `${EMOJI_ERY[S.era[0]]} Era ${S.era[0]}: ${ERY[S.era[0]]} · ${S.bogowie[0].map(b => BOGOWIE[b].emoji).join('')}`;
@@ -3407,13 +3401,13 @@ function podpowiedz() {
   if (!JED.some(u => u.strona === 0 && u.zad && u.zad.typ === 'modl')) return '🙏 Zaznacz 2–3 osadników i dotknij Gontyny: będą się modlić o łaskę';
   if (!ma('koszary')) return '🛡️ Zbuduj Dwór drużyny';
   if (S.moce[0] && S.moce[0].some(m => !m.uzyta) && S.czas > 600 && !S.pomoc.moc) return '⚡ Masz moc boga! Naciśnij ⚡ z boku ekranu';
-  if (S.era[0] === 1) return brakEry(0) ? '🏗️ Do ery 2 potrzeba 2 różnych budynków (np. drwalnia i Gontyna)' : '🏯 Zbierz 500 żywności i dotknij przycisku ery na górze ekranu (wybierzesz boga)';
+  if (S.era[0] === 1) return brakEry(0) ? '🏗️ Do ery 2 potrzeba 2 różnych budynków (np. drwalnia i Gontyna)' : '🏯 Dotknij Grodu: zobaczysz, czego brakuje do nowej ery';
   if (!ma('kopalnia')) return '⛏️ Zbuduj dymarkę przy rdzawych skałach z rudą';
   if (!BUD.some(b => b.strona === 0 && b.typ === 'gontyna' && b.kolejka.length) && !JED.some(u => u.strona === 0 && u.d.mit) && S.era[0] >= 2) return '🐺 W Gontynie przyzwij stwora swojego boga (za łaskę ✨)';
   if (!ma('jarmark')) return '🎪 Zbuduj Targowisko daleko od spichlerza: wozy przywiozą srebro';
   if (woj.length < 8) return '🛡️ Szkol wojsko w Dworze drużyny';
-  if (S.era[0] === 2) return '⚔️ Przycisk ery na górze: Czasy Bohaterów (potrzeba 200 żelaza)';
-  if (S.era[0] === 3 && woj.length >= 12) return '⚡ Przycisk ery na górze: Czasy Bogów (pancerni, katapulty, najsilniejsze stwory)';
+  if (S.era[0] === 2) return '🏯 Dotknij Grodu: następna era to Czasy Bohaterów';
+  if (S.era[0] === 3 && woj.length >= 12) return '🏯 Dotknij Grodu: następna era to Czasy Bogów';
   return '🚩 Zaznacz wojsko ⚔️ i dotknij Grodu komputera';
 }
 let toastT = null;
@@ -3431,17 +3425,9 @@ $('b-wojsko').onclick = () => {
   zaznacz(l); dzwiek('tak');
 };
 $('b-dom').onclick = () => { audio(); const r = BUD.find(b => b.strona === 0 && b.typ === 'ratusz'); if (r) { kam.x = r.x; kam.z = r.z; } kam.kat = Math.PI / 4; dzwiek('klik'); };
-$('b-era').onclick = () => {
-  audio(); if (!S) return;
-  const b = brakiEry(0);
-  if (!b) { toast('⚡ To już najwyższa era'); dzwiek('klik'); return; }
-  if (BUD.some(o => o.strona === 0 && o.kolejka.some(q => q.rodzaj === 'era'))) { toast('⏳ Gród już przechodzi do nowej ery'); dzwiek('klik'); return; }
-  if (b.length) { toast('🔒 Do nowej ery brakuje: ' + b.join(', ')); dzwiek('blad'); return; }
-  zaznacz([]); pokazMoce = false; trybMocy = null; pokazEre = !pokazEre; dzwiek('tak'); odswiezPanel(true);
-};
 $('b-moce').onclick = () => {
   audio(); if (!S) return;
-  if (pokazMoce || trybMocy) { pokazMoce = false; trybMocy = null; } else { zaznacz([]); pokazMoce = true; pokazEre = false; }
+  if (pokazMoce || trybMocy) { pokazMoce = false; trybMocy = null; } else { zaznacz([]); pokazMoce = true; }
   dzwiek('klik'); odswiezPanel(true); odswiezHud();
 };
 $('b-obszar').onclick = () => { audio(); trybObszar = !trybObszar; $('b-obszar').classList.toggle('wl', trybObszar); if (trybObszar) toast('Przeciągnij palcem ramkę wokół swoich ludzi'); };

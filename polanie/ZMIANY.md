@@ -7,6 +7,16 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 5 (24.11.2026)
+
+**Zmienione**
+- U góry ekranu nie ma już paska nowej ery. Wszystko o erze jest w Grodzie: dotknij Grodu, a na początku listy zobaczysz,
+  czego brakuje (jakie budynki i ile surowców), albo dwa przyciski z bogami, gdy można już przejść dalej.
+- Krótsze podpowiedzi u góry („Dotknij Grodu: zobaczysz, czego brakuje do nowej ery”).
+
+**Usunięte**
+- Przycisk ery u góry ekranu (z wersji 2).
+
 ## Wersja 4 (24.11.2026)
 
 **Zmienione**
