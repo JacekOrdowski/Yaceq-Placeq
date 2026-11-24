@@ -7,6 +7,13 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 11 (24.11.2026)
+
+**Zmienione**
+- Modlitwa w Gontynie wygląda jak bieg bokserski, a nie jak bicie worka treningowego: osadnicy rozstawieni dookoła Gontyny
+  biegają tam i z powrotem wzdłuż jej boków (zwalniają i zawracają na końcach). Gdy coś stoi na drodze (skała, drzewo, ktoś inny),
+  zawracają wcześniej. Łaska zbiera się tak samo jak dotąd.
+
 ## Wersja 10 (24.11.2026)
 
 **Zmienione**
