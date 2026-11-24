@@ -16,6 +16,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
   w nagłówku zaznaczonej jednostki albo budynku, w kolejce szkolenia i na ikonkach rodzajów w zaznaczonej grupie.
   W napisach i krótkich komunikatach zostają emoji.
 
+Zapis w repozytorium: `6303787`
+
 ## Wersja 25 (24.11.2026)
 
 **Dodane**
