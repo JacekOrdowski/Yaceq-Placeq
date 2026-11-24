@@ -30,6 +30,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
 - Bitwy komputer na komputer trwały 32–47 minut; gracz, który nic nie robi, na łatwym przegrywa po 30 minutach.
 - Czasy wzięte częściowo z notek do poprawek gry i opisów w internecie, a częściowo z pamięci (strony z dokładnymi tabelami były niedostępne).
 
+Zapis w repozytorium: `4772eb6`
+
 ## Wersja 1 (24.11.2026)
 
 **Dodane**
