@@ -15,6 +15,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
   Dotknięcie mapki dalej przenosi widok w to miejsce.
 - Styl obrazków (`STYL.md`): dopisane, co jest słowiańskie, a czego unikać, żeby nie wyglądało nordycko (uwaga właściciela).
 
+Zapis w repozytorium: `97bdd2b`
+
 ## Wersja 23 (24.11.2026)
 
 **Dodane**
