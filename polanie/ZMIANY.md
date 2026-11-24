@@ -18,6 +18,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
 **Do sprawdzenia**
 - Czy na telefonie gra wczytuje się równie szybko (doszły 2 modele po około 2 MB).
 
+Zapis w repozytorium: `4244c33`
+
 ## Wersja 20 (24.11.2026)
 
 **Zmienione**
