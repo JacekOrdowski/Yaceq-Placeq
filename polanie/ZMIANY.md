@@ -30,6 +30,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
 - Płynność na iPhonie 13 przy dużych bitwach (w podglądzie na komputerze różnica była mała). Gdyby zwalniało: mniejsze `LUDZ_MAKS`
   albo `LUDZ_D` w `gra.js`.
 
+Zapis w repozytorium: `560630d`
+
 ## Wersja 5 (24.11.2026)
 
 **Zmienione**
