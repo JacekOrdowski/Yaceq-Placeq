@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 21;
+const WERSJA = 22;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 21, opis: 'Leszy jak prawdziwy drzewny olbrzym: kora, mech i korzenie, biega, uderza, grozi i pada z prawdziwym ruchem. Do tego wszystko z wersji 20.' },
+  { nr: 22, opis: 'W zaznaczonej grupie można dotknąć rodzaju wojska (jednego albo kilku), żeby dowodzić tylko nimi. Do tego wszystko z wersji 21.' },
+  { nr: 21, opis: 'Leszy jak prawdziwy drzewny olbrzym: kora, mech i korzenie, biega, uderza, grozi i pada z prawdziwym ruchem. Do tego wszystko z wersji 20.', adres: 'wersje/21/' },
   { nr: 20, opis: 'Nowy Leszy: wysoki olbrzym z kory i korzeni, z gałęziami jak poroże, świecącymi oczami i brodą z mchu. Do tego wszystko z wersji 19.', adres: 'wersje/20/' },
   { nr: 19, opis: 'Zapisywanie i wczytywanie gry (do 8 zapisów), ulepszenia muru po dotknięciu muru, a bramy po dotknięciu bramy. Do tego wszystko z wersji 18.', adres: 'wersje/19/' },
   { nr: 18, opis: 'Procenty budowy: przy częstokole tylko przy największym przybliżeniu, przy budynkach znikają przy oddalaniu, z daleka nie ma ich wcale. Do tego wszystko z wersji 17.', adres: 'wersje/18/' },
@@ -3023,7 +3024,10 @@ function wskaz(px, py) {
   }
   return naj;
 }
-function zaznacz(lista) {
+// wybór rodzajów w zaznaczonej grupie: grupaZrodlo = cała zaznaczona grupa, grupaTypy = wybrane rodzaje (pusto = wszyscy)
+let grupaZrodlo = null, grupaTypy = new Set();
+function zaznacz(lista, zGrupy = false) {
+  if (!zGrupy) { grupaZrodlo = null; grupaTypy.clear(); }
   if (lista.length) pokazMoce = false;
   for (const e of wybrane) if (e.pierscien) e.pierscien.visible = false;
   wybrane = lista.filter(e => e && (E.get(e.id) === e));
@@ -3405,7 +3409,14 @@ function odswiezPanel(wymus = false) {
   } else {
     const moje = sel.filter(e => e.strona === STRONA_GRACZA), wrogi = !moje.length;
     const typy = {}; for (const u of sel) typy[u.typ] = (typy[u.typ] || 0) + 1;
-    if (sel.length === 1) {
+    // rodzaje w grupie: dotknięcie wybiera tylko ten rodzaj, kolejne dotknięcia dokładają albo zdejmują następne
+    if (grupaZrodlo) grupaZrodlo = grupaZrodlo.filter(e => E.get(e.id) === e);
+    const zrodlo = grupaZrodlo || (wrogi ? [] : moje), typyZr = {}; for (const u of zrodlo) typyZr[u.typ] = (typyZr[u.typ] || 0) + 1;
+    const chipy = Object.keys(typyZr).length > 1 ? `<div class="p-grupa">${Object.entries(typyZr).map(([t, n]) => `<button class="${grupaTypy.has(t) ? 'wybrana' : grupaTypy.size ? 'wyl' : ''}" data-a="grupa:${t}">${JEDNOSTKI[t].emoji}×${n}</button>`).join('')}</div>` : '';
+    if (chipy) {
+      h = `<div class="p-glowa"><div>${chipy}<div class="p-opis">${grupaTypy.size ? 'Dotknij innej ikonki, żeby dołożyć albo zdjąć rodzaj. Wszystkie zdjęte = cała grupa.' : 'Dotknij ikonki, żeby wybrać tylko ten rodzaj (można kilka).'}</div></div><button class="p-x" data-a="odznacz">✖</button></div>`;
+      if (sel.length === 1) { const u = pierwszy; h += `<div class="p-opis"><b>${u.d.emoji} ${u.d.nazwa}</b> · <span data-hp>❤️ ${Math.ceil(u.hp)} / ${u.max}</span></div>`; }
+    } else if (sel.length === 1) {
       const u = pierwszy;
       h = `<div class="p-glowa"><span class="p-ik">${u.d.emoji}</span><div><b>${u.d.nazwa}${wrogi ? ' (komputer)' : ''}</b><small data-hp>❤️ ${Math.ceil(u.hp)} / ${u.max} · ⚔️ ${atakJ(u)} · 🛡️ ${pancerzJ(u)}</small><div class="p-hp"><i data-hpb style="width:${u.hp / u.max * 100}%"></i></div></div><button class="p-x" data-a="odznacz">✖</button></div>`;
     } else {
@@ -3457,6 +3468,11 @@ $('panel').addEventListener('click', e => {
   audio();
   const [akcja, arg] = b.dataset.a.split(':'), cel = wybrane[0];
   if (akcja === 'odznacz') { zaznacz([]); dzwiek('klik'); return; }
+  if (akcja === 'grupa') {
+    if (!grupaZrodlo) grupaZrodlo = wybrane.filter(e => e.strona === STRONA_GRACZA && !jestBudynkiem(e));
+    if (grupaTypy.has(arg)) grupaTypy.delete(arg); else grupaTypy.add(arg);
+    const zr = grupaZrodlo; zaznacz(zr.filter(u => !grupaTypy.size || grupaTypy.has(u.typ)), true); dzwiek('klik'); return;
+  }
   if (akcja === 'era-wybor') { dzwiek('tak'); pokazWyborBoga(); return; }
   if (akcja === 'era-brak') { toast('🔒 Do nowej ery brakuje: ' + (brakiEry(0) || []).join(', ')); dzwiek('blad'); return; }
   if (akcja === 'moce-zamknij') { pokazMoce = false; trybMocy = null; dzwiek('klik'); odswiezPanel(true); odswiezHud(); return; }

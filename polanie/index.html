@@ -81,7 +81,11 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 #panel > div:has(.p-x) { padding-right: 106px; min-height: 102px; box-sizing: border-box; }
 .p-x:active { transform: translateY(2px); box-shadow: 0 1px 0 #c5cfdc; }
 .p-grupa { display: flex; flex-wrap: wrap; gap: 6px; font-weight: 900; font-size: 16px; }
-.p-grupa span { background: #eef2f7; border-radius: 10px; padding: 2px 7px; }
+.p-grupa span, .p-grupa button { background: #eef2f7; border-radius: 10px; padding: 2px 7px; font: inherit; color: var(--ink); }
+.p-grupa button { padding: 4px 9px; box-shadow: 0 2px 0 #c5cfdc; }
+.p-grupa button.wybrana { background: var(--green); color: #fff; box-shadow: 0 2px 0 #2f8a4a; }
+.p-grupa button.wyl { opacity: 0.45; }
+.p-grupa + .p-opis { margin-top: 5px; }
 .p-opis { font-size: 12px; color: var(--ink-soft); font-weight: 800; line-height: 1.25; }
 .p-kolejka { display: flex; gap: 5px; align-items: center; }
 .kol { position: relative; width: 34px; height: 34px; border-radius: 9px; background: #eef2f7; overflow: hidden; font-size: 18px; }
