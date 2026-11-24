@@ -1,4 +1,4 @@
-// Age of Haskap II: gra strategiczna. Dowodzisz osadnikami, zbierasz surowce, budujesz osadę, przechodzisz przez ery
+// Age of Haskap: gra strategiczna. Dowodzisz osadnikami, zbierasz surowce, budujesz osadę, przechodzisz przez ery
 // i bronisz się przed osadą komputera (albo ją pokonujesz). Gatunek jak w znanych grach strategicznych,
 // ale nazwy, budynki, wygląd i liczby są nasze.
 import * as THREE from '../survival/three.module.min.js';
@@ -6,10 +6,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY } from './dane.js';
 
-const WERSJA = 29;
+const WERSJA = 30;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 29, opis: '14 nowych ulepszeń: Umocniony Dworek, Murarze, Mistrzowie budowy, Blanki, Wrzący syrop, Lunety, Płonące pociski, Pobór, Inżynierowie, Zaprzęg reniferów, Bite monety, Uczciwe wagi, Poborcy podatków, Szyb z drabinami. Do tego wszystko z wersji 28.' },
+  { nr: 30, opis: 'Nowa nazwa: Age of Haskap (bez „II”); przycisk „Inne gry” także w pauzie, a na liście gier jest nowa gra Age of Polan. Do tego wszystko z wersji 29.' },
+  { nr: 29, opis: '14 nowych ulepszeń: Umocniony Dworek, Murarze, Mistrzowie budowy, Blanki, Wrzący syrop, Lunety, Płonące pociski, Pobór, Inżynierowie, Zaprzęg reniferów, Bite monety, Uczciwe wagi, Poborcy podatków, Szyb z drabinami. Do tego wszystko z wersji 28.', adres: 'wersje/29/' },
   { nr: 28, opis: 'Prawdziwe wysokie góry ze śniegiem na szczytach w Jotunheim i nowa wielkość mapy Mega (384 × 384, 2 razy większa niż Średnia). Do tego wszystko z wersji 27.', adres: 'wersje/28/' },
   { nr: 27, opis: 'Nowa mapa Jotunheim: zimowa kraina olbrzymów z ośnieżonymi górami, fiordami, lasami świerkowymi i kamieniami z runami. Do tego wszystko z wersji 26.', adres: 'wersje/27/' },
   { nr: 26, opis: '8 rodzajów map do wyboru: Dolina, Wielkie Jezioro, Rzeka z brodami, Skalne Przełęcze, Gęsta Puszcza, Mroźna Tundra, Oaza, Bagna (albo losowa). Do tego wszystko z wersji 25.', adres: 'wersje/26/' },
@@ -3167,7 +3168,7 @@ function pokazMenu() {
   if (jest) $('m-dalej').textContent = `Graj dalej (${TRUDNOSC[zapis.gra.trudnosc].nazwa.toLowerCase()}, ${Math.floor(zapis.gra.czas / 60)} min)`;
   const w = zapis.wygrane, ile = Object.values(w).reduce((a, b) => a + b, 0);
   $('m-wygrane').textContent = ile ? `🏆 Wygrane: ${Object.entries(w).filter(([, n]) => n).map(([k, n]) => `${TRUDNOSC[k].nazwa.toLowerCase()} ${n}`).join(', ')}` : '';
-  $('m-wersja').textContent = `Age of Haskap II, wersja ${WERSJA}`;
+  $('m-wersja').textContent = `Age of Haskap, wersja ${WERSJA}`;
   $('m-wersje').hidden = WERSJE.length < 2;
   ustawPrzelaczniki(); pokazOkno('o-menu');
 }

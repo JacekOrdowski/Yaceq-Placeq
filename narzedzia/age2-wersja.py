@@ -55,7 +55,10 @@ def main():
             t = zamien(t, "$('m-wersje').hidden = WERSJE.length < 2;", "$('m-wersje').hidden = false;", p)
             t = zamien(t, "$('m-wersje').onclick = () => { dzwiek('klik'); pokazWersje(); };", "$('m-wersje').onclick = () => { location.href = '../../'; };", p)
         if p == 'index.html':
-            t = zamien(t, '<title>Age of Haskap II</title>', f'<title>Age of Haskap II (wersja {nr})</title>', p)
+            # do wersji 29 gra nazywała się Age of Haskap II
+            t, ile = re.subn(r'<title>(Age of Haskap(?: II)?)</title>', lambda m: f'<title>{m.group(1)} (wersja {nr})</title>', t, count=1)
+            if not ile:
+                raise SystemExit('Nie znaleziono <title> w index.html')
             t = zamien(t, 'src="../gry.js"', 'src="../../../gry.js"', p)
         (cel / p).write_text(t, encoding='utf-8', newline='\n')
     print(f'Zapisano wersję {nr} (z {commit}) w {cel}')

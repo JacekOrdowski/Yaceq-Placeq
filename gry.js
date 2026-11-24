@@ -6,7 +6,8 @@
     { folder: '', nazwa: 'Śmierdzipacha', opis: 'Matematyka od 1. do 8. klasy: armia biegnie przez bramki z wynikami.', ikona: '🧮' },
     { folder: 'survival/', nazwa: 'Yaceq Survival', opis: 'Jagody kamczackie, zimowy obóz, pomocnicy i zwierzęta (3D).', ikona: '🫐' },
     { folder: 'age/', nazwa: 'Age of Yaceq', opis: 'Budujesz miasto gdzie chcesz i przechodzisz przez kolejne ery w ratuszu (3D).', ikona: '🏰' },
-    { folder: 'age2/', nazwa: 'Age of Haskap II', opis: 'Dowodzisz zbieraczami, przechodzisz 4 ery jagody kamczackiej i walczysz z osadą komputera (3D).', ikona: '👑' },
+    { folder: 'age2/', nazwa: 'Age of Haskap', opis: 'Dowodzisz zbieraczami, przechodzisz 4 ery jagody kamczackiej i walczysz z osadą komputera (3D).', ikona: '👑' },
+    { folder: 'polanie/', nazwa: 'Age of Polan', opis: 'Słowiańska gra o erach: gród Polan, bogowie (Perun, Weles, Swaróg…), moce, stwory i bohaterowie z podań (3D).', ikona: '⚡' },
     { folder: 'wersja-robocza/', nazwa: 'Obrona bazy (wersja robocza)', opis: 'Meteory lecą na bazę, a Strażnik strzela do nich z wieżyczkami.', ikona: '☄️' },
   ];
   const skrypt = document.currentScript;

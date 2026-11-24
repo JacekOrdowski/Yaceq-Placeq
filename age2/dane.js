@@ -1,4 +1,4 @@
-// Age of Haskap II: liczby do strojenia (jednostki, budynki, ery, ulepszenia, poziomy trudności).
+// Age of Haskap: liczby do strojenia (jednostki, budynki, ery, ulepszenia, poziomy trudności).
 // Nasza własna mapa ulepszeń, inspirowana jagodą kamczacką (haskap): ery rosną jak krzak, wojsko jeździ na reniferach i łosiach.
 // Nazwy wewnętrzne (np. 'ratusz', 'koszary', 'szopa') zostają takie same jak w wersji 1, żeby zapisane gry dało się wczytać.
 

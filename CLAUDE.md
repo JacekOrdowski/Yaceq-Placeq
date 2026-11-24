@@ -99,7 +99,7 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   (robot stawia to w wolnym miejscu). Robot przechodzi grę w około 80 minut.
 - Przybliżanie: uszczypnięcie dwoma palcami albo kółko myszy (`zoom` w `age/gra.js`, od 0,6 do 2, zapamiętane w `zapis.zoom`).
 
-## Age of Haskap II (osobna gra w folderze `age2/`)
+## Age of Haskap (osobna gra w folderze `age2/`; do wersji 29 „Age of Haskap II”)
 
 - Gra strategiczna (gatunek jak znane gry o erach, ale nazwy, budynki, wygląd i liczby są nasze; nie kopiujemy cudzej gry).
   Gracz dowodzi osadnikami (dotknij osadnika, potem krzaka, drzewa, skały, budynku albo wroga); obok rośnie osada komputera.
@@ -137,6 +137,25 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   Brama ma 4 kratki (`kratkiBramy`, `SZER_BRAMY`, `b.kom`; przy murze wpasowuje się w niego: `bramaWMurze`), można ją zamknąć (`ustawBrame`). Rzemieślnik (`naprawia: true`) sam naprawia budynki (`NAPRAWA` w `dane.js`).
   Poprzednią wersję zapisz jako kopię: `python narzedzia/age2-wersja.py NUMER SKROT_COMMITA` i dopisz ją w `WERSJE`
   z `adres: 'wersje/NUMER/'` (kopie mają zapis `age-of-haskap-2-wNUMER`).
+
+## Age of Polan (osobna gra w folderze `polanie/`)
+
+- Słowiańska gra o erach i bogach (gatunek jak Age of Mythology, ale treść, nazwy, wygląd i liczby są nasze; nie kopiujemy cudzej gry).
+  Silnik skopiowany z Age of Haskap 29; Age of Haskap przy pracy nad Polanami nie ruszamy (i odwrotnie). Zapis `age-of-polan-1`.
+- Co czemu odpowiada (bogowie, moce, stwory, bohaterowie, krainy, plany na później): `polanie/MITOLOGIA.md`.
+  Plan gry z kolegami: `polanie/GRA-Z-KOLEGAMI.md`. Czasy około 1000 lat temu (przed 966 r.), wierzenia i podania z ziem polskich.
+- Nazwy wewnętrzne zostały z Age of Haskap: `ratusz` = Gród, `koszary` = Dwór drużyny, `tartak` = Drwalnia, `kopalnia` = Dymarka,
+  `jarmark` = Targowisko, `pole` = Zagon prosa, `jagody` = żywność, `zloto` = srebro, linia `renifer` = konie. Łaska to `S.zas[s].laska`
+  (poza `SUROWCE`, nie da się nią handlować).
+- Bogowie (`BOGOWIE`, `BOGOWIE_GLOWNI`), moce (`MOCE`), łaska (`LASKA`), stwory (`mit`, `bog` w `JEDNOSTKI`) i bohaterowie (`bohater`)
+  są w `polanie/dane.js`. Wybrani bogowie: `S.bogowie[strona]` (pierwszy = główny), moce: `S.moce`, działające moce: `S.czary`,
+  czasowe wzmocnienia: `S.buff`. Bonusy bogów liczą funkcje z `bogMa(strona, id)`; moce: `uzyjMocy`, `krokCzarow`; komputer: `aiMoce`.
+  Era przechodzi z wybranym bogiem: `dodajDoKolejki(gród, 'era', idBoga)`, opcje: `bogowieEry`. Modlitwa: zadanie `modl`.
+- Muzyka i dźwięki są brane z `age2/` (`../age2/muzyka/`, `../age2/dzwieki/`).
+- Test: `window.__polan` (to samo co `__haskap`, do tego `uzyjMocy`). Gry komputer kontra komputer trwają około 60–80 minut.
+- Nowa wersja: podnieś `WERSJA` w `polanie/gra.js`, dopisz sekcję w `polanie/ZMIANY.md` (te same zasady co wyżej).
+  Poprzednią wersję zapisz jako kopię: `python narzedzia/polanie-wersja.py NUMER SKROT_COMMITA` i dopisz ją w `WERSJE`
+  z `adres: 'wersje/NUMER/'` (kopie mają zapis `age-of-polan-1-wNUMER`).
 
 ## Lista naszych gier
 

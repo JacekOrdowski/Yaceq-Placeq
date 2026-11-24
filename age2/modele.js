@@ -1,4 +1,4 @@
-// Age of Haskap II: modele 3D (własne, proste bryły). Każdy model to jedna bryła z kolorami w wierzchołkach,
+// Age of Haskap: modele 3D (własne, proste bryły). Każdy model to jedna bryła z kolorami w wierzchołkach,
 // dzięki temu telefon rysuje setki postaci bez zwalniania.
 import * as THREE from '../survival/three.module.min.js';
 

@@ -1,9 +1,15 @@
-# Age of Haskap II: historia wersji
+# Age of Haskap: historia wersji
 
 Gra działa pod adresem https://jacekordowski.github.io/Yaceq-Placeq/age2/
 
 Nowa gra strategiczna. Pomysł gatunku jest wspólny dla wielu gier o erach (osadnicy, surowce, budowanie, wojsko),
 ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda kamczacka.
+
+## Wersja 30 (24.11.2026)
+
+**Zmienione**
+- Gra nazywa się teraz Age of Haskap (bez „II”): w menu, w tytule strony, na ikonie w telefonie i na liście naszych gier.
+- Przycisk „Inne gry” jest teraz także w pauzie (w menu był już wcześniej). Na liście gier jest nowa gra Age of Polan.
 
 ## Wersja 29 (23.11.2026)
 
