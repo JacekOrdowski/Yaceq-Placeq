@@ -15,6 +15,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
   Są w okrągłych ramkach w pasku u góry, w cenach na przyciskach, na Targowisku i w nagłówku krzaka, drzewa czy skały.
   W krótkich komunikatach zostają emoji.
 
+Zapis w repozytorium: `f06d66f`
+
 ## Wersja 27 (24.11.2026)
 
 **Dodane**
