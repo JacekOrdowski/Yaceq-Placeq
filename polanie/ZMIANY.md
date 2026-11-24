@@ -7,6 +7,21 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 25 (24.11.2026)
+
+**Dodane**
+- Malowane portrety wszystkich 12 bogów (Perun, Weles, Swaróg, Dażbóg, Mokosz, Jaryło, Strzybóg, Swarożyc, Łada, Świętowit,
+  Marzanna, Trzygłów) w wybranym stylu A: noc, księżyc, mgła, chłodne światło i jeden mocny kolor boga, słowiańskie stroje
+  z haftem. Widać je przy wyborze boga do nowej gry i w oknie wyboru boga przy nowej erze (folder `portrety/`).
+- Tło ekranu startowego, wyboru wersji i nowej gry: gród Polan nocą nad rzeką, z księżycem, pochodniami, posągiem
+  o czterech twarzach i świętym dębem (`obrazy/tlo-menu.jpg`). Okienka są lekko przezroczyste, żeby gród prześwitywał.
+
+**Zmienione**
+- `STYL.md`: zapisany wybrany wariant A i wzór polecenia do Gemini.
+
+**Do sprawdzenia**
+- Czy portrety i tło dobrze wyglądają na telefonie (gra pobiera około 0,6 MB obrazków więcej).
+
 ## Wersja 24 (24.11.2026)
 
 **Zmienione**

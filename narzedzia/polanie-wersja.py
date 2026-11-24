@@ -47,6 +47,10 @@ def main():
             t = zamien(t, "'../survival/three.module.min.js'", "'../../../survival/three.module.min.js'", p)
             t = t.replace("from './postacie/", "from '../../postacie/").replace("L.load('postacie/' + n", "L.load('../../postacie/' + n")
             t = t.replace("TL.load('postacie/' + n", "TL.load('../../postacie/' + n")  # faktury stworów (od wersji 21)
+        if p == 'portrety.js':  # malowane portrety (od wersji 25) są tylko w głównym folderze gry
+            t = t.replace("const FOLDER_PORTRETOW = 'portrety/';", "const FOLDER_PORTRETOW = '../../portrety/';")
+        if p == 'index.html':  # tło ekranu startowego (od wersji 25)
+            t = t.replace("url('obrazy/", "url('../../obrazy/")
         if p in ('gra.js', 'modele.js'):
             t = zamien(t, "'../survival/three.module.min.js'", "'../../../survival/three.module.min.js'", p)
         if p == 'gra.js':

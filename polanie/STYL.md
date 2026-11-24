@@ -24,7 +24,21 @@ Nie kopiujemy wyglądu żadnej gry ani filmu (bez postaci i znaków z Wiedźmina
     łodzie smocze, krajobraz fiordów. na pierwszym planie i przerażających twarzy. Bez tekstu i liter na obrazkach (napisy robi gra).
 - Portrety bogów: popiersie, patrzy lekko w bok, ciemne tło z mgłą i światłem w kolorze boga, ten sam kadr i wielkość u wszystkich.
 
-### Wzór opisu do Gemini (początek każdego polecenia)
+### Wybrany wariant: A „mroczny, nocny” (właściciel, 24.11.2026)
+
+Z czterech prób (A mroczny nocny, B baśniowy złoty świt, C ludowy na desce, D tusz i akwarela) wybrany został **A**:
+noc, księżyc, mgła nad bagnem lub puszczą, chłodne niebieskozielone światło, do tego ciepłe światełka (świetliki, ogień)
+i jeden mocny akcent w kolorze boga lub sceny. Twarze łagodne albo surowe, ale nie straszne. Wzór: portret Mokoszy
+(`portrety/mokosz.jpg`).
+
+Wzór polecenia dla tego wariantu:
+
+> Wygeneruj obrazek. Malarstwo cyfrowe fantasy, mroczna baśń przyjazna dzieciom, pogańscy Słowianie około roku 1000.
+> Noc, księżyc, mgła, chłodne niebieskozielone światło i jeden mocny akcent: [kolor i źródło światła].
+> Stroje dawnych Słowian: lniane koszule z czerwono-białym haftem, kożuchy, srebrne ozdoby.
+> Bez wikingów, bez nordyckich węzłów, bez hełmów z nosalem. [Co na obrazku]. Bez tekstu. Kwadrat 1:1.
+
+### Wzór opisu do Gemini (początek każdego polecenia, ogólny)
 
 > Ilustracja w stylu malarstwa cyfrowego fantasy, słowiański pogański klimat około roku 1000, lekko mroczna, ale przyjazna dzieciom.
 > Przygaszone ziemiste kolory, mgła, ciepłe światło ognia, jeden mocny kolor akcentu. Stroje i ozdoby dawnych Słowian

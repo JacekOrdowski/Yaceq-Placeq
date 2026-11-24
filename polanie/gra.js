@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 24;
+const WERSJA = 25;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 24, opis: 'Mapka w lewym górnym rogu: schowana, pokazuje się po dotknięciu 🗺️ i jest o połowę większa. Do tego wszystko z wersji 23.' },
+  { nr: 25, opis: 'Malowane portrety 12 bogów w mrocznym, nocnym stylu i gród nocą na ekranie startowym. Do tego wszystko z wersji 24.' },
+  { nr: 24, opis: 'Mapka w lewym górnym rogu: schowana, pokazuje się po dotknięciu 🗺️ i jest o połowę większa. Do tego wszystko z wersji 23.', adres: 'wersje/24/' },
   { nr: 23, opis: 'Nowa muzyka słowiańsko-pogańska: pieśni obrzędowe, fujarki, mroczny las i bębny wojenne w bitwie. Do tego wszystko z wersji 22.', adres: 'wersje/23/' },
   { nr: 22, opis: 'W zaznaczonej grupie można dotknąć rodzaju wojska (jednego albo kilku), żeby dowodzić tylko nimi. Do tego wszystko z wersji 21.', adres: 'wersje/22/' },
   { nr: 21, opis: 'Leszy jak prawdziwy drzewny olbrzym: kora, mech i korzenie, biega, uderza, grozi i pada z prawdziwym ruchem. Do tego wszystko z wersji 20.', adres: 'wersje/21/' },

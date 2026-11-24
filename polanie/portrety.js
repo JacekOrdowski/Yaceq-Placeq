@@ -117,7 +117,11 @@ const RYS = {
     `<path d="M72 70 L78 52 L90 64 L100 46 L110 64 L122 52 L128 70 Z" fill="#c8a8ff" stroke="#6a4a9a" stroke-width="1.5"/>`,
 };
 
+// od wersji 25 malowane portrety z Gemini (styl A z STYL.md) w folderze portrety/; rysunki SVG zostają na zapas
+export const PORTRETY_OBRAZY = ['perun', 'weles', 'swarog', 'dazbog', 'mokosz', 'jarylo', 'strzybog', 'swarozyc', 'lada', 'swietowit', 'marzanna', 'trzyglow'];
+const FOLDER_PORTRETOW = 'portrety/';
 export function portret(id) {
+  if (PORTRETY_OBRAZY.includes(id)) return `<img class="portret" src="${FOLDER_PORTRETOW}${id}.jpg" alt="${id}" draggable="false">`;
   const f = RYS[id]; if (!f) return '';
   const n = 'p' + (nr++);
   return `<svg viewBox="0 0 200 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${id}">${f(n)}${RAMKA}</svg>`;

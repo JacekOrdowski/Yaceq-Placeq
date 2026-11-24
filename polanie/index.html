@@ -128,6 +128,9 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 
 /* ---------- okna ---------- */
 .okno { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(20, 40, 60, 0.45); padding: 16px; overflow: auto; }
+/* ekran startowy: gród nocą (obraz z Gemini, styl A z STYL.md) */
+#o-menu, #o-wersje, #o-nowa { background: #0d1a24 url('obrazy/tlo-menu.jpg') center top / cover no-repeat; }
+#o-menu .karta, #o-wersje .karta, #o-nowa .karta { background: rgba(255, 255, 255, 0.8); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 .karta { width: min(420px, 100%); background: #fff; border-radius: 26px; padding: 20px 18px 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.3); text-align: center; box-sizing: border-box; }
 .karta h1 { margin: 4px 0 2px; font-family: var(--display); font-weight: 400; font-size: 42px; line-height: 0.95; color: var(--berry); }
 .karta h1 span { display: block; color: var(--orange); font-size: 34px; }
@@ -155,9 +158,12 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .mapy .wyb { flex: 1 1 40%; font-size: 14px; padding: 9px 6px; }
 /* bogowie: portrety przy wyborze boga głównego i okno wyboru boga przy nowej erze */
 .bog-wyb svg { display: block; width: 72px; height: 90px; margin: 0 auto 4px; }
+.bog-wyb img.portret { display: block; width: 84px; height: 84px; object-fit: cover; border-radius: 14px; margin: 0 auto 5px; box-shadow: 0 3px 8px rgba(0,0,0,0.3); }
 .karta.bogowie { width: min(620px, 100%); padding: 16px 12px 12px; }
 .bg-lista { display: flex; gap: 10px; justify-content: center; align-items: stretch; }
 .bg-karta { flex: 1 1 0; max-width: 280px; display: flex; flex-direction: column; background: #fff8e6; border-radius: 18px; padding: 10px; box-shadow: 0 4px 0 #e8cf8f; text-align: center; }
+.bg-karta img.portret { display: block; width: 100%; max-width: 230px; aspect-ratio: 1; object-fit: cover; border-radius: 16px; margin: 0 auto 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
 .bg-karta svg { width: 100%; max-width: 200px; aspect-ratio: 200 / 250; margin: 0 auto 6px; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25)); }
 .bg-karta b { font-family: var(--display); font-weight: 400; font-size: 26px; color: var(--berry); line-height: 1; }
 .bg-karta i { display: block; font-style: normal; font-size: 13px; font-weight: 800; color: var(--ink-soft); margin: 2px 0 6px; }
