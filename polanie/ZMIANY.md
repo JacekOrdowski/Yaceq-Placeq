@@ -15,6 +15,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
   świecącymi zielonymi oczami i brodą z mchu, z głowy wyrastają rozłożyste gałęzie z liśćmi jak poroże. Na ramionach mech
   i muchomory, pas z pnączy i kwiaty w kolorze strony. Jest wyraźnie wyższy od ludzi (pasek życia wyżej).
 
+Zapis w repozytorium: `777f5df`
+
 ## Wersja 19 (24.11.2026)
 
 **Dodane**
