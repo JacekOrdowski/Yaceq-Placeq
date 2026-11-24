@@ -151,7 +151,8 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   są w `polanie/dane.js`. Wybrani bogowie: `S.bogowie[strona]` (pierwszy = główny), moce: `S.moce`, działające moce: `S.czary`,
   czasowe wzmocnienia: `S.buff`. Bonusy bogów liczą funkcje z `bogMa(strona, id)`; moce: `uzyjMocy`, `krokCzarow`; komputer: `aiMoce`.
   Era przechodzi z wybranym bogiem: `dodajDoKolejki(gród, 'era', idBoga)`, opcje: `bogowieEry`. Modlitwa: zadanie `modl`.
-- Muzyka i dźwięki są brane z `age2/` (`../age2/muzyka/`, `../age2/dzwieki/`).
+- Dźwięki są brane z `age2/` (`../age2/dzwieki/`). Muzyka słowiańsko-pogańska jest własna: `polanie/muzyka/` (lista `UTWORY`, autorzy w `ZRODLA.md`).
+- Jeden styl grafiki (obrazki z Gemini) i muzyki: `polanie/STYL.md` (słowiańsko-pogański, lekko mroczny, przyjazny dzieciom).
 - Realistyczne postacie (Quaternius, CC0): `polanie/postacie.js` (wygląd jednostek `WYGLAD`, przedmioty w rękach, stroje przefarbowane na kolor strony: `farbuj`)
   i pliki w `polanie/postacie/` (robi je `python narzedzia/polanie-postacie.py FOLDER_Z_PACZKAMI` z darmowych paczek itch.io).
   W `gra.js`: `u.ludz` (postać z ruchem), `ruchLudzia` (który ruch), `LUDZ_MAKS` (najwyżej tyle naraz, najbliżej środka widoku),

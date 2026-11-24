@@ -50,7 +50,10 @@ def main():
         if p in ('gra.js', 'modele.js'):
             t = zamien(t, "'../survival/three.module.min.js'", "'../../../survival/three.module.min.js'", p)
         if p == 'gra.js':
-            t = zamien(t, "'../age2/muzyka/' +", "'../../../age2/muzyka/' +", p)
+            if "'../age2/muzyka/' +" in t:  # do wersji 22 muzyka z Age of Haskap, potem własna (polanie/muzyka/)
+                t = zamien(t, "'../age2/muzyka/' +", "'../../../age2/muzyka/' +", p)
+            else:
+                t = zamien(t, "e.a.src = 'muzyka/' +", "e.a.src = '../../muzyka/' +", p)
             t = zamien(t, "fetch('../age2/dzwieki/", "fetch('../../../age2/dzwieki/", p)
             if not re.search(r"const KLUCZ = '[^']*';", t):
                 raise SystemExit('Nie znaleziono KLUCZ w gra.js')

@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 22;
+const WERSJA = 23;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 22, opis: 'W zaznaczonej grupie można dotknąć rodzaju wojska (jednego albo kilku), żeby dowodzić tylko nimi. Do tego wszystko z wersji 21.' },
+  { nr: 23, opis: 'Nowa muzyka słowiańsko-pogańska: pieśni obrzędowe, fujarki, mroczny las i bębny wojenne w bitwie. Do tego wszystko z wersji 22.' },
+  { nr: 22, opis: 'W zaznaczonej grupie można dotknąć rodzaju wojska (jednego albo kilku), żeby dowodzić tylko nimi. Do tego wszystko z wersji 21.', adres: 'wersje/22/' },
   { nr: 21, opis: 'Leszy jak prawdziwy drzewny olbrzym: kora, mech i korzenie, biega, uderza, grozi i pada z prawdziwym ruchem. Do tego wszystko z wersji 20.', adres: 'wersje/21/' },
   { nr: 20, opis: 'Nowy Leszy: wysoki olbrzym z kory i korzeni, z gałęziami jak poroże, świecącymi oczami i brodą z mchu. Do tego wszystko z wersji 19.', adres: 'wersje/20/' },
   { nr: 19, opis: 'Zapisywanie i wczytywanie gry (do 8 zapisów), ulepszenia muru po dotknięciu muru, a bramy po dotknięciu bramy. Do tego wszystko z wersji 18.', adres: 'wersje/19/' },
@@ -390,15 +391,15 @@ function dzwiek(n) {
     case 'przegrana': [392, 330, 262, 196].forEach((f, i) => ton(f, f, 0.35, 'triangle', 0.12, i * 0.2)); break;
   }
 }
-// ================= muzyka (CC0, autorzy w muzyka/ZRODLA.md) =================
+// ================= muzyka słowiańsko-pogańska (CC0 i CC-BY, autorzy w muzyka/ZRODLA.md, styl w STYL.md) =================
 // g: wyrównanie głośności (utwory są nagrane różnie głośno), od: od której ery gra, cisza: sekundy ciszy na końcu do pominięcia
 const UTWORY = {
   spokoj: [
-    { plik: 'ognisko', g: 2.2, od: 1 }, { plik: 'celtycka', g: 1, od: 1, cisza: 1.8 }, { plik: 'laki', g: 0.8, od: 1 },
-    { plik: 'wedrowka', g: 2.2, od: 1, cisza: 4.4 }, { plik: 'targ', g: 0.5, od: 2 }, { plik: 'zniwa', g: 0.65, od: 3, cisza: 2 },
-    { plik: 'uczta', g: 0.9, od: 4 },
+    { plik: 'wiosna', g: 0.68, od: 1 }, { plik: 'nowolecie', g: 0.86, od: 1 }, { plik: 'mroczny_las', g: 0.84, od: 1 },
+    { plik: 'zapomniany_las', g: 1.6, od: 1 }, { plik: 'obozowisko', g: 2.5, od: 2 }, { plik: 'brzeg', g: 1.18, od: 2 },
+    { plik: 'cos_nadchodzi', g: 1.85, od: 3 }, { plik: 'marsz', g: 1.9, od: 3 },
   ],
-  walka: [{ plik: 'bitwa', g: 0.9, cisza: 7 }],
+  walka: [{ plik: 'bitwa_waregow', g: 1 }, { plik: 'bebny_puszczy', g: 0.54 }, { plik: 'przebudzenie', g: 0.67 }],
 };
 const MUZ_GLOSNOSC = 0.24, MUZ_PRZEJSCIE = 2.5;
 // krótka cisza: odtworzona po dotknięciu „odblokowuje” odtwarzacz w telefonie (iPhone pozwala potem zmieniać mu utwory)
@@ -427,7 +428,7 @@ function nowyUtwor(tryb) {
   const zajete = [muz.spokoj, muz.walka, ...muz.wygasa].filter(Boolean).map(p => p.e);
   let e = odtwarzacze().find(x => !zajete.includes(x));
   if (!e) { const p = muz.wygasa.shift(); p.e.a.pause(); e = p.e; }
-  e.a.src = '../age2/muzyka/' + u.plik + '.mp3';
+  e.a.src = 'muzyka/' + u.plik + '.mp3';
   const p = { e, a: e.a, u, f: 0 }; glosnoscMuzyki(p); return p;
 }
 function glosnoscMuzyki(p) { const v = Math.min(1, MUZ_GLOSNOSC * p.u.g * p.f); if (p.e.g) { p.e.g.gain.value = v; p.a.volume = 1; } else p.a.volume = v; }

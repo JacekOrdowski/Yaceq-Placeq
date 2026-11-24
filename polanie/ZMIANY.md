@@ -7,6 +7,22 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 23 (24.11.2026)
+
+**Dodane**
+- Własna muzyka słowiańsko-pogańska (folder `muzyka/`, 11 utworów z OpenGameArt.org, autorzy w `muzyka/ZRODLA.md`
+  i na dole menu). Spokojne: dawne pieśni obrzędowe na fujarkę (Wiosna, Nowolecie), mroczny las, zapomniany las;
+  od 2. ery obozowisko i brzeg z bębnami, od 3. ery „Coś nadchodzi” i marsz. W bitwie trzy utwory z bębnami wojennymi
+  (Waregowie, bębny puszczy, przebudzenie), na zmianę.
+- Jeden styl grafiki i muzyki dla całej gry: `STYL.md` (słowiańsko-pogański, trochę wiedźmiński, lekko mroczny,
+  ale przyjazny dzieciom), z gotowym początkiem polecenia do obrazków z Gemini.
+
+**Usunięte**
+- Dawna muzyka z Age of Haskap (celtycka i średniowieczna) w Age of Polan już nie gra (w Age of Haskap zostaje bez zmian).
+
+**Do sprawdzenia**
+- Czy głośność utworów jest równa i czy bębny w bitwie nie są za głośne.
+
 ## Wersja 22 (24.11.2026)
 
 **Dodane**
