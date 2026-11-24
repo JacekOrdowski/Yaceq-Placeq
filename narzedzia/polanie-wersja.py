@@ -46,6 +46,7 @@ def main():
             # pliki postaci (modele i ruchy) są tylko w głównym folderze gry
             t = zamien(t, "'../survival/three.module.min.js'", "'../../../survival/three.module.min.js'", p)
             t = t.replace("from './postacie/", "from '../../postacie/").replace("L.load('postacie/' + n", "L.load('../../postacie/' + n")
+            t = t.replace("TL.load('postacie/' + n", "TL.load('../../postacie/' + n")  # faktury stworów (od wersji 21)
         if p in ('gra.js', 'modele.js'):
             t = zamien(t, "'../survival/three.module.min.js'", "'../../../survival/three.module.min.js'", p)
         if p == 'gra.js':

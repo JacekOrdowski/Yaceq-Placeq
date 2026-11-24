@@ -3,6 +3,7 @@
 // a z daleka zostają proste bryły z modele.js (żeby telefon nie zwalniał).
 import * as THREE from '../survival/three.module.min.js';
 import { GLTFLoader } from './postacie/GLTFLoader.js';
+import { FBXLoader } from './postacie/FBXLoader.js';
 import * as SU from './postacie/SkeletonUtils.js';
 import { KOLORY_STRON } from './modele.js';
 
@@ -17,6 +18,7 @@ const PLIKI = ['chlop', 'chlopka', 'mysliwy', 'mysliwa', 'glowa_m', 'glowa_k', '
 export function wczytaj() {
   if (wczytywanie) return wczytywanie;
   const L = new GLTFLoader(), jeden = n => new Promise((ok, zle) => L.load('postacie/' + n, ok, undefined, zle));
+  wczytajStwory();
   wczytywanie = Promise.all([...PLIKI.map(n => jeden(n + '.gltf')), jeden('ruchy.glb')]).then(w => {
     PLIKI.forEach((n, i) => { P[n] = w[i]; });
     for (const a of w[PLIKI.length].animations) RUCHY[a.name] = a;
@@ -26,6 +28,59 @@ export function wczytaj() {
   return wczytywanie;
 }
 const RUCHY = {};
+
+// ---------- stwory z gotowych modeli FBX: Leszy w dwóch wyglądach (drzewne potwory z paczki Free Treant Pack, CC0) ----------
+const STW = {}, STWORY_PLIKI = { leszy: ['leszy1', 'leszy2'] }, WYSOKOSC_STW = { leszy: 3.3 };
+let stworyGotowe = false;
+function wczytajStwory() {
+  const L = new FBXLoader(), TL = new THREE.TextureLoader(), zad = [];
+  for (const [typ, pliki] of Object.entries(STWORY_PLIKI)) pliki.forEach(n => zad.push(new Promise((ok, zle) => L.load('postacie/' + n + '.fbx', ok, undefined, zle)).then(g => {
+    const t = TL.load('postacie/' + n + '.jpg'); t.colorSpace = THREE.SRGBColorSpace;
+    const mat = new THREE.MeshLambertMaterial({ map: t, color: new THREE.Color('#ffffff').multiplyScalar(1.2) });
+    g.traverse(m => { if (m.isMesh) { m.material = mat; m.frustumCulled = false; } });
+    const box = new THREE.Box3().setFromObject(g), ruchy = {};
+    // ruchy bez przesuwania całego ciała w poziomie (po mapie przesuwa je gra)
+    for (const c of g.animations) {
+      for (const t2 of c.tracks) if (/^spine\.position$/.test(t2.name)) { const v = t2.values; for (let i = 0; i < v.length; i += 3) { v[i] = v[0]; v[i + 2] = v[2]; } }
+      ruchy[c.name.split('|').pop()] = c;
+    }
+    (STW[typ] || (STW[typ] = [])).push({ scena: g, wys: box.max.y - box.min.y, ruchy });
+  })));
+  return Promise.all(zad).then(() => { stworyGotowe = true; }).catch(e => console.warn('Stwory nie wczytały się, zostają proste bryły', e));
+}
+// nazwy ruchów ludzi → ruchy stwora
+const RUCHY_STWORA = { Idle_Loop: 'Idle', Sword_Idle: 'Idle', Idle_Shield_Loop: 'Idle', Walk_Loop: 'Run', Jog_Fwd_Loop: 'Run', Walk_Carry_Loop: 'Run', Sword_Attack: 'Attack_1',
+  Sword_Regular_A: 'Attack2', OverhandThrow: 'Attack3', Death01: 'Death1', TRENING: 'Taunt' };
+function stworzStwora(typ, strona, w) {
+  const wz = STW[typ][w % STW[typ].length];
+  const obj = new THREE.Group(), cialo = SU.clone(wz.scena); obj.add(cialo);
+  cialo.scale.setScalar(WYSOKOSC_STW[typ] / wz.wys); cialo.updateMatrixWorld(true);
+  const kosci = {}; cialo.traverse(n => { if (n.isBone) kosci[n.name] = n; });
+  // kolor strony: pas z pnączy w kolorze strony wokół bioder, z kwiatkami
+  if (kosci.spine) {
+    const odwr = new THREE.Matrix4().copy(cialo.matrixWorld).invert(), m = new THREE.Matrix4().multiplyMatrices(odwr, kosci.spine.matrixWorld), p = new THREE.Vector3().setFromMatrixPosition(m), H = wz.wys;
+    const pas = new THREE.Group();
+    const k = new THREE.Color(KOLORY_STRON[strona]), mPas = new THREE.MeshLambertMaterial({ color: k, emissive: k.clone().multiplyScalar(0.45) });
+    pas.add(new THREE.Mesh(new THREE.TorusGeometry(H * 0.1, H * 0.024, 6, 18), mPas));
+    pas.add(new THREE.Mesh(new THREE.TorusGeometry(H * 0.1, H * 0.008, 4, 18).translate(0, 0, H * 0.026), mat('#f4f0e0')));
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2, kw = new THREE.Mesh(new THREE.SphereGeometry(H * 0.02, 6, 4), mat(i % 2 ? '#ffd84a' : '#ffffff')); kw.position.set(Math.cos(a) * H * 0.115, Math.sin(a) * H * 0.115, H * 0.01); pas.add(kw); }
+    pas.rotation.x = Math.PI / 2; pas.position.set(p.x, p.y + H * 0.02, p.z); pas.scale.set(1.15, 0.9, 1); pas.updateMatrix();
+    pas.applyMatrix4(new THREE.Matrix4().copy(m).invert()); kosci.spine.add(pas);
+  }
+  const mixer = new THREE.AnimationMixer(cialo), akcje = {};
+  let teraz = null, terazNazwa = null;
+  function graj(nazwa, szybkosc = 1, raz = false) {
+    const n2 = RUCHY_STWORA[nazwa] || 'Idle', klip = wz.ruchy[n2]; if (!klip) return;
+    if (terazNazwa === n2) { teraz.timeScale = szybkosc; return; }
+    const a = akcje[n2] || (akcje[n2] = mixer.clipAction(klip));
+    if (raz || n2.startsWith('Death')) { a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; }
+    a.timeScale = szybkosc; a.reset().fadeIn(0.2).play();
+    if (teraz) teraz.fadeOut(0.2);
+    teraz = a; terazNazwa = n2;
+  }
+  const dl = nazwa => { const k = wz.ruchy[RUCHY_STWORA[nazwa] || 'Idle']; return k ? k.duration : 1; };
+  return { obj, mixer, graj, przedmioty: {}, opis: {}, typ, kosci, stwor: true, dlugosc: dl };
+}
 
 // ---------- przygotowanie wzorów (raz) ----------
 const MAT = new Map(), JASNOSC = 1.35;
@@ -126,7 +181,7 @@ const WYGLAD = {
   procarz2: w => ({ stroj: w % 3 === 2 ? 'mysliwa' : 'mysliwy', kobieta: w % 3 === 2, broda: w % 2 === 0, lewa: 'luk' }),
   kusznik: w => ({ stroj: 'mysliwy', broda: true, helm: true, lewa: 'luk' }),
 };
-export const ma = typ => !!WYGLAD[typ];
+export const ma = typ => !!WYGLAD[typ] || stworyGotowe && !!STW[typ];
 
 // część do przypięcia (głowa, włosy): siatki z kośćmi przepinamy na szkielet postaci
 function dolacz(o, kosci, wzor, kolor) {
@@ -150,6 +205,7 @@ function przypnij(kosc, obiekt, x, y, z, ry = 0) {
 
 // nowa postać: { obj, mixer, graj(nazwa, szybkosc), przedmioty, typ }
 export function stworz(typ, strona, w = 0) {
+  if (stworyGotowe && STW[typ]) return stworzStwora(typ, strona, w);
   if (!gotowe || !WYGLAD[typ]) return null;
   const opis = WYGLAD[typ](w);
   const obj = new THREE.Group(), cialo = SU.clone(P[opis.stroj].scene);

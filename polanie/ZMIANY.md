@@ -7,6 +7,17 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 21 (24.11.2026)
+
+**Zmienione**
+- Leszy ma teraz wygląd tak dokładny jak osadnicy: drzewny olbrzym z prawdziwą korą, mchem i korzeniami (gotowy model
+  z darmowej paczki, licencja CC0), w dwóch odmianach na zmianę. Ma prawdziwe ruchy: stoi, biega (krok dopasowany do szybkości),
+  uderza trzema różnymi ciosami i pada na ziemię. Na biodrach pas z pnączy w kolorze strony, z białymi i żółtymi kwiatkami.
+- Z bardzo daleka (gdy na ekranie jest więcej niż 120 postaci) Leszy jest dalej prostszym modelem z wersji 20.
+
+**Do sprawdzenia**
+- Czy na telefonie gra wczytuje się równie szybko (doszły 2 modele po około 2 MB).
+
 ## Wersja 20 (24.11.2026)
 
 **Zmienione**

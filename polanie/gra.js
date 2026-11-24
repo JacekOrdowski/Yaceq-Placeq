@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 20;
+const WERSJA = 21;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 20, opis: 'Nowy Leszy: wysoki olbrzym z kory i korzeni, z gałęziami jak poroże, świecącymi oczami i brodą z mchu. Do tego wszystko z wersji 19.' },
+  { nr: 21, opis: 'Leszy jak prawdziwy drzewny olbrzym: kora, mech i korzenie, biega, uderza, grozi i pada z prawdziwym ruchem. Do tego wszystko z wersji 20.' },
+  { nr: 20, opis: 'Nowy Leszy: wysoki olbrzym z kory i korzeni, z gałęziami jak poroże, świecącymi oczami i brodą z mchu. Do tego wszystko z wersji 19.', adres: 'wersje/20/' },
   { nr: 19, opis: 'Zapisywanie i wczytywanie gry (do 8 zapisów), ulepszenia muru po dotknięciu muru, a bramy po dotknięciu bramy. Do tego wszystko z wersji 18.', adres: 'wersje/19/' },
   { nr: 18, opis: 'Procenty budowy: przy częstokole tylko przy największym przybliżeniu, przy budynkach znikają przy oddalaniu, z daleka nie ma ich wcale. Do tego wszystko z wersji 17.', adres: 'wersje/18/' },
   { nr: 17, opis: 'Surowce nie przepadają przy zmianie pracy (osadnik najpierw je odnosi), krok zgrany z ciosem w biegu bokserskim. Do tego wszystko z wersji 16.', adres: 'wersje/17/' },
@@ -2778,6 +2779,7 @@ let klatkaNr = 0;
 let ileLudzi = 0;
 const MAT_UKRYTY = new THREE.MeshBasicMaterial({ visible: false });
 const NARZ_LUDZ = ['siekiera', 'kilof', 'mlotek', 'sierp'];
+const KROK_STWORA = 1.7; // przy tej szybkości stwór (Leszy) biegnie w zwykłym tempie ruchu
 // który ruch gra postać: praca, walka, chodzenie (szybkość nóg dopasowana do szybkości jednostki), stanie
 function ruchLudzia(u, dt) {
   const L = u.ludz, z = u.zad, os = u.typ === 'osadnik';
@@ -2788,13 +2790,14 @@ function ruchLudzia(u, dt) {
     else if (z.typ === 'farma') { nazwa = 'Farm_Harvest'; narz = 'sierp'; }
     else if (z.typ === 'buduj' || z.typ === 'naprawiaj') { nazwa = 'Fixing_Kneeling'; narz = 'mlotek'; }
     else if (z.typ === 'modl') nazwa = 'TRENING';
-    else if (z.typ === 'atakuj') { nazwa = u.d.zasieg ? 'OverhandThrow' : L.opis.tarcza ? 'Sword_Regular_A' : 'Sword_Attack'; szyb = Math.min(2, Math.max(0.7, LUDZ.dlugosc(nazwa) / Math.max(0.6, u.d.odstep))); }
+    else if (z.typ === 'atakuj') { nazwa = u.d.zasieg ? 'OverhandThrow' : L.opis.tarcza ? 'Sword_Regular_A' : 'Sword_Attack'; szyb = Math.min(2, Math.max(0.7, (L.dlugosc || LUDZ.dlugosc)(nazwa) / Math.max(0.6, u.d.odstep))); }
   } else if (u.idzie) {
     const v = predkosc(u);
     if (os && u.niesie.ile > 0.5) { nazwa = 'Walk_Carry_Loop'; szyb = Math.min(1.9, v / 1.15); }
     else if (v > 1.6) { nazwa = 'Jog_Fwd_Loop'; szyb = v / 2.3; }
     else { nazwa = 'Walk_Loop'; szyb = v / 1.1; }
   } else if (u.d.wojsko && !u.d.zasieg) nazwa = L.opis.tarcza ? 'Idle_Shield_Loop' : 'Sword_Idle';
+  if (L.stwor && u.idzie) szyb = predkosc(u) / KROK_STWORA;
   if (u.zamarz > S.czas || u.spokoj > S.czas) szyb = u.zamarz > S.czas ? 0 : 0.4;
   L.graj(nazwa, szyb);
   if (os) for (const n of NARZ_LUDZ) if (L.przedmioty[n]) L.przedmioty[n].visible = n === narz;
@@ -2880,7 +2883,7 @@ function rysuj(dt) {
   }
   for (let i = UMIERA.length - 1; i >= 0; i--) {
     const u = UMIERA[i]; u.t += dt;
-    if (u.j === 2) { u.ludz.mixer.update(dt); if (u.t > 2.2) u.mesh.position.y = -(u.t - 2.2) * 0.5; if (u.t > 3.6) { scena.remove(u.mesh); UMIERA.splice(i, 1); } continue; }
+    if (u.j === 2) { u.ludz.mixer.update(dt); if (u.t > 2.2) u.mesh.position.y = -(u.t - 2.2) * (u.ludz.stwor ? 2 : 0.5); if (u.t > 3.6) { scena.remove(u.mesh); UMIERA.splice(i, 1); } continue; }
     if (u.j) { u.mesh.rotation.z = Math.min(1, u.t / 0.4) * 1.45; u.mesh.position.y = u.t > 1.2 ? -(u.t - 1.2) * 0.6 : 0; }
     else u.mesh.position.y = -u.t * 1.6;
     if (u.t > (u.j ? 2.4 : 2.5)) { scena.remove(u.mesh); UMIERA.splice(i, 1); }

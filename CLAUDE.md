@@ -156,6 +156,7 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   i pliki w `polanie/postacie/` (robi je `python narzedzia/polanie-postacie.py FOLDER_Z_PACZKAMI` z darmowych paczek itch.io).
   W `gra.js`: `u.ludz` (postać z ruchem), `ruchLudzia` (który ruch), `LUDZ_MAKS` (najwyżej tyle naraz, najbliżej środka widoku),
   ponad to proste bryły z `modele.js`. Jednostki bez wpisu w `WYGLAD` (jeźdźcy, stwory, bohaterowie) są jeszcze bryłami.
+  Wyjątek: stwory z gotowych modeli FBX (`STWORY_PLIKI`, `RUCHY_STWORA` w `postacie.js`; Leszy = Free Treant Pack, CC0).
 - Ulepszenia wzmacniające jednostki mają pole `wzmocni` (liczy `wzm` w `polanie/gra.js`); ulepszenia od bogów mają `bog`.
   Nowa era: w panelu Grodu (czego brakuje: `brakiEry`), wybór boga w oknie `o-bogowie` (`pokazWyborBoga`) z portretami z `polanie/portrety.js`.
   W budynkach widać tylko to, co już dostępne.
