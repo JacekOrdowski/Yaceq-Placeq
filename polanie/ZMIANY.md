@@ -14,6 +14,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
   i erach: lniane koszule osadników i wojaków oraz zielone kaptury i kurtki łuczników są przefarbowane na niebiesko, czerwono, żółto
   albo fioletowo. Fałdy i cienie stroju zostają, zmienia się tylko barwa. Tarcze nadal są w kolorze strony.
 
+Zapis w repozytorium: `27243a1`
+
 ## Wersja 9 (24.11.2026)
 
 **Zmienione**
