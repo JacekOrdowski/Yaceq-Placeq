@@ -14,6 +14,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
   więc mijają się od razu: dwóch osadników na 8 kratek idzie 4,2 s (bez nikogo na drodze 4 s), sześciu naraz 5,3 s.
 - Przy zagonach (i przy płotach Stajni i Spichlerza) żerdzie płotu sterczały w poprzek jako długie linie. Teraz leżą wzdłuż płotu.
 
+Zapis w repozytorium: `bab37d9`
+
 ## Wersja 6 (24.11.2026)
 
 **Dodane**
