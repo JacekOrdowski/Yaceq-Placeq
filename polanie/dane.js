@@ -18,18 +18,18 @@ export const MAKS_LUDNOSC = 100;
 const RENIFERY = { renifer: 3 };
 export const JEDNOSTKI = {
   osadnik: { nazwa: 'Osadnik', emoji: '🧑‍🌾', hp: 25, atak: 3, pancerz: 0, zasieg: 0, odstep: 1.5, szybkosc: 2.0, r: 0.32, wzrok: 4,
-    koszt: { jagody: 50 }, czas: 10, era: 1, z: 'ratusz', opis: 'Zbiera, buduje i modli się w Gontynie' },
+    koszt: { jagody: 50 }, czas: 15, era: 1, z: 'ratusz', opis: 'Zbiera, buduje i modli się w Gontynie' },
   // Dwór drużyny: piechota
   wojownik: { nazwa: 'Wojak z maczugą', emoji: '🏏', linia: 'piechota', st: 1, hp: 45, atak: 5, pancerz: 1, zasieg: 0, odstep: 1.4, szybkosc: 2.1, r: 0.34, wzrok: 6, wojsko: true,
-    koszt: { jagody: 50, drewno: 20 }, czas: 12, era: 1, z: 'koszary', opis: 'Tani i mocny na początek' },
+    koszt: { jagody: 50, drewno: 20 }, czas: 14, era: 1, z: 'koszary', opis: 'Tani i mocny na początek' },
   tarczownik: { nazwa: 'Tarczownik', emoji: '🛡️', linia: 'piechota', st: 2, hp: 60, atak: 6, pancerz: 2, zasieg: 0, odstep: 1.4, szybkosc: 2.1, r: 0.36, wzrok: 6, wojsko: true,
-    koszt: { jagody: 55, zelazo: 20 }, czas: 12, era: 2, z: 'koszary', awans: 'aw_tarczownik', opis: 'Z tarczą, trudno go zranić' },
+    koszt: { jagody: 55, zelazo: 20 }, czas: 14, era: 2, z: 'koszary', awans: 'aw_tarczownik', opis: 'Z tarczą, trudno go zranić' },
   obronca: { nazwa: 'Drużynnik', emoji: '⚔️', linia: 'piechota', st: 3, hp: 75, atak: 8, pancerz: 3, zasieg: 0, odstep: 1.3, szybkosc: 2.1, r: 0.37, wzrok: 6, wojsko: true,
-    koszt: { jagody: 60, zelazo: 30 }, czas: 12, era: 3, z: 'koszary', awans: 'aw_obronca', opis: 'Najsilniejszy piechur z drużyny księcia' },
+    koszt: { jagody: 60, zelazo: 30 }, czas: 14, era: 3, z: 'koszary', awans: 'aw_obronca', opis: 'Najsilniejszy piechur z drużyny księcia' },
   wlocznik: { nazwa: 'Włócznik', emoji: '🔱', linia: 'wlocznia', st: 1, hp: 45, atak: 3, pancerz: 0, zasieg: 0, odstep: 1.4, szybkosc: 2.1, r: 0.34, wzrok: 6, wojsko: true, przeciw: RENIFERY,
-    koszt: { jagody: 35, drewno: 25 }, czas: 11, era: 1, z: 'koszary', opis: 'Bardzo mocny przeciw jeźdźcom' },
+    koszt: { jagody: 35, drewno: 25 }, czas: 13, era: 1, z: 'koszary', opis: 'Bardzo mocny przeciw jeźdźcom' },
   pikinier: { nazwa: 'Rohatyniarz', emoji: '🔱', linia: 'wlocznia', st: 2, hp: 55, atak: 4, pancerz: 1, zasieg: 0, odstep: 1.4, szybkosc: 2.1, r: 0.35, wzrok: 6, wojsko: true, przeciw: { renifer: 3.5 },
-    koszt: { jagody: 35, drewno: 25, zelazo: 10 }, czas: 11, era: 3, z: 'koszary', awans: 'aw_pikinier', opis: 'Ciężka włócznia (rohatyna): jeszcze mocniejszy przeciw jeźdźcom' },
+    koszt: { jagody: 35, drewno: 25, zelazo: 10 }, czas: 13, era: 3, z: 'koszary', awans: 'aw_pikinier', opis: 'Ciężka włócznia (rohatyna): jeszcze mocniejszy przeciw jeźdźcom' },
   // strzelnica: proca i kusza
   procarz: { nazwa: 'Procarz', emoji: '🎯', linia: 'proca', st: 1, hp: 30, atak: 4, pancerz: 0, zasieg: 5.5, odstep: 1.8, szybkosc: 2.2, r: 0.32, wzrok: 7, wojsko: true,
     koszt: { jagody: 30, drewno: 40 }, czas: 13, era: 2, z: 'strzelnica', opis: 'Rzuca kamykami z daleka' },
@@ -39,19 +39,19 @@ export const JEDNOSTKI = {
     koszt: { jagody: 25, drewno: 45, zelazo: 20 }, czas: 14, era: 3, z: 'strzelnica', awans: 'aw_kusznik', opis: 'Łuk refleksyjny: strzela najdalej i najmocniej' },
   // Stajnia: jazda na koniach (nazwa linii 'renifer' została z Age of Haskap)
   zwiadowca: { nazwa: 'Zwiadowca na koniu', emoji: '🐎', linia: 'renifer', st: 1, hp: 60, atak: 4, pancerz: 0, zasieg: 0, odstep: 1.5, szybkosc: 3.8, r: 0.48, wzrok: 8, wojsko: true,
-    koszt: { jagody: 80 }, czas: 14, era: 2, z: 'stajnia', opis: 'Bardzo szybki, dobry na osadników' },
+    koszt: { jagody: 80 }, czas: 12, era: 2, z: 'stajnia', opis: 'Bardzo szybki, dobry na osadników' },
   jezdziec: { nazwa: 'Jeździec', emoji: '🐎', linia: 'renifer', st: 2, hp: 100, atak: 8, pancerz: 2, zasieg: 0, odstep: 1.6, szybkosc: 3.5, r: 0.48, wzrok: 6, wojsko: true,
-    koszt: { jagody: 70, zelazo: 50 }, czas: 18, era: 3, z: 'stajnia', awans: 'aw_jezdziec', opis: 'Szybki i silny' },
+    koszt: { jagody: 70, zelazo: 50 }, czas: 16, era: 3, z: 'stajnia', awans: 'aw_jezdziec', opis: 'Szybki i silny' },
   rycerz: { nazwa: 'Pancerny', emoji: '🏇', linia: 'renifer', st: 3, hp: 140, atak: 11, pancerz: 3, zasieg: 0, odstep: 1.6, szybkosc: 3.3, r: 0.55, wzrok: 6, wojsko: true,
-    koszt: { jagody: 80, zelazo: 50, zloto: 30 }, czas: 20, era: 4, z: 'stajnia', awans: 'aw_rycerz', opis: 'Ciężka jazda w kolczugach, jak drużyna Mieszka' },
+    koszt: { jagody: 80, zelazo: 50, zloto: 30 }, czas: 18, era: 4, z: 'stajnia', awans: 'aw_rycerz', opis: 'Ciężka jazda w kolczugach, jak drużyna Mieszka' },
   // warsztat
   taran: { nazwa: 'Taran', emoji: '🪵', linia: 'taran', st: 1, hp: 180, atak: 30, pancerz: 3, pancerzDystans: 12, zasieg: 0, odstep: 3, szybkosc: 1.2, r: 0.7, wzrok: 6, wojsko: true, tylkoBudynki: true,
-    koszt: { drewno: 160, zelazo: 75 }, czas: 25, era: 3, z: 'warsztat', opis: 'Burzy budynki, nie walczy z ludźmi' },
+    koszt: { drewno: 160, zelazo: 75 }, czas: 20, era: 3, z: 'warsztat', opis: 'Burzy budynki, nie walczy z ludźmi' },
   katapulta: { nazwa: 'Katapulta', emoji: '🪨', linia: 'katapulta', st: 1, hp: 90, atak: 16, pancerz: 0, pancerzDystans: 6, zasieg: 8.5, odstep: 4.5, szybkosc: 1.0, r: 0.7, wzrok: 9, wojsko: true, oblezenie: true,
-    koszt: { drewno: 200, zelazo: 100, zloto: 60 }, czas: 30, era: 4, z: 'warsztat', opis: 'Rzuca kamieniami, burzy budynki z daleka' },
+    koszt: { drewno: 200, zelazo: 100, zloto: 60 }, czas: 25, era: 4, z: 'warsztat', opis: 'Rzuca kamieniami, burzy budynki z daleka' },
   // Targowisko: wóz kupiecki z koniem jeździ sam między Targowiskiem a twoim spichlerzem (albo Grodem) i przywozi srebro
   woz: { nazwa: 'Wóz kupiecki', emoji: '🛒', hp: 70, atak: 0, pancerz: 0, zasieg: 0, odstep: 99, szybkosc: 2.6, r: 0.55, wzrok: 4, kupiec: true,
-    koszt: { drewno: 100, jagody: 50 }, czas: 20, era: 2, z: 'jarmark', opis: 'Wozi towar do spichlerza i z powrotem: im dalej, tym więcej srebra' },
+    koszt: { drewno: 100, jagody: 50 }, czas: 15, era: 2, z: 'jarmark', opis: 'Wozi towar do spichlerza i z powrotem: im dalej, tym więcej srebra' },
   // Kuźnia: rzemieślnik sam szuka uszkodzonych budynków i naprawia je za twoje surowce (NAPRAWA niżej)
   rzemieslnik: { nazwa: 'Rzemieślnik', emoji: '🔨', hp: 35, atak: 2, pancerz: 1, zasieg: 0, odstep: 1.5, szybkosc: 2.1, r: 0.32, wzrok: 5, naprawia: true,
     koszt: { jagody: 60, zelazo: 20 }, czas: 15, era: 2, z: 'kuznia', opis: 'Sam naprawia uszkodzone budynki za twoje surowce' },
@@ -62,28 +62,28 @@ export const JEDNOSTKI = {
   rarog: { nazwa: 'Raróg', emoji: '🔥', mit: true, bog: 'dazbog', lata: 1.4, hp: 95, atak: 9, pancerz: 1, zasieg: 6, odstep: 1.8, szybkosc: 3.0, r: 0.45, wzrok: 9, wojsko: true,
     koszt: { jagody: 100, laska: 20 }, czas: 20, era: 2, z: 'gontyna', opis: 'Ognisty ptak: lata i strzela ogniem z góry' },
   leszy: { nazwa: 'Leszy', emoji: '🌳', mit: true, bog: 'mokosz', burzy: 3, hp: 280, atak: 14, pancerz: 2, zasieg: 0, odstep: 2.2, szybkosc: 1.7, r: 0.62, wzrok: 7, wojsko: true,
-    koszt: { jagody: 150, drewno: 60, laska: 25 }, czas: 25, era: 2, z: 'gontyna', opis: 'Duch puszczy, olbrzym z drzewa: burzy budynki' },
+    koszt: { jagody: 150, drewno: 60, laska: 25 }, czas: 30, era: 2, z: 'gontyna', opis: 'Duch puszczy, olbrzym z drzewa: burzy budynki' },
   wilkolak: { nazwa: 'Wilkołak', emoji: '🐺', mit: true, bog: 'jarylo', hp: 160, atak: 12, pancerz: 1, zasieg: 0, odstep: 1.1, szybkosc: 3.7, r: 0.45, wzrok: 9, wojsko: true,
     koszt: { jagody: 120, laska: 20 }, czas: 20, era: 2, z: 'gontyna', opis: 'Szybki i groźny, poluje na osadników i strzelców' },
   planetnik: { nazwa: 'Płanetnik', emoji: '⛈️', mit: true, bog: 'strzybog', lata: 0.6, burzy: 3, hp: 130, atak: 11, pancerz: 1, zasieg: 7.5, odstep: 2.4, szybkosc: 2.2, r: 0.42, wzrok: 10, wojsko: true,
-    koszt: { jagody: 130, zloto: 20, laska: 30 }, czas: 24, era: 3, z: 'gontyna', opis: 'Duch chmur: rzuca gradem z daleka, mocno w budynki' },
+    koszt: { jagody: 130, zloto: 20, laska: 30 }, czas: 25, era: 3, z: 'gontyna', opis: 'Duch chmur: rzuca gradem z daleka, mocno w budynki' },
   zmij: { nazwa: 'Żmij', emoji: '🐉', mit: true, bog: 'swarozyc', lata: 1.2, hp: 230, atak: 16, pancerz: 2, zasieg: 5, odstep: 2.1, szybkosc: 2.9, r: 0.55, wzrok: 9, wojsko: true,
-    koszt: { jagody: 180, zloto: 40, laska: 35 }, czas: 28, era: 3, z: 'gontyna', opis: 'Ognisty skrzydlaty wąż: zieje ogniem' },
+    koszt: { jagody: 180, zloto: 40, laska: 35 }, czas: 30, era: 3, z: 'gontyna', opis: 'Ognisty skrzydlaty wąż: zieje ogniem' },
   rusalka: { nazwa: 'Rusałka', emoji: '💧', mit: true, bog: 'lada', hp: 110, atak: 11, pancerz: 1, zasieg: 6.5, odstep: 1.7, szybkosc: 2.6, r: 0.38, wzrok: 9, wojsko: true, leczy: 4,
-    koszt: { jagody: 110, laska: 25 }, czas: 22, era: 3, z: 'gontyna', opis: 'Wodna panna: czaruje wodą i leczy swoich wokół' },
+    koszt: { jagody: 110, laska: 25 }, czas: 20, era: 3, z: 'gontyna', opis: 'Wodna panna: czaruje wodą i leczy swoich wokół' },
   kon: { nazwa: 'Biały Koń Świętowita', emoji: '🐴', mit: true, bog: 'swietowit', linia: 'kon', hp: 320, atak: 18, pancerz: 3, zasieg: 0, odstep: 1.5, szybkosc: 4.2, r: 0.6, wzrok: 9, wojsko: true,
     koszt: { jagody: 200, laska: 40 }, czas: 30, era: 4, z: 'gontyna', opis: 'Święty koń z Arkony: najszybszy i bardzo silny' },
   strzyga: { nazwa: 'Strzyga', emoji: '🧛', mit: true, bog: 'marzanna', wampir: 0.5, hp: 240, atak: 17, pancerz: 2, zasieg: 0, odstep: 1.4, szybkosc: 3.0, r: 0.45, wzrok: 8, wojsko: true,
-    koszt: { jagody: 180, laska: 35 }, czas: 28, era: 4, z: 'gontyna', opis: 'Nocny upiór: każde uderzenie leczy jej rany' },
+    koszt: { jagody: 180, laska: 35 }, czas: 30, era: 4, z: 'gontyna', opis: 'Nocny upiór: każde uderzenie leczy jej rany' },
   bies: { nazwa: 'Bies', emoji: '👹', mit: true, bog: 'trzyglow', burzy: 2, hp: 400, atak: 22, pancerz: 3, zasieg: 0, odstep: 1.8, szybkosc: 2.6, r: 0.62, wzrok: 8, wojsko: true,
-    koszt: { jagody: 220, zloto: 50, laska: 45 }, czas: 32, era: 4, z: 'gontyna', opis: 'Rogaty demon z Bieszczad: najsilniejszy ze stworów' },
+    koszt: { jagody: 220, zloto: 50, laska: 45 }, czas: 35, era: 4, z: 'gontyna', opis: 'Rogaty demon z Bieszczad: najsilniejszy ze stworów' },
   // ---------- bohaterowie z podań (w Grodzie, każdego tylko jeden; stwory biją 3 razy mocniej) ----------
   krak: { nazwa: 'Krak', emoji: '👑', bohater: true, hp: 230, atak: 12, pancerz: 3, zasieg: 0, odstep: 1.3, szybkosc: 2.4, r: 0.38, wzrok: 8, wojsko: true,
-    koszt: { jagody: 150, zloto: 60 }, czas: 25, era: 2, z: 'ratusz', opis: 'Książę, pogromca smoka: 3 razy mocniej bije stwory' },
+    koszt: { jagody: 150, zloto: 60 }, czas: 20, era: 2, z: 'ratusz', opis: 'Książę, pogromca smoka: 3 razy mocniej bije stwory' },
   waligora: { nazwa: 'Waligóra', emoji: '💪', bohater: true, hp: 340, atak: 16, pancerz: 4, zasieg: 0, odstep: 1.4, szybkosc: 2.3, r: 0.45, wzrok: 8, wojsko: true,
-    koszt: { jagody: 200, zloto: 100 }, czas: 30, era: 3, z: 'ratusz', opis: 'Siłacz, co góry przewraca: 3 razy mocniej bije stwory' },
+    koszt: { jagody: 200, zloto: 100 }, czas: 20, era: 3, z: 'ratusz', opis: 'Siłacz, co góry przewraca: 3 razy mocniej bije stwory' },
   lech: { nazwa: 'Lech', emoji: '🦅', bohater: true, hp: 420, atak: 20, pancerz: 5, zasieg: 0, odstep: 1.3, szybkosc: 2.5, r: 0.4, wzrok: 9, wojsko: true,
-    koszt: { jagody: 250, zloto: 150 }, czas: 35, era: 4, z: 'ratusz', opis: 'Założyciel Gniezna z białym orłem: 3 razy mocniej bije stwory' },
+    koszt: { jagody: 250, zloto: 150 }, czas: 20, era: 4, z: 'ratusz', opis: 'Założyciel Gniezna z białym orłem: 3 razy mocniej bije stwory' },
 };
 // naprawa przez rzemieślnika: pełna naprawa kosztuje połowę ceny budynku i trwa dwa razy dłużej niż jego budowa
 export const NAPRAWA = { koszt: 0.5, wolniej: 2 };
@@ -110,7 +110,7 @@ export const MAPY = {
 export const BUDYNKI = {
   ratusz: { nazwa: 'Gród', emoji: '🏯', w: 4, hp: 1400, koszt: { drewno: 275, kamien: 100 }, czas: 80, era: 2, ludnosc: 5,
     skup: ['jagody', 'drewno', 'kamien', 'zelazo'], strzela: { atak: 3, zasieg: 6.5, odstep: 2 }, opis: 'Szkoli osadników i bohaterów, tu przechodzisz do nowej ery i wybierasz boga' },
-  dom: { nazwa: 'Chata', emoji: '🏠', w: 2, hp: 250, koszt: { drewno: 30 }, czas: 12, era: 1, ludnosc: 5, opis: 'Miejsce dla 5 mieszkańców' },
+  dom: { nazwa: 'Chata', emoji: '🏠', w: 2, hp: 250, koszt: { drewno: 30 }, czas: 15, era: 1, ludnosc: 5, opis: 'Miejsce dla 5 mieszkańców' },
   spichlerz: { nazwa: 'Spichlerz', emoji: '🧺', w: 3, hp: 400, koszt: { drewno: 100 }, czas: 20, era: 1, skup: ['jagody'], opis: 'Tu osadnicy odnoszą żywność, tu ulepszasz zagony' },
   tartak: { nazwa: 'Drwalnia', emoji: '🪚', w: 3, hp: 400, koszt: { drewno: 100 }, czas: 20, era: 1, skup: ['drewno'], opis: 'Tu osadnicy odnoszą drewno' },
   szopa: { nazwa: 'Kamieniołom', emoji: '🪨', w: 3, hp: 400, koszt: { drewno: 100 }, czas: 20, era: 1, skup: ['kamien', 'zloto'], opis: 'Tu osadnicy odnoszą kamień i srebro' },
@@ -149,7 +149,7 @@ export const MUR_POZIOMY = [null,
 // przejście do nowej ery: w Grodzie (z wyborem jednego z dwóch bogów); potrzeba surowców i kilku budynków z poprzedniej ery
 export const NOWA_ERA = {
   2: { koszt: { jagody: 500 }, czas: 60, budynki: 2 },
-  3: { koszt: { jagody: 800, zelazo: 200 }, czas: 90, budynki: 2 },
+  3: { koszt: { jagody: 800, zelazo: 200 }, czas: 75, budynki: 2 },
   4: { koszt: { jagody: 1000, zelazo: 400, zloto: 200 }, czas: 120, budynki: 2 },
 };
 // budynki, które liczą się do przejścia do nowej ery (domy i plantacje się nie liczą)
@@ -207,14 +207,49 @@ export const ULEPSZENIA = {
   monety: { nazwa: 'Siekane srebro', emoji: '🪙', z: 'jarmark', era: 2, koszt: { jagody: 150, drewno: 100 }, czas: 30, opis: 'Wozy kupieckie przywożą o 20% więcej srebra' },
   wagi: { nazwa: 'Uczciwe wagi', emoji: '⚖️', z: 'jarmark', era: 3, koszt: { jagody: 200, drewno: 100, zloto: 50 }, czas: 35, opis: 'Na Targowisku kupujesz o 10% taniej i dostajesz więcej za sprzedaż' },
   poborcy: { nazwa: 'Danina', emoji: '💰', z: 'jarmark', era: 3, koszt: { jagody: 250, drewno: 150 }, czas: 40, opis: 'Każdy Gród sam przynosi srebro (1 sztuka co 2 sekundy)' },
+  // Spichlerz: zbieranie z krzaków (jak psy myśliwskie: jedzenie spoza pól)
+  bartnictwo: { nazwa: 'Bartnictwo', emoji: '🍯', z: 'spichlerz', era: 1, koszt: { jagody: 100, drewno: 50 }, czas: 20, opis: 'Krzaki dają żywność o 15% szybciej' },
+  // Kuźnia: tarcze (pancerz przeciw strzałom) i wyważone pociski
+  tarcze1: { nazwa: 'Tarcze z łozy', emoji: '🛡️', z: 'kuznia', era: 2, koszt: { jagody: 100, drewno: 75 }, czas: 30, opis: 'Całe wojsko: +1 pancerza przeciw strzałom i kamieniom' },
+  tarcze2: { nazwa: 'Tarcze obite skórą', emoji: '🛡️', z: 'kuznia', era: 3, wymaga: 'tarcze1', koszt: { jagody: 200, zelazo: 75 }, czas: 40, opis: 'Przeciw strzałom: jeszcze +1 pancerza' },
+  tarcze3: { nazwa: 'Tarcze okute żelazem', emoji: '🛡️', z: 'kuznia', era: 4, wymaga: 'tarcze2', koszt: { jagody: 300, zelazo: 125, zloto: 75 }, czas: 50, opis: 'Przeciw strzałom: jeszcze +2 pancerza' },
+  balistyka: { nazwa: 'Wyważone strzały', emoji: '🎯', z: 'kuznia', era: 3, koszt: { drewno: 200, zloto: 100 }, czas: 40, wzmocni: { strzelcy: true, atak: 1.15 }, opis: 'Strzelcy trafiają mocniej: +15% ataku' },
+  // mistrzowie linii (era 4): ostatni stopień każdej linii wojska
+  mistrz_piechoty: { nazwa: 'Mistrzowie piechoty', emoji: '🎖️', z: 'koszary', era: 4, wymaga: 'aw_obronca', koszt: { jagody: 400, zelazo: 250, zloto: 100 }, czas: 40, wzmocni: { linie: ['piechota', 'wlocznia'], hp: 1.15, atak: 1.15 }, opis: 'Piechota i włócznicy: +15% życia i ataku' },
+  mistrz_strzelcow: { nazwa: 'Mistrzowie łuku', emoji: '🎖️', z: 'strzelnica', era: 4, wymaga: 'aw_kusznik', koszt: { jagody: 300, drewno: 250, zloto: 100 }, czas: 40, wzmocni: { linie: ['proca'], hp: 1.15, atak: 1.15 }, opis: 'Łucznicy: +15% życia i ataku' },
+  mistrz_jazdy: { nazwa: 'Mistrzowie jazdy', emoji: '🎖️', z: 'stajnia', era: 4, wymaga: 'aw_rycerz', koszt: { jagody: 400, zelazo: 200, zloto: 150 }, czas: 40, wzmocni: { linie: ['renifer'], hp: 1.15, atak: 1.15 }, opis: 'Jazda: +15% życia i ataku' },
+  // ---------- ulepszenia od bogów (w Gontynie, tylko gdy masz tego boga) ----------
+  // bogowie główni
+  topor_peruna: { nazwa: 'Topór Peruna', emoji: '🪓', z: 'gontyna', bog: 'perun', era: 2, koszt: { zloto: 100, laska: 15 }, czas: 30, wzmocni: { wojskoWrecz: true, atak: 1.1 }, opis: 'Wojsko walczące wręcz: +10% ataku' },
+  stada_welesa: { nazwa: 'Stada Welesa', emoji: '🐄', z: 'gontyna', bog: 'weles', era: 1, koszt: { jagody: 150, laska: 10 }, czas: 30, opis: 'Zagony dają o 15% więcej żywności' },
+  kuznia_swaroga: { nazwa: 'Kuźnia Swaroga', emoji: '⚒️', z: 'gontyna', bog: 'swarog', era: 2, koszt: { zloto: 150, laska: 20 }, czas: 20, opis: 'Ulepszenia w Kuźni robią się o połowę szybciej' },
+  // bogowie pomniejsi: jedno ulepszenie stwora i jedno ze świata boga
+  zlote_piora: { nazwa: 'Złote pióra', emoji: '🔥', z: 'gontyna', bog: 'dazbog', era: 2, koszt: { drewno: 150, laska: 15 }, czas: 30, wzmocni: { typy: ['rarog'], hp: 1.25, atak: 1.2 }, opis: 'Raróg: +25% życia, +20% ataku' },
+  dar_slonca: { nazwa: 'Dar słońca', emoji: '☀️', z: 'gontyna', bog: 'dazbog', era: 2, koszt: { jagody: 150, laska: 10 }, czas: 30, opis: 'Srebro zbiera się o 20% szybciej' },
+  prastary_leszy: { nazwa: 'Prastary Leszy', emoji: '🌳', z: 'gontyna', bog: 'mokosz', era: 2, koszt: { drewno: 200, laska: 20 }, czas: 30, wzmocni: { typy: ['leszy'], hp: 1.3, atak: 1.2 }, opis: 'Leszy: +30% życia, +20% ataku' },
+  len_mokoszy: { nazwa: 'Len i przędza', emoji: '🧶', z: 'gontyna', bog: 'mokosz', era: 2, koszt: { jagody: 100, drewno: 100, laska: 10 }, czas: 30, opis: 'Osadnicy niosą o 3 więcej' },
+  wilcza_wataha: { nazwa: 'Wilcza wataha', emoji: '🐺', z: 'gontyna', bog: 'jarylo', era: 2, koszt: { jagody: 150, laska: 15 }, czas: 30, wzmocni: { typy: ['wilkolak'], szybkosc: 1.2, atak: 1.2 }, opis: 'Wilkołak: +20% szybkości i ataku' },
+  jare_zboze: { nazwa: 'Jare zboże', emoji: '🌱', z: 'gontyna', bog: 'jarylo', era: 2, koszt: { jagody: 200, laska: 10 }, czas: 30, opis: 'Osadnicy szkolą się w Grodzie o 25% szybciej' },
+  gradowe_chmury: { nazwa: 'Gradowe chmury', emoji: '⛈️', z: 'gontyna', bog: 'strzybog', era: 3, koszt: { zloto: 150, laska: 20 }, czas: 30, wzmocni: { typy: ['planetnik'], zasieg: 2, atak: 1.2 }, opis: 'Płanetnik: o 2 kratki dalej, +20% ataku' },
+  wiatr_w_plecy: { nazwa: 'Wiatr w plecy', emoji: '🌬️', z: 'gontyna', bog: 'strzybog', era: 3, koszt: { jagody: 150, drewno: 100, laska: 10 }, czas: 30, wzmocni: { typy: ['woz', 'osadnik'], szybkosc: 1.15 }, opis: 'Osadnicy i wozy kupieckie chodzą o 15% szybciej' },
+  ognisty_oddech: { nazwa: 'Ognisty oddech', emoji: '🐉', z: 'gontyna', bog: 'swarozyc', era: 3, koszt: { zloto: 200, laska: 25 }, czas: 35, wzmocni: { typy: ['zmij'], hp: 1.2, atak: 1.25 }, opis: 'Żmij: +20% życia, +25% ataku' },
+  swiety_zar: { nazwa: 'Święty żar', emoji: '🔥', z: 'gontyna', bog: 'swarozyc', era: 3, koszt: { drewno: 150, kamien: 100, laska: 15 }, czas: 30, opis: 'Strażnice: +25% życia' },
+  piesn_rusalek: { nazwa: 'Pieśń rusałek', emoji: '💧', z: 'gontyna', bog: 'lada', era: 3, koszt: { jagody: 200, laska: 20 }, czas: 30, wzmocni: { typy: ['rusalka'], hp: 1.2, leczy: 3 }, opis: 'Rusałka: +20% życia, leczy prawie 2 razy mocniej' },
+  kupala: { nazwa: 'Noc Kupały', emoji: '🔥', z: 'gontyna', bog: 'lada', era: 3, koszt: { jagody: 150, drewno: 100 }, czas: 30, opis: 'Modlitwa daje o 20% więcej łaski' },
+  wrozba_konia: { nazwa: 'Wróżba z konia', emoji: '🐴', z: 'gontyna', bog: 'swietowit', era: 4, koszt: { jagody: 250, laska: 25 }, czas: 35, wzmocni: { typy: ['kon'], hp: 1.2, atak: 1.2 }, opis: 'Biały Koń: +20% życia i ataku' },
+  arkonska_druzyna: { nazwa: 'Arkońska drużyna', emoji: '🏇', z: 'gontyna', bog: 'swietowit', era: 4, koszt: { jagody: 250, zloto: 150, laska: 15 }, czas: 35, wzmocni: { jazda: true, atak: 1.1 }, opis: 'Jazda: +10% ataku' },
+  upiorna_noc: { nazwa: 'Upiorna noc', emoji: '🧛', z: 'gontyna', bog: 'marzanna', era: 4, koszt: { zloto: 200, laska: 25 }, czas: 35, wzmocni: { typy: ['strzyga'], hp: 1.15, wampir: 0.3 }, opis: 'Strzyga: +15% życia i jeszcze mocniej leczy się uderzeniami' },
+  zimowe_futra: { nazwa: 'Zimowe futra', emoji: '🧥', z: 'gontyna', bog: 'marzanna', era: 4, koszt: { jagody: 300, zloto: 100, laska: 15 }, czas: 40, wzmocni: { wojsko: true, hp: 1.1 }, opis: 'Całe wojsko: +10% życia' },
+  bies_z_nawii: { nazwa: 'Bies z Nawii', emoji: '👹', z: 'gontyna', bog: 'trzyglow', era: 4, koszt: { zloto: 250, laska: 25 }, czas: 35, wzmocni: { typy: ['bies'], hp: 1.25, atak: 1.2 }, opis: 'Bies: +25% życia, +20% ataku' },
+  trzy_swiaty: { nazwa: 'Strażnik trzech światów', emoji: '🗻', z: 'gontyna', bog: 'trzyglow', era: 4, koszt: { zloto: 200, laska: 20 }, czas: 35, wzmocni: { mit: true, pancerz: 1 }, opis: 'Wszystkie stwory: +1 pancerza' },
   // awanse wojska
-  aw_tarczownik: { nazwa: 'Awans: Tarczownik', emoji: '🛡️', z: 'koszary', era: 2, koszt: { jagody: 150, zelazo: 50 }, czas: 30, awans: 'tarczownik', opis: 'Wszyscy wojacy dostają tarcze' },
-  aw_obronca: { nazwa: 'Awans: Drużynnik', emoji: '⚔️', z: 'koszary', era: 3, wymaga: 'aw_tarczownik', koszt: { jagody: 250, zelazo: 150 }, czas: 40, awans: 'obronca', opis: 'Tarczownicy stają się drużynnikami' },
-  aw_pikinier: { nazwa: 'Awans: Rohatyniarz', emoji: '🔱', z: 'koszary', era: 3, koszt: { jagody: 200, zelazo: 100 }, czas: 35, awans: 'pikinier', opis: 'Włócznicy dostają ciężkie rohatyny' },
-  aw_procarz2: { nazwa: 'Awans: Łucznik', emoji: '🏹', z: 'strzelnica', era: 2, koszt: { jagody: 125, zelazo: 50 }, czas: 30, awans: 'procarz2', opis: 'Procarze dostają łuki' },
-  aw_kusznik: { nazwa: 'Awans: Łucznik drużyny', emoji: '🏹', z: 'strzelnica', era: 3, wymaga: 'aw_procarz2', koszt: { jagody: 250, zelazo: 125 }, czas: 40, awans: 'kusznik', opis: 'Łucznicy dostają łuki refleksyjne' },
-  aw_jezdziec: { nazwa: 'Awans: Jeździec', emoji: '🐎', z: 'stajnia', era: 3, koszt: { jagody: 250, zelazo: 150 }, czas: 40, awans: 'jezdziec', opis: 'Zwiadowcy dostają zbroje' },
-  aw_rycerz: { nazwa: 'Awans: Pancerny', emoji: '🏇', z: 'stajnia', era: 4, wymaga: 'aw_jezdziec', koszt: { jagody: 400, zelazo: 200, zloto: 150 }, czas: 50, awans: 'rycerz', opis: 'Jeźdźcy dostają kolczugi i silniejsze konie' },
+  aw_tarczownik: { nazwa: 'Awans: Tarczownik', emoji: '🛡️', z: 'koszary', era: 2, koszt: { jagody: 150, zelazo: 50 }, czas: 20, awans: 'tarczownik', opis: 'Wszyscy wojacy dostają tarcze' },
+  aw_obronca: { nazwa: 'Awans: Drużynnik', emoji: '⚔️', z: 'koszary', era: 3, wymaga: 'aw_tarczownik', koszt: { jagody: 250, zelazo: 150 }, czas: 30, awans: 'obronca', opis: 'Tarczownicy stają się drużynnikami' },
+  aw_pikinier: { nazwa: 'Awans: Rohatyniarz', emoji: '🔱', z: 'koszary', era: 3, koszt: { jagody: 200, zelazo: 100 }, czas: 30, awans: 'pikinier', opis: 'Włócznicy dostają ciężkie rohatyny' },
+  aw_procarz2: { nazwa: 'Awans: Łucznik', emoji: '🏹', z: 'strzelnica', era: 2, koszt: { jagody: 125, zelazo: 50 }, czas: 20, awans: 'procarz2', opis: 'Procarze dostają łuki' },
+  aw_kusznik: { nazwa: 'Awans: Łucznik drużyny', emoji: '🏹', z: 'strzelnica', era: 3, wymaga: 'aw_procarz2', koszt: { jagody: 250, zelazo: 125 }, czas: 30, awans: 'kusznik', opis: 'Łucznicy dostają łuki refleksyjne' },
+  aw_jezdziec: { nazwa: 'Awans: Jeździec', emoji: '🐎', z: 'stajnia', era: 3, koszt: { jagody: 250, zelazo: 150 }, czas: 30, awans: 'jezdziec', opis: 'Zwiadowcy dostają zbroje' },
+  aw_rycerz: { nazwa: 'Awans: Pancerny', emoji: '🏇', z: 'stajnia', era: 4, wymaga: 'aw_jezdziec', koszt: { jagody: 400, zelazo: 200, zloto: 150 }, czas: 40, awans: 'rycerz', opis: 'Jeźdźcy dostają kolczugi i silniejsze konie' },
 };
 
 // tempo zbierania (na sekundę) i ile zbieracz niesie naraz
@@ -254,6 +289,8 @@ export const BOGOWIE = {
   trzyglow: { nazwa: 'Trzygłów', emoji: '🗻', era: 4, kim: 'trzy głowy: niebo, ziemia i podziemie', moc: 'drzenie', stwor: 'bies', bonus: 'Stwory: +2 do ataku.' },
 };
 export const BOGOWIE_GLOWNI = ['perun', 'weles', 'swarog'];
+// bohaterowie rosną w siłę z każdą erą po swojej (o tyle więcej życia i ataku na erę)
+export const BOHATER_ERA = 0.15;
 // moce bogów: każdą można użyć raz w grze; cel: trzeba dotknąć miejsca na mapie; r: promień (kratki); czas: jak długo działa (s)
 export const MOCE = {
   grom: { nazwa: 'Grom Peruna', emoji: '⚡', cel: true, r: 4, piorunow: 7, rana: 70, ranaBud: 220, opis: 'Pioruny walą w wybrane miejsce' },

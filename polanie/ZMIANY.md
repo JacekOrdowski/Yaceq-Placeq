@@ -7,6 +7,29 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 2 (24.11.2026)
+
+**Dodane**
+- Przycisk nowej ery u góry ekranu. Gdy można, świeci na zielono: dotknij i wybierz jednego z dwóch bogów.
+  Gdy nie można, pisze, czego brakuje (ile żywności, żelaza, srebra, ilu budynków). W trakcie pokazuje, ile procent już jest.
+- Ulepszenia od bogów w Gontynie (tylko gdy masz danego boga): Topór Peruna, Stada Welesa, Kuźnia Swaroga
+  i po dwa od każdego boga pomniejszego: jedno wzmacnia jego stwora (np. Złote pióra dla Raroga, Prastary Leszy,
+  Wilcza wataha, Gradowe chmury, Ognisty oddech, Pieśń rusałek, Wróżba z konia, Upiorna noc, Bies z Nawii),
+  drugie pasuje do boga (np. Dar słońca, Len i przędza, Jare zboże, Wiatr w plecy, Święty żar, Noc Kupały).
+- Brakujące ścieżki ulepszeń z gier o bogach i erach: Bartnictwo (Spichlerz), Tarcze w 3 stopniach i Wyważone strzały (Kuźnia),
+  Mistrzowie piechoty, łuku i jazdy (4. stopień każdej linii wojska w erze 4).
+- Bohaterowie rosną w siłę z każdą erą (+15% życia i ataku na erę).
+- Komputer też robi nowe ulepszenia.
+
+**Zmienione**
+- W budynkach (np. w Grodzie) widać tylko to, co da się zrobić już teraz; rzeczy z późniejszych er pojawiają się dopiero w swojej erze.
+- Czasy jak w grach o bogach i erach: osadnik 15 s, piechota 13–14 s, jazda 12–18 s, katapulta 25 s, wóz 15 s, stwory 20–35 s,
+  bohaterowie 20 s, awanse linii 20/30/40 s (era 2/3/4), ery 60/75/120 s, chata 15 s.
+
+**Do sprawdzenia**
+- Bitwy komputer na komputer trwały 32–47 minut; gracz, który nic nie robi, na łatwym przegrywa po 30 minutach.
+- Czasy wzięte częściowo z notek do poprawek gry i opisów w internecie, a częściowo z pamięci (strony z dokładnymi tabelami były niedostępne).
+
 ## Wersja 1 (24.11.2026)
 
 **Dodane**

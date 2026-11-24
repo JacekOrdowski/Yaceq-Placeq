@@ -5,12 +5,13 @@
 import * as THREE from '../survival/three.module.min.js';
 import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
-  ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA } from './dane.js';
+  ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 1;
+const WERSJA = 2;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 1, opis: 'Pierwsza wersja: Polanie, 3 bogów głównych i 9 pomniejszych, łaska z modlitwy w Gontynie, 12 mocy bogów, 9 stworów, 3 bohaterów, 9 krain z ziem polskich.' },
+  { nr: 2, opis: 'Nowa era na przycisku u góry ekranu (pisze, czego brakuje), w budynkach tylko to, co już można zrobić, czasy szkolenia jak w grach o bogach i erach, 27 nowych ulepszeń (od bogów, tarcze, mistrzowie linii), bohaterowie rosną z erami. Do tego wszystko z wersji 1.' },
+  { nr: 1, opis: 'Pierwsza wersja: Polanie, 3 bogów głównych i 9 pomniejszych, łaska z modlitwy w Gontynie, 12 mocy bogów, 9 stworów, 3 bohaterów, 9 krain z ziem polskich.', adres: 'wersje/1/' },
 ];
 const KLUCZ = 'age-of-polan-1';
 const $ = id => document.getElementById(id);
@@ -1036,14 +1037,28 @@ function nowaJednostka(strona, typ, x, z, id) {
   JED.push(u); E.set(u.id, u);
   return u;
 }
+// ulepszenia, które wzmacniają jednostki (pole wzmocni w ULEPSZENIA): hp, atak, szybkosc mnożą; zasieg, pancerz, leczy, wampir dodają
+const WZM = Object.entries(ULEPSZENIA).filter(([, d]) => d.wzmocni);
+function pasuje(w, typ, d) {
+  return !!(w.typy && w.typy.includes(typ) || w.linie && w.linie.includes(d.linia) || w.mit && d.mit || w.jazda && d.linia === 'renifer' || w.wojsko && d.wojsko
+    || w.wojskoWrecz && d.wojsko && !d.zasieg && !d.tylkoBudynki && !d.mit || w.strzelcy && d.zasieg > 0 && !d.oblezenie && !d.mit);
+}
+function wzm(strona, typ, k, v) {
+  const ul = S.ul[strona], d = JEDNOSTKI[typ];
+  for (const [id, u] of WZM) if (ul[id] && u.wzmocni[k] != null && pasuje(u.wzmocni, typ, d)) v = k === 'hp' || k === 'atak' || k === 'szybkosc' ? v * u.wzmocni[k] : v + u.wzmocni[k];
+  if (d.bohater && (k === 'hp' || k === 'atak')) v *= 1 + BOHATER_ERA * Math.max(0, S.era[strona] - d.era);
+  return v;
+}
+// po ulepszeniu albo nowej erze: nowe życie jednostek (rany zostają w tej samej proporcji)
+function przeliczZycie(strona) { for (const u of JED) if (u.strona === strona) { const nm = maxHpJ(strona, u.typ); if (nm !== u.max) { u.hp = u.hp * nm / u.max; u.max = nm; } } }
 // bogowie wybrani przez stronę (główny i pomniejsi)
 const bogMa = (strona, id) => !!(S && S.bogowie && S.bogowie[strona] && S.bogowie[strona].includes(id));
 const buff = (strona, k) => !!(S.buff && S.buff[strona] && S.buff[strona][k] > S.czas);
-function predkosc(u) { const ul = S.ul[u.strona]; return u.d.szybkosc * (u.typ === 'osadnik' ? (ul.taczka ? 1.1 : 1) * (ul.wozek ? 1.1 : 1) : 1) * (ul.zaprzeg && (u.d.oblezenie || u.d.kupiec) ? EFEKTY.zaprzeg : 1) * (u.d.wojsko && bogMa(u.strona, 'jarylo') ? 1.1 : 1); }
-function udzwig(u) { const ul = S.ul[u.strona]; return UDZWIG + (ul.kosz ? 3 : 0) + (ul.taczka ? 4 : 0) + (ul.wozek ? 5 : 0) + (ul.plecak1 ? 2 : 0) + (ul.plecak2 ? 3 : 0) + (ul.plecak3 ? 4 : 0) + (bogMa(u.strona, 'dazbog') ? 2 : 0); }
+function predkosc(u) { const ul = S.ul[u.strona]; return u.d.szybkosc * (u.typ === 'osadnik' ? (ul.taczka ? 1.1 : 1) * (ul.wozek ? 1.1 : 1) : 1) * (ul.zaprzeg && (u.d.oblezenie || u.d.kupiec) ? EFEKTY.zaprzeg : 1) * (u.d.wojsko && bogMa(u.strona, 'jarylo') ? 1.1 : 1) * wzm(u.strona, u.typ, 'szybkosc', 1); }
+function udzwig(u) { const ul = S.ul[u.strona]; return UDZWIG + (ul.kosz ? 3 : 0) + (ul.taczka ? 4 : 0) + (ul.wozek ? 5 : 0) + (ul.plecak1 ? 2 : 0) + (ul.plecak2 ? 3 : 0) + (ul.plecak3 ? 4 : 0) + (bogMa(u.strona, 'dazbog') ? 2 : 0) + (ul.len_mokoszy ? 3 : 0); }
 function maxHpJ(strona, typ) {
   const d = JEDNOSTKI[typ];
-  return Math.round((d.hp + (typ === 'osadnik' && S.ul[strona].rekawice ? 15 : 0)) * (d.linia === 'renifer' && bogMa(strona, 'swietowit') ? 1.2 : 1) * (d.mit && bogMa(strona, 'marzanna') ? 1.15 : 1));
+  return Math.round((d.hp + (typ === 'osadnik' && S.ul[strona].rekawice ? 15 : 0)) * (d.linia === 'renifer' && bogMa(strona, 'swietowit') ? 1.2 : 1) * (d.mit && bogMa(strona, 'marzanna') ? 1.15 : 1) * wzm(strona, typ, 'hp', 1));
 }
 // strzelcy (bez katapulty) korzystają z ulepszeń pocisków
 const strzelec = d => d.zasieg > 0 && !d.oblezenie;
@@ -1058,6 +1073,9 @@ function tempoZbierania(u, rodzaj) {
   if (rodzaj === 'zelazo' || rodzaj === 'zloto') t *= ul.kilof_z ? 1.2 : 1;
   if (ul.szyb && (rodzaj === 'kamien' || rodzaj === 'zelazo' || rodzaj === 'zloto')) t *= EFEKTY.szyb;
   if (bogMa(u.strona, 'mokosz') && (rodzaj === 'jagody' || rodzaj === 'pole')) t *= 1.15;
+  if (rodzaj === 'pole' && ul.stada_welesa) t *= 1.15;
+  if (rodzaj === 'jagody' && ul.bartnictwo) t *= 1.15;
+  if (rodzaj === 'zloto' && ul.dar_slonca) t *= 1.2;
   if (buff(u.strona, 'slonce')) t *= MOCE.slonce.razy;
   if (u.strona !== STRONA_GRACZA || S.aiGracz) t *= TRUDNOSC[trudnoscStrony(u.strona)].zbieranie;
   return t;
@@ -1070,16 +1088,17 @@ function atakJ(u) {
   if (u.d.wojsko && !u.d.zasieg && !u.d.tylkoBudynki && bogMa(u.strona, 'perun')) a += 1;
   if (u.d.mit && bogMa(u.strona, 'trzyglow')) a += 2;
   if (u.d.wojsko && buff(u.strona, 'ogien')) a *= MOCE.swietyOgien.razy;
+  a *= wzm(u.strona, u.typ, 'atak', 1);
   return Math.round(a * 10) / 10;
 }
-function zasiegJ(u) { return u.d.zasieg ? u.d.zasieg + (strzelec(u.d) && !u.d.mit ? zasiegPociskow(u.strona) + (bogMa(u.strona, 'strzybog') ? 1 : 0) : 0) : 0; }
-function pancerzJ(u) { const ul = S.ul[u.strona]; return u.d.pancerz + (u.d.wojsko ? (ul.zbroja1 ? 1 : 0) + (ul.zbroja2 ? 1 : 0) + (ul.zbroja3 ? 2 : 0) + (bogMa(u.strona, 'swarog') ? 1 : 0) : 0); }
+function zasiegJ(u) { return u.d.zasieg ? u.d.zasieg + (strzelec(u.d) && !u.d.mit ? zasiegPociskow(u.strona) + (bogMa(u.strona, 'strzybog') ? 1 : 0) : 0) + wzm(u.strona, u.typ, 'zasieg', 0) : 0; }
+function pancerzJ(u) { const ul = S.ul[u.strona]; return u.d.pancerz + (u.d.wojsko ? (ul.zbroja1 ? 1 : 0) + (ul.zbroja2 ? 1 : 0) + (ul.zbroja3 ? 2 : 0) + (bogMa(u.strona, 'swarog') ? 1 : 0) : 0) + wzm(u.strona, u.typ, 'pancerz', 0); }
 const poziomMuru = strona => 1 + (S.ul[strona].mur_cegla ? 1 : 0) + (S.ul[strona].mur_stal ? 1 : 0);
 function maxHpBud(strona, typ, poziom = 1) {
   if (typ === 'mur' || typ === 'brama') { const p = MUR_POZIOMY[poziomMuru(strona)]; return typ === 'mur' ? p.hpMur : p.hpBrama; }
   // Murarze, Mistrzowie budowy i Umocniony Dworek dają budynkom więcej życia
   const ul = S && S.ul && S.ul[strona] || {};
-  const m = (1 + (ul.murarze ? EFEKTY.murarze : 0) + (ul.budowniczowie ? EFEKTY.budowniczowie : 0)) * (typ === 'ratusz' && ul.umocnienie ? EFEKTY.umocnienieZycie : 1) * (bogMa(strona, 'swarog') ? 1.1 : 1);
+  const m = (1 + (ul.murarze ? EFEKTY.murarze : 0) + (ul.budowniczowie ? EFEKTY.budowniczowie : 0)) * (typ === 'ratusz' && ul.umocnienie ? EFEKTY.umocnienieZycie : 1) * (bogMa(strona, 'swarog') ? 1.1 : 1) * (typ === 'wieza' && ul.swiety_zar ? 1.25 : 1);
   return Math.round((typ === 'wieza' ? WIEZA_POZIOMY[poziom].hp : BUDYNKI[typ].hp) * m);
 }
 const nazwaBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].nazwa : b.d.mur || b.d.brama ? MUR_POZIOMY[poziomMuru(b.strona)][b.typ] : b.d.nazwa;
@@ -1210,7 +1229,7 @@ function handel(u, dt) {
 }
 function rozkazModl(u, b) { if (u.typ !== 'osadnik') return; u.zad = { typ: 'modl', bid: b.id }; u.sciezka = null; }
 function dodajLaske(strona, ile) { const z = S.zas[strona]; z.laska = Math.min(LASKA.maks, (z.laska || 0) + ile); }
-const tempoLaski = strona => LASKA.modlitwa * (bogMa(strona, 'weles') ? 1.25 : 1) * (bogMa(strona, 'lada') ? 1.2 : 1);
+const tempoLaski = strona => LASKA.modlitwa * (bogMa(strona, 'weles') ? 1.25 : 1) * (bogMa(strona, 'lada') ? 1.2 : 1) * (S.ul[strona].kupala ? 1.2 : 1);
 function modl(u, dt) {
   const b = E.get(u.zad.bid);
   if (!b || b.hp <= 0 || !b.gotowy) { u.zad = null; return; }
@@ -1274,7 +1293,8 @@ function obrazenia(atakujacy, cel, atak) {
   }
   const bonus = ((atakujacy.d && atakujacy.d.przeciw && cel.d.linia && atakujacy.d.przeciw[cel.d.linia]) || 1) * (atakujacy.d && atakujacy.d.bohater && cel.d.mit ? 3 : 1);
   const dystans = !atakujacy.d || atakujacy.d.zasieg || atakujacy.d.w;
-  const p = pancerzJ(cel) + (dystans && cel.d.pancerzDystans ? cel.d.pancerzDystans : 0);
+  const ulC = S.ul[cel.strona] || {}, tarcze = dystans && cel.d.wojsko ? (ulC.tarcze1 ? 1 : 0) + (ulC.tarcze2 ? 1 : 0) + (ulC.tarcze3 ? 2 : 0) : 0;
+  const p = pancerzJ(cel) + tarcze + (dystans && cel.d.pancerzDystans ? cel.d.pancerzDystans : 0);
   return Math.max(1, atak * bonus - p);
 }
 let alarmT = -99;
@@ -1295,7 +1315,7 @@ function zadaj(cel, ile, od) {
 }
 function uderz(u, c) {
   if (u.d.zasieg) { rzut(u, c, atakJ(u)); if (!odglos('zamach', u.x, u.z, 0.45)) dzwiek('rzut'); }
-  else { const ob = obrazenia(u, c, atakJ(u)); zadaj(c, ob, u); if (u.d.wampir) u.hp = Math.min(u.max, u.hp + ob * u.d.wampir); if (naEkranie(u)) { if (!odglosUderzenia(u, c)) dzwiek('uderz'); EF.iskry((u.x + c.x) / 2, 0.7, (u.z + c.z) / 2, jestBudynkiem(c) ? 3 : 5, jestBudynkiem(c) ? '#e0c08a' : '#ffd84a'); } }
+  else { const ob = obrazenia(u, c, atakJ(u)); zadaj(c, ob, u); if (u.d.wampir) u.hp = Math.min(u.max, u.hp + ob * wzm(u.strona, u.typ, 'wampir', u.d.wampir)); if (naEkranie(u)) { if (!odglosUderzenia(u, c)) dzwiek('uderz'); EF.iskry((u.x + c.x) / 2, 0.7, (u.z + c.z) / 2, jestBudynkiem(c) ? 3 : 5, jestBudynkiem(c) ? '#e0c08a' : '#ffd84a'); } }
 }
 const KAMYK = MOD.kamyk();
 function rzut(od, cel, atak) {
@@ -1340,7 +1360,7 @@ function aktualizujJednostke(u, dt) {
   u.cd = Math.max(0, u.cd - dt); u.idzie = false; u.pracuje = false;
   if (u.zamarz > S.czas || u.spokoj > S.czas) return;
   // Rusałka leczy swoich wokół (każdego najwyżej raz na sekundę, nawet gdy rusałek jest kilka)
-  if (u.d.leczy && (u.lecz = (u.lecz || 0) - dt) <= 0) { u.lecz = 1; for (const o of JED) if (o.strona === u.strona && o !== u && o.hp < o.max && S.czas - (o.leczony || -9) > 0.95 && Math.abs(o.x - u.x) < 4 && Math.abs(o.z - u.z) < 4) { o.leczony = S.czas; o.hp = Math.min(o.max, o.hp + u.d.leczy); } }
+  if (u.d.leczy && (u.lecz = (u.lecz || 0) - dt) <= 0) { u.lecz = 1; for (const o of JED) if (o.strona === u.strona && o !== u && o.hp < o.max && S.czas - (o.leczony || -9) > 0.95 && Math.abs(o.x - u.x) < 4 && Math.abs(o.z - u.z) < 4) { o.leczony = S.czas; o.hp = Math.min(o.max, o.hp + wzm(u.strona, u.typ, 'leczy', u.d.leczy)); } }
   const z = u.zad;
   if (!z) {
     // wóz kupiecki sam wraca do handlu
@@ -1650,6 +1670,7 @@ function brakUlepszenia(strona, id) {
   if (S.ul[strona][id]) return 'gotowe';
   if (BUD.some(b => b.strona === strona && b.kolejka.some(q => q.rodzaj === 'u' && q.typ === id))) return 'w trakcie';
   if (d.era > S.era[strona]) return '🔒 Era ' + d.era;
+  if (d.bog && !bogMa(strona, d.bog)) return '🔒 Bóg: ' + BOGOWIE[d.bog].nazwa;
   if (d.wymaga && !S.ul[strona][d.wymaga]) return '🔒 Najpierw: ' + ULEPSZENIA[d.wymaga].nazwa;
   if (d.awans) { const jl = JEDNOSTKI[d.awans]; const pop = Object.keys(JEDNOSTKI).find(t => JEDNOSTKI[t].linia === jl.linia && (JEDNOSTKI[t].st || 1) === jl.st - 1); if (pop && JEDNOSTKI[pop].era > S.era[strona]) return '🔒 Era ' + JEDNOSTKI[pop].era; }
   return null;
@@ -1664,6 +1685,25 @@ function brakEry(strona) {
 }
 // dwaj bogowie do wyboru przy następnej erze (zależy od boga głównego)
 function bogowieEry(strona) { const g = BOGOWIE[S.bogowie[strona][0]]; return (g && g.ery[S.era[strona] + 1]) || []; }
+// czego brakuje do następnej ery (pusta lista = można)
+function brakiEry(strona) {
+  const ne = NOWA_ERA[S.era[strona] + 1]; if (!ne) return null;
+  const l = [], ma = budynkiDoEry(strona);
+  if (ma < ne.budynki) l.push(`${ne.budynki - ma} ${ne.budynki - ma === 1 ? 'innego budynku' : 'innych budynków'} (np. ${['spichlerz', 'tartak', 'gontyna', 'koszary', 'szopa', 'kopalnia', 'kuznia', 'strzelnica'].filter(t => !BUD.some(b => b.strona === strona && b.typ === t && b.gotowy) && !brakBudynku(strona, t)).slice(0, 2).map(t => BUDYNKI[t].nazwa).join(', ')})`);
+  for (const [k, v] of Object.entries(ne.koszt)) if (S.zas[strona][k] < v) l.push(`${Math.ceil(v - S.zas[strona][k])} ${EMOJI_SUR[k]}`);
+  if (!BUD.some(b => b.strona === strona && b.typ === 'ratusz' && b.gotowy)) l.push('gotowego Grodu');
+  return l;
+}
+function odswiezPrzyciskEry() {
+  const el = $('b-era'), nast = S.era[0] + 1, ne = NOWA_ERA[nast];
+  const trwa = BUD.map(b => b.strona === 0 && b.kolejka.find(q => q.rodzaj === 'era')).find(q => q);
+  let tekst, kl;
+  if (!ne) { tekst = `⚡ Najwyższa era: ${ERY[S.era[0]]}`; kl = 'koniec'; }
+  else if (trwa) { tekst = `⏳ ${BOGOWIE[trwa.typ] ? BOGOWIE[trwa.typ].emoji + ' ' : ''}Era ${nast}: ${ERY[nast]} · ${Math.floor(trwa.t / trwa.czas * 100)}%`; kl = 'trwa'; }
+  else { const b = brakiEry(0); if (b.length) { tekst = `🔒 Era ${nast}: ${ERY[nast]} · brakuje: ${b.join(', ')}`; kl = 'brak'; } else { tekst = `⬆️ Era ${nast}: ${ERY[nast]} · dotknij, żeby wybrać boga!`; kl = 'gotowa'; } }
+  if (el.textContent !== tekst) el.textContent = tekst;
+  el.className = kl;
+}
 function dodajDoKolejki(b, rodzaj, typ) {
   if (b.kolejka.length >= 5) return 'Kolejka jest pełna';
   let koszt, czas;
@@ -1739,7 +1779,8 @@ function aktualizujBudynek(b, dt) {
     if (b.strona === STRONA_GRACZA && !S.aiGracz) dzwiek('gotowe');
     return;
   }
-  q.t += dt * (q.rodzaj === 'j' && JEDNOSTKI[q.typ].wojsko && S.ul[b.strona].pobor ? EFEKTY.pobor : 1);
+  const ulB = S.ul[b.strona];
+  q.t += dt * (q.rodzaj === 'j' && JEDNOSTKI[q.typ].wojsko && ulB.pobor ? EFEKTY.pobor : 1) * (q.rodzaj === 'j' && q.typ === 'osadnik' && ulB.jare_zboze ? 1.25 : 1) * (q.rodzaj === 'u' && b.typ === 'kuznia' && ulB.kuznia_swaroga ? 1.5 : 1);
   if (q.t >= q.czas && q.rodzaj !== 'j') {
     b.kolejka.shift();
     if (q.rodzaj === 'u') {
@@ -1755,6 +1796,8 @@ function aktualizujBudynek(b, dt) {
         const nm = maxHpBud(o.strona, o.typ, o.poziom || 1); o.hp = o.gotowy ? Math.max(1, nm - (o.max - o.hp)) : o.hp * nm / o.max; o.max = nm;
       }
       if (q.typ === 'rekawice') for (const u of JED) if (u.strona === b.strona && u.typ === 'osadnik') { u.max = maxHpJ(u.strona, 'osadnik'); u.hp += 15; }
+      przeliczZycie(b.strona);
+      if (q.typ === 'swiety_zar') for (const o of BUD) if (o.strona === b.strona && o.typ === 'wieza') { const nm = maxHpBud(o.strona, o.typ, o.poziom || 1); o.hp = o.hp * nm / o.max; o.max = nm; }
       if (b.strona === STRONA_GRACZA && !S.aiGracz) { toast(ULEPSZENIA[q.typ].emoji + ' Ulepszone: ' + ULEPSZENIA[q.typ].nazwa); dzwiek('buduj'); odglos('ulepszenie'); }
     } else if (q.rodzaj === 'rozb') {
       // rozbudowa ambony: nowy wygląd, więcej życia (rany zostają), mocniejsze strzały
@@ -1766,6 +1809,7 @@ function aktualizujBudynek(b, dt) {
       S.era[b.strona]++;
       const bg = BOGOWIE[q.typ];
       if (bg) { S.bogowie[b.strona].push(q.typ); S.moce[b.strona].push({ id: bg.moc, uzyta: false }); }
+      przeliczZycie(b.strona); // bohaterowie rosną w siłę z każdą erą
       if (!S.aiGracz || b.strona !== STRONA_GRACZA) {
         if (b.strona === STRONA_GRACZA) { baner(`Era ${S.era[b.strona]}: ${ERY[S.era[b.strona]]}`, bg ? `${bg.emoji} ${bg.nazwa} daje ci moc ${MOCE[bg.moc].emoji} ${MOCE[bg.moc].nazwa} i stwora ${JEDNOSTKI[bg.stwor].emoji} ${JEDNOSTKI[bg.stwor].nazwa}` : 'Nowe budynki, wojsko i ulepszenia!'); dzwiek('era'); EF.fajerwerki(b.x, b.z); }
         else if (!S.aiGracz) toast(`${ZNAK_STRON[b.strona]} Komputer wszedł w erę ${S.era[b.strona]}: ${ERY[S.era[b.strona]]}${bg ? ' (' + bg.emoji + ' ' + bg.nazwa + ')' : ''}`);
@@ -1797,7 +1841,7 @@ function cenyWracaja(dt) { for (let s = 0; s < ileStron(); s++) { const c = ceny
 
 // ================= moce bogów =================
 // każda moc działa raz w grze; moce z celem trzeba wskazać na mapie (gracz: dotknięciem, komputer: sam wybiera)
-let pokazMoce = false, trybMocy = null;
+let pokazMoce = false, trybMocy = null, pokazEre = false;
 const WIDOK_CZAROW = []; // błyskawice, ogniste kule, aury (tylko wygląd, nie trafia do zapisu)
 const GEO_PIORUN = new THREE.CylinderGeometry(0.09, 0.16, 26, 6).translate(0, 13, 0);
 const MAT_PIORUN = new THREE.MeshBasicMaterial({ color: '#e8f4ff', transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
@@ -2096,9 +2140,12 @@ function ai(strona, dt) {
   if (oszczedza && !ratusz.kolejka.length && !brakEry(strona) && stac(strona, nastEra.koszt)) { const op = bogowieEry(strona); dodajDoKolejki(ratusz, 'era', op[Math.floor(Math.random() * op.length)]); }
   // 9. ulepszenia
   for (const id of ['kosz', 'plecak1', 'rekawice', 'deski', 'sciolka', 'kilof', 'taczka', 'siekiera_z', 'kilof_z', 'bron1', 'zbroja1', 'pociski1', 'aw_tarczownik', 'aw_procarz2', 'nawadnianie',
-    'pobor', 'blanki', 'murarze', 'monety', 'umocnienie',
-    'wozek', 'pila', 'bron2', 'zbroja2', 'pociski2', 'aw_obronca', 'plecak2', 'aw_pikinier', 'aw_kusznik', 'szyb', 'ogniste', 'budowniczowie', 'inzynierowie', 'lunety', 'wrzatek',
-    'plecak3', 'aw_jezdziec', 'mrozoodporne', 'zaprzeg', 'poborcy', 'wagi', 'bron3', 'zbroja3', 'pociski3', 'aw_rycerz']) {
+    'pobor', 'blanki', 'murarze', 'monety', 'umocnienie', 'bartnictwo', 'stada_welesa', 'topor_peruna', 'kuznia_swaroga', 'tarcze1',
+    'zlote_piora', 'dar_slonca', 'prastary_leszy', 'len_mokoszy', 'wilcza_wataha', 'jare_zboze',
+    'wozek', 'pila', 'bron2', 'zbroja2', 'pociski2', 'aw_obronca', 'plecak2', 'aw_pikinier', 'aw_kusznik', 'szyb', 'ogniste', 'budowniczowie', 'inzynierowie', 'lunety', 'wrzatek', 'tarcze2', 'balistyka',
+    'gradowe_chmury', 'wiatr_w_plecy', 'ognisty_oddech', 'swiety_zar', 'piesn_rusalek', 'kupala',
+    'plecak3', 'aw_jezdziec', 'mrozoodporne', 'zaprzeg', 'poborcy', 'wagi', 'bron3', 'zbroja3', 'pociski3', 'aw_rycerz', 'tarcze3', 'mistrz_piechoty', 'mistrz_strzelcow', 'mistrz_jazdy',
+    'wrozba_konia', 'arkonska_druzyna', 'upiorna_noc', 'zimowe_futra', 'bies_z_nawii', 'trzy_swiaty']) {
     const d = ULEPSZENIA[id], b = moje.find(o => o.typ === d.z && o.gotowy && !o.kolejka.length);
     if (b && !brakUlepszenia(strona, id) && stacR(d.koszt) && (osadnicy.length >= celOs - 6 || era > 1)) { dodajDoKolejki(b, 'u', id); break; }
   }
@@ -2838,7 +2885,7 @@ function wskaz(px, py) {
   return naj;
 }
 function zaznacz(lista) {
-  if (lista.length) pokazMoce = false;
+  if (lista.length) { pokazMoce = false; pokazEre = false; }
   for (const e of wybrane) if (e.pierscien) e.pierscien.visible = false;
   wybrane = lista.filter(e => e && (E.get(e.id) === e));
   if (wybrane.length) S.pomoc.zaznaczyl = true;
@@ -3145,11 +3192,18 @@ function odswiezPanel(wymus = false) {
   wybrane = wybrane.filter(e => E.get(e.id) === e);
   const p = $('p-akcje'), info = $('p-info');
   const sel = wybrane, pierwszy = sel[0];
-  const klucz = (pokazMoce ? 'M' + S.moce[0].map(m => m.uzyta ? 1 : 0).join('') : '') + sel.map(e => e.id).join(',') + '|' + S.era[0] + '|' + (pierwszy && jestBudynkiem(pierwszy) ? pierwszy.gotowy + ':' + (pierwszy.poziom || 1) + ':' + (pierwszy.zamk ? 1 : 0) + ':' + pierwszy.kolejka.map(q => q.typ).join('.') + ':' + Object.keys(S.ul[0]).join('.') : '');
+  const klucz = (pokazEre ? 'E' + S.era[0] : '') + (pokazMoce ? 'M' + S.moce[0].map(m => m.uzyta ? 1 : 0).join('') : '') + sel.map(e => e.id).join(',') + '|' + S.era[0] + '|' + (pierwszy && jestBudynkiem(pierwszy) ? pierwszy.gotowy + ':' + (pierwszy.poziom || 1) + ':' + (pierwszy.zamk ? 1 : 0) + ':' + pierwszy.kolejka.map(q => q.typ).join('.') + ':' + Object.keys(S.ul[0]).join('.') : '');
   if (!wymus && klucz === panelKlucz) { aktualizujPanel(); return; }
   panelKlucz = klucz;
   let h = '', a = '', zburzHTML = '';
-  if (!sel.length && pokazMoce) {
+  if (!sel.length && pokazEre) {
+    const ne = NOWA_ERA[S.era[0] + 1];
+    h = `<div class="p-glowa"><span class="p-ik">${EMOJI_ERY[S.era[0] + 1]}</span><div><b>Era ${S.era[0] + 1}: ${ERY[S.era[0] + 1]}</b><small>Wybierz boga, który poprowadzi twoje plemię</small></div><button class="p-x" data-a="era-zamknij">✖</button></div>`;
+    if (ne) for (const id of bogowieEry(0)) {
+      const bg = BOGOWIE[id], st = JEDNOSTKI[bg.stwor], mc = MOCE[bg.moc];
+      a += `<button class="akcja era bog" data-a="era:${id}" data-koszt='${JSON.stringify(ne.koszt)}'><span class="ak-ik">${bg.emoji}</span><b>${bg.nazwa}</b><small>${bg.kim}. Moc: ${mc.emoji} ${mc.nazwa}. Stwór: ${st.emoji} ${st.nazwa}. ${bg.bonus}</small><span class="ak-koszt">${kosztHTML(ne.koszt)}</span></button>`;
+    }
+  } else if (!sel.length && pokazMoce) {
     h = `<div class="p-glowa"><span class="p-ik">⚡</span><div><b>Moce bogów</b><small>Każdej mocy możesz użyć tylko raz w grze</small></div><button class="p-x" data-a="moce-zamknij">✖</button></div>`;
     for (const m of S.moce[0]) {
       const d = MOCE[m.id], bg = Object.values(BOGOWIE).find(b => b.moc === m.id);
@@ -3168,19 +3222,13 @@ function odswiezPanel(wymus = false) {
     if (moj && !b.gotowy) h += `<div class="p-opis">Plac budowy: zaznacz osadników i dotknij go, żeby budowali.</div>`;
     else if (moj) {
       h += `<div class="p-opis">${b.d.opis}${b.d.pole ? (wolnePole(b) ? ' · nikt tu nie pracuje' : ' · pracuje tu osadnik') : ''}${produkuje(b) ? ' · dotknij ziemi, żeby wskazać, dokąd mają iść nowi' : ''}</div>`;
-      const typy = typyBudynku(0, b.typ);
-      for (const t of Object.keys(JEDNOSTKI)) if (JEDNOSTKI[t].z === b.typ && !typy.includes(t) && !JEDNOSTKI[t].awans && !JEDNOSTKI[t].bog && JEDNOSTKI[t].era > S.era[0]) typy.push(t);
+      // pokazujemy tylko to, co da się zrobić już teraz (brak surowców widać po kolorze ceny)
+      const typy = typyBudynku(0, b.typ).filter(t => !brakJednostki(0, t));
       for (const t of typy) {
-        const d = JEDNOSTKI[t], br = brakJednostki(0, t);
+        const d = JEDNOSTKI[t], br = null;
         a += `<button class="akcja${br ? ' zablok' : ''}" data-a="szkol:${t}" data-koszt='${JSON.stringify(d.koszt)}'><span class="ak-ik">${d.emoji}</span><b>${d.nazwa}</b><small>${br || d.opis}</small><span class="ak-koszt">${kosztHTML(d.koszt)}</span></button>`;
       }
-      if (b.typ === 'ratusz' && NOWA_ERA[S.era[0] + 1]) {
-        const ne = NOWA_ERA[S.era[0] + 1], br = brakEry(0);
-        if (br !== 'w trakcie') for (const id of bogowieEry(0)) {
-          const bg = BOGOWIE[id], st = JEDNOSTKI[bg.stwor], mc = MOCE[bg.moc];
-          a += `<button class="akcja era bog${br ? ' zablok' : ''}" data-a="era:${id}" data-koszt='${JSON.stringify(ne.koszt)}'><span class="ak-ik">${bg.emoji}</span><b>Era ${S.era[0] + 1}: ${ERY[S.era[0] + 1]} z bogiem ${bg.nazwa}</b><small>${br || `${bg.kim}. Moc: ${mc.emoji} ${mc.nazwa}. Stwór: ${st.emoji} ${st.nazwa}. ${bg.bonus}`}</small><span class="ak-koszt">${kosztHTML(ne.koszt)}</span></button>`;
-        }
-      }
+      if (b.typ === 'ratusz' && NOWA_ERA[S.era[0] + 1]) h += `<div class="p-opis">⬆️ Nowa era: przycisk na górze ekranu</div>`;
       if (b.d.gontyna) {
         const ilu = JED.filter(u => u.strona === 0 && u.zad && u.zad.typ === 'modl' && u.zad.bid === b.id).length;
         h += `<div class="p-opis">🙏 Modli się: ${ilu} (liczy się do ${LASKA.modlacychNaGontyne}) · ✨ ${(Math.min(ilu, LASKA.modlacychNaGontyne) * tempoLaski(0) * 60).toFixed(0)} łaski na minutę · zaznacz osadników i dotknij Gontyny, żeby się modlili</div>`;
@@ -3235,7 +3283,7 @@ function odswiezPanel(wymus = false) {
     }
   }
   a += zburzHTML;
-  info.innerHTML = h; p.innerHTML = a; p.scrollLeft = 0; $('panel').classList.toggle('zwiniety', !sel.length && !pokazMoce);
+  info.innerHTML = h; p.innerHTML = a; p.scrollLeft = 0; $('panel').classList.toggle('zwiniety', !sel.length && !pokazMoce && !pokazEre);
   aktualizujPanel();
 }
 function aktualizujPanel() {
@@ -3263,6 +3311,13 @@ $('panel').addEventListener('click', e => {
   audio();
   const [akcja, arg] = b.dataset.a.split(':'), cel = wybrane[0];
   if (akcja === 'odznacz') { zaznacz([]); dzwiek('klik'); return; }
+  if (akcja === 'era-zamknij') { pokazEre = false; dzwiek('klik'); odswiezPanel(true); return; }
+  if (akcja === 'era' && pokazEre) {
+    const gr = BUD.find(o => o.strona === STRONA_GRACZA && o.typ === 'ratusz' && o.gotowy && o.kolejka.length < 5);
+    const bl = gr ? dodajDoKolejki(gr, 'era', arg) : 'Nie masz wolnego Grodu';
+    if (bl) { toast(bl); dzwiek('blad'); } else { pokazEre = false; toast(`${BOGOWIE[arg].emoji} ${BOGOWIE[arg].nazwa}: Gród zaczyna przechodzić do nowej ery`); dzwiek('tak'); }
+    odswiezPanel(true); odswiezHud(); return;
+  }
   if (akcja === 'moce-zamknij') { pokazMoce = false; trybMocy = null; dzwiek('klik'); odswiezPanel(true); odswiezHud(); return; }
   if (akcja === 'moc') {
     const m = S.moce[0].find(o => o.id === arg); if (!m || m.uzyta) { dzwiek('blad'); return; }
@@ -3308,6 +3363,7 @@ function odswiezHud() {
   const z = S.zas[0];
   for (const s of SUROWCE) $('z-' + s).textContent = Math.floor(z[s]);
   $('z-laska').textContent = Math.floor(z.laska || 0);
+  odswiezPrzyciskEry();
   const lud = ludnosc(0), lim = limitLudnosci(0);
   $('z-lud').textContent = `${lud}/${lim}`; $('c-lud').classList.toggle('pelno', lud >= lim && lim < MAKS_LUDNOSC);
   $('h-era').textContent = `${EMOJI_ERY[S.era[0]]} Era ${S.era[0]}: ${ERY[S.era[0]]} · ${S.bogowie[0].map(b => BOGOWIE[b].emoji).join('')}`;
@@ -3332,13 +3388,13 @@ function podpowiedz() {
   if (!JED.some(u => u.strona === 0 && u.zad && u.zad.typ === 'modl')) return '🙏 Zaznacz 2–3 osadników i dotknij Gontyny: będą się modlić o łaskę';
   if (!ma('koszary')) return '🛡️ Zbuduj Dwór drużyny';
   if (S.moce[0] && S.moce[0].some(m => !m.uzyta) && S.czas > 600 && !S.pomoc.moc) return '⚡ Masz moc boga! Naciśnij ⚡ z boku ekranu';
-  if (S.era[0] === 1) return brakEry(0) ? '🏗️ Do ery 2 potrzeba 2 różnych budynków (np. drwalnia i Gontyna)' : '🏯 Zbierz 500 żywności i w Grodzie przejdź do Czasów Grodów (wybierzesz boga)';
+  if (S.era[0] === 1) return brakEry(0) ? '🏗️ Do ery 2 potrzeba 2 różnych budynków (np. drwalnia i Gontyna)' : '🏯 Zbierz 500 żywności i dotknij przycisku ery na górze ekranu (wybierzesz boga)';
   if (!ma('kopalnia')) return '⛏️ Zbuduj dymarkę przy rdzawych skałach z rudą';
   if (!BUD.some(b => b.strona === 0 && b.typ === 'gontyna' && b.kolejka.length) && !JED.some(u => u.strona === 0 && u.d.mit) && S.era[0] >= 2) return '🐺 W Gontynie przyzwij stwora swojego boga (za łaskę ✨)';
   if (!ma('jarmark')) return '🎪 Zbuduj Targowisko daleko od spichlerza: wozy przywiozą srebro';
   if (woj.length < 8) return '🛡️ Szkol wojsko w Dworze drużyny';
-  if (S.era[0] === 2) return '⚔️ W Grodzie przejdź do Czasów Bohaterów (potrzeba 200 żelaza)';
-  if (S.era[0] === 3 && woj.length >= 12) return '⚡ W Grodzie przejdź do Czasów Bogów (pancerni, katapulty, najsilniejsze stwory)';
+  if (S.era[0] === 2) return '⚔️ Przycisk ery na górze: Czasy Bohaterów (potrzeba 200 żelaza)';
+  if (S.era[0] === 3 && woj.length >= 12) return '⚡ Przycisk ery na górze: Czasy Bogów (pancerni, katapulty, najsilniejsze stwory)';
   return '🚩 Zaznacz wojsko ⚔️ i dotknij Grodu komputera';
 }
 let toastT = null;
@@ -3356,9 +3412,17 @@ $('b-wojsko').onclick = () => {
   zaznacz(l); dzwiek('tak');
 };
 $('b-dom').onclick = () => { audio(); const r = BUD.find(b => b.strona === 0 && b.typ === 'ratusz'); if (r) { kam.x = r.x; kam.z = r.z; } kam.kat = Math.PI / 4; dzwiek('klik'); };
+$('b-era').onclick = () => {
+  audio(); if (!S) return;
+  const b = brakiEry(0);
+  if (!b) { toast('⚡ To już najwyższa era'); dzwiek('klik'); return; }
+  if (BUD.some(o => o.strona === 0 && o.kolejka.some(q => q.rodzaj === 'era'))) { toast('⏳ Gród już przechodzi do nowej ery'); dzwiek('klik'); return; }
+  if (b.length) { toast('🔒 Do nowej ery brakuje: ' + b.join(', ')); dzwiek('blad'); return; }
+  zaznacz([]); pokazMoce = false; trybMocy = null; pokazEre = !pokazEre; dzwiek('tak'); odswiezPanel(true);
+};
 $('b-moce').onclick = () => {
   audio(); if (!S) return;
-  if (pokazMoce || trybMocy) { pokazMoce = false; trybMocy = null; } else { pokazMoce = true; zaznacz([]); }
+  if (pokazMoce || trybMocy) { pokazMoce = false; trybMocy = null; } else { zaznacz([]); pokazMoce = true; pokazEre = false; }
   dzwiek('klik'); odswiezPanel(true); odswiezHud();
 };
 $('b-obszar').onclick = () => { audio(); trybObszar = !trybObszar; $('b-obszar').classList.toggle('wl', trybObszar); if (trybObszar) toast('Przeciągnij palcem ramkę wokół swoich ludzi'); };

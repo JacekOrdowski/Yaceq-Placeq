@@ -152,7 +152,9 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
   czasowe wzmocnienia: `S.buff`. Bonusy bogów liczą funkcje z `bogMa(strona, id)`; moce: `uzyjMocy`, `krokCzarow`; komputer: `aiMoce`.
   Era przechodzi z wybranym bogiem: `dodajDoKolejki(gród, 'era', idBoga)`, opcje: `bogowieEry`. Modlitwa: zadanie `modl`.
 - Muzyka i dźwięki są brane z `age2/` (`../age2/muzyka/`, `../age2/dzwieki/`).
-- Test: `window.__polan` (to samo co `__haskap`, do tego `uzyjMocy`). Gry komputer kontra komputer trwają około 60–80 minut.
+- Ulepszenia wzmacniające jednostki mają pole `wzmocni` (liczy `wzm` w `polanie/gra.js`); ulepszenia od bogów mają `bog`.
+  Nowa era: przycisk `#b-era` u góry (`brakiEry`, `odswiezPrzyciskEry`, wybór boga w panelu `pokazEre`). W budynkach widać tylko to, co już dostępne.
+- Test: `window.__polan` (to samo co `__haskap`, do tego `uzyjMocy`). Gry komputer kontra komputer trwają około 30–50 minut.
 - Nowa wersja: podnieś `WERSJA` w `polanie/gra.js`, dopisz sekcję w `polanie/ZMIANY.md` (te same zasady co wyżej).
   Poprzednią wersję zapisz jako kopię: `python narzedzia/polanie-wersja.py NUMER SKROT_COMMITA` i dopisz ją w `WERSJE`
   z `adres: 'wersje/NUMER/'` (kopie mają zapis `age-of-polan-1-wNUMER`).

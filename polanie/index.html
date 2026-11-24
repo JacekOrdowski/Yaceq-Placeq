@@ -51,6 +51,12 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .okr b { position: absolute; right: -5px; top: -6px; min-width: 20px; height: 20px; border-radius: 10px; background: var(--ink); color: #fff; font-size: 12px;
   font-family: var(--body); font-weight: 900; display: grid; place-items: center; padding: 0 4px; }
 #b-bezczynni.jest b { background: var(--orange); animation: puls 1s infinite; }
+#b-era { display: block; margin: 5px auto 0; max-width: 520px; width: 100%; padding: 6px 12px; border-radius: 14px; font-family: var(--body); font-size: 13px; font-weight: 900;
+  line-height: 1.25; text-align: center; background: rgba(33, 48, 71, 0.82); color: #fff; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25); pointer-events: auto; }
+#b-era.gotowa { background: #3fbf5f; box-shadow: 0 3px 0 #23883c; animation: pulsEra 1.2s infinite; }
+@keyframes pulsEra { 50% { filter: brightness(1.25); transform: scale(1.03); } }
+#b-era.trwa { background: #ff8a3d; box-shadow: 0 3px 0 #c9561a; }
+#b-era.brak { background: rgba(255, 255, 255, 0.92); color: #5a6b84; box-shadow: 0 3px 0 #c3ccda; }
 #b-moce.jest b { background: #f2b51c; color: #3b2a00; }
 .akcja.bog { min-width: 230px; }
 .okr.wl { background: #c9f7d5; box-shadow: 0 4px 0 #7fcf95; }
@@ -185,6 +191,7 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
       <div class="chip" id="h-era">🪵 Era 1: Czasy Plemion</div>
       <div id="zadanie"></div>
     </div>
+    <button id="b-era" class="brak">🔒 Era 2</button>
   </div>
   <div id="boczne">
     <button class="okr" id="b-moce" aria-label="Moce bogów">⚡<b>0</b></button>
