@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 18;
+const WERSJA = 19;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 18, opis: 'Procenty budowy: przy częstokole tylko przy największym przybliżeniu, przy budynkach znikają przy oddalaniu, z daleka nie ma ich wcale. Do tego wszystko z wersji 17.' },
+  { nr: 19, opis: 'Zapisywanie i wczytywanie gry (do 8 zapisów), ulepszenia muru po dotknięciu muru, a bramy po dotknięciu bramy. Do tego wszystko z wersji 18.' },
+  { nr: 18, opis: 'Procenty budowy: przy częstokole tylko przy największym przybliżeniu, przy budynkach znikają przy oddalaniu, z daleka nie ma ich wcale. Do tego wszystko z wersji 17.', adres: 'wersje/18/' },
   { nr: 17, opis: 'Surowce nie przepadają przy zmianie pracy (osadnik najpierw je odnosi), krok zgrany z ciosem w biegu bokserskim. Do tego wszystko z wersji 16.', adres: 'wersje/17/' },
   { nr: 16, opis: 'Ciosy w biegu bokserskim równo na zmianę: lewa, prawa, lewa, prawa (każdy krok jeden cios). Do tego wszystko z wersji 15.', adres: 'wersje/16/' },
   { nr: 15, opis: 'Bieg bokserski w równym rytmie: jeden krok to jedno uderzenie, 3 kroki i 3 uderzenia na sekundę. Do tego wszystko z wersji 14.', adres: 'wersje/15/' },
@@ -1112,18 +1113,19 @@ function atakJ(u) {
 }
 function zasiegJ(u) { return u.d.zasieg ? u.d.zasieg + (strzelec(u.d) && !u.d.mit ? zasiegPociskow(u.strona) + (bogMa(u.strona, 'strzybog') ? 1 : 0) : 0) + wzm(u.strona, u.typ, 'zasieg', 0) : 0; }
 function pancerzJ(u) { const ul = S.ul[u.strona]; return u.d.pancerz + (u.d.wojsko ? (ul.zbroja1 ? 1 : 0) + (ul.zbroja2 ? 1 : 0) + (ul.zbroja3 ? 2 : 0) + (bogMa(u.strona, 'swarog') ? 1 : 0) : 0) + wzm(u.strona, u.typ, 'pancerz', 0); }
-const poziomMuru = strona => 1 + (S.ul[strona].mur_cegla ? 1 : 0) + (S.ul[strona].mur_stal ? 1 : 0);
+// poziom murów (ulepszenia w murze) i bram (ulepszenia w bramie): 1 częstokół, 2 wał grodowy, 3 wał z kamieniem
+const poziomMuru = (strona, typ = 'mur') => { const ul = S.ul[strona]; return typ === 'brama' ? 1 + (ul.brama_wal ? 1 : 0) + (ul.brama_kamien ? 1 : 0) : 1 + (ul.mur_cegla ? 1 : 0) + (ul.mur_stal ? 1 : 0); };
 function maxHpBud(strona, typ, poziom = 1) {
-  if (typ === 'mur' || typ === 'brama') { const p = MUR_POZIOMY[poziomMuru(strona)]; return typ === 'mur' ? p.hpMur : p.hpBrama; }
+  if (typ === 'mur' || typ === 'brama') { const p = MUR_POZIOMY[poziomMuru(strona, typ)]; return typ === 'mur' ? p.hpMur : p.hpBrama; }
   // Murarze, Mistrzowie budowy i Umocniony Dworek dają budynkom więcej życia
   const ul = S && S.ul && S.ul[strona] || {};
   const m = (1 + (ul.murarze ? EFEKTY.murarze : 0) + (ul.budowniczowie ? EFEKTY.budowniczowie : 0)) * (typ === 'ratusz' && ul.umocnienie ? EFEKTY.umocnienieZycie : 1) * (bogMa(strona, 'swarog') ? 1.1 : 1) * (typ === 'wieza' && ul.swiety_zar ? 1.25 : 1);
   return Math.round((typ === 'wieza' ? WIEZA_POZIOMY[poziom].hp : BUDYNKI[typ].hp) * m);
 }
-const nazwaBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].nazwa : b.d.mur || b.d.brama ? MUR_POZIOMY[poziomMuru(b.strona)][b.typ] : b.d.nazwa;
-const emojiBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].emoji : (b.d.mur || b.d.brama) && poziomMuru(b.strona) > 1 ? '🧱' : b.d.emoji;
+const nazwaBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].nazwa : b.d.mur || b.d.brama ? MUR_POZIOMY[poziomMuru(b.strona, b.typ)][b.typ] : b.d.nazwa;
+const emojiBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].emoji : (b.d.mur || b.d.brama) && poziomMuru(b.strona, b.typ) > 1 ? '🧱' : b.d.emoji;
 function modelBud(typ, poziom, strona, zamk = false) {
-  if ((typ === 'mur' || typ === 'brama') && strona != null && S) { const p = poziomMuru(strona); return (p > 1 ? typ + p : typ) + (typ === 'brama' && zamk ? 'Z' : ''); }
+  if ((typ === 'mur' || typ === 'brama') && strona != null && S) { const p = poziomMuru(strona, typ); return (p > 1 ? typ + p : typ) + (typ === 'brama' && zamk ? 'Z' : ''); }
   return typ === 'wieza' && poziom > 1 ? 'wieza' + poziom : typ;
 }
 // strzelanie budynku: ambona zależy od poziomu i ulepszeń pocisków
@@ -1830,7 +1832,7 @@ function aktualizujBudynek(b, dt) {
       S.ul[b.strona][q.typ] = true;
       if (ULEPSZENIA[q.typ].awans) awansuj(b.strona, ULEPSZENIA[q.typ].awans);
       // nowe mury: wszystkie palisady i bramy zmieniają się naraz (rany zostają)
-      if (q.typ === 'mur_cegla' || q.typ === 'mur_stal') for (const o of BUD) if (o.strona === b.strona && (o.d.mur || o.d.brama)) {
+      if (['mur_cegla', 'mur_stal', 'brama_wal', 'brama_kamien'].includes(q.typ)) for (const o of BUD) if (o.strona === b.strona && (o.d.mur || o.d.brama)) {
         const ubyl = o.max - o.hp; o.max = maxHpBud(o.strona, o.typ); o.hp = Math.max(1, o.max - ubyl);
         o.mesh.geometry = MOD.budynek(modelBud(o.typ, 1, o.strona, o.zamk), o.strona);
       }
@@ -2430,7 +2432,7 @@ function nowaGra(opcje = {}) {
   // bogowie główni: gracz wybiera, komputery losują; każdy bóg główny daje od razu swoją moc
   S.bogowie = dla(s => [s === 0 && BOGOWIE[opcje.bog] ? opcje.bog : BOGOWIE_GLOWNI[Math.floor(Math.random() * BOGOWIE_GLOWNI.length)]]);
   S.moce = dla(s => [{ id: BOGOWIE[S.bogowie[s][0]].moc, uzyta: false }]);
-  S.buff = dla(() => ({})); S.czary = [];
+  S.buff = dla(() => ({})); S.czary = []; S.osobneBramy = true;
   S.nextId = generujMape(seed);
   dodatkoweZloza(seed);
   zamknijPolanki();
@@ -2602,6 +2604,8 @@ function wczytajGre(o) {
   ustawMape(o.mapa || 192);
   wyczyscSwiat();
   S = { ...o }; delete S.zasoby; delete S.bud; delete S.jed; delete S.kamera;
+  // zapisy sprzed wersji 19: ulepszenia muru zmieniały też bramy
+  if (!S.osobneBramy) { for (const ul of S.ul || []) if (ul) { if (ul.mur_cegla) ul.brama_wal = true; if (ul.mur_stal) ul.brama_kamien = true; } S.osobneBramy = true; }
   generujMape(S.seed);
   dodatkoweZloza(S.seed);
   zamknijPolanki();
@@ -3552,7 +3556,7 @@ $('b-moce').onclick = () => {
 $('b-obszar').onclick = () => { audio(); trybObszar = !trybObszar; $('b-obszar').classList.toggle('wl', trybObszar); if (trybObszar) toast('Przeciągnij palcem ramkę wokół swoich ludzi'); };
 
 // ================= okna =================
-const OKNA = ['o-menu', 'o-nowa', 'o-pauza', 'o-koniec', 'o-wersje', 'o-bogowie'];
+const OKNA = ['o-menu', 'o-nowa', 'o-pauza', 'o-koniec', 'o-wersje', 'o-bogowie', 'o-zapisy'];
 function pokazOkno(id) { for (const o of OKNA) $(o).hidden = o !== id; $('gra-ui').hidden = !!id; }
 function ukryjOkna() { pokazOkno(null); }
 function ustawPrzelaczniki() { for (const [id, k] of [['m-muz', 'muzyka'], ['m-dzw', 'dzwieki'], ['p-muz', 'muzyka'], ['p-dzw', 'dzwieki']]) { $(id).textContent = zapis[k] ? 'wł.' : 'wył.'; $(id).classList.toggle('wl', zapis[k]); } }
@@ -3655,6 +3659,44 @@ $('b-pauza').onclick = () => {
 };
 $('pa-dalej').onclick = () => { dzwiek('klik'); startuj(); };
 $('pa-menu').onclick = () => { dzwiek('klik'); zapiszGre(); pokazMenu(); };
+// ---------- zapisane gry: osobne zapisy (oprócz samoczynnego zapisu bieżącej gry), do 8, najnowszy na górze ----------
+const KLUCZ_ZAPISY = KLUCZ + '-zapisy', MAKS_ZAPISOW = 8;
+function zapisy() { try { const l = JSON.parse(localStorage.getItem(KLUCZ_ZAPISY)); return Array.isArray(l) ? l : []; } catch (e) { return []; } }
+function zapiszZapisy(l) { try { localStorage.setItem(KLUCZ_ZAPISY, JSON.stringify(l)); return true; } catch (e) { return false; } }
+function opisGry(g) {
+  const m = MAPY[g.mapaTyp || 'dolina'], bog = g.bogowie && g.bogowie[0] && g.bogowie[0][0] && BOGOWIE[g.bogowie[0][0]];
+  return `${m ? m.emoji + ' ' + m.nazwa : ''} · era ${g.era ? g.era[0] : 1}${bog ? ' · ' + bog.emoji + ' ' + bog.nazwa : ''} · ${Math.floor((g.czas || 0) / 60)} min gry`;
+}
+function zapiszDoListy() {
+  if (!S || S.wynik) { toast('Nie ma gry do zapisania'); return; }
+  const l = zapisy(); l.unshift({ kiedy: Date.now(), opis: opisGry(S), gra: stanDoZapisu() });
+  while (l.length > MAKS_ZAPISOW) l.pop();
+  // gdy brakuje miejsca w pamięci telefonu, usuwamy najstarsze zapisy
+  while (!zapiszZapisy(l) && l.length > 1) l.pop();
+  if (!zapisy().length) { toast('Nie udało się zapisać: pełna pamięć'); dzwiek('blad'); return; }
+  toast('💾 Gra zapisana'); dzwiek('gotowe');
+}
+let zapisyPowrot = 'o-menu', usunPyt = -1;
+function pokazZapisy(skad) {
+  zapisyPowrot = skad || zapisyPowrot; usunPyt = -1;
+  const l = zapisy(), el = $('zs-lista'); el.innerHTML = '';
+  $('zs-opis').textContent = l.length ? 'Dotknij „Wczytaj”, żeby grać dalej od tego miejsca.' : 'Nie ma jeszcze zapisanych gier. W czasie gry naciśnij pauzę ⏸ i „Zapisz grę”.';
+  l.forEach((z, i) => {
+    const d = new Date(z.kiedy), kiedy = d.toLocaleDateString('pl-PL') + ' ' + d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+    const w = document.createElement('div'); w.className = 'pozycja';
+    w.innerHTML = `<div class="nr">💾</div><div class="tekst"><b>${kiedy}</b><small>${z.opis}</small></div>`;
+    const wcz = document.createElement('button'); wcz.className = 'maly'; wcz.textContent = 'Wczytaj';
+    wcz.onclick = () => { audio(); dzwiek('klik'); const g = zapisy()[i]; if (!g) return; try { wczytajGre(JSON.parse(JSON.stringify(g.gra))); zapiszGre(); startuj(); toast('📂 Wczytano grę z ' + kiedy); } catch (e) { console.error(e); toast('Nie udało się wczytać tej gry'); dzwiek('blad'); } };
+    const us = document.createElement('button'); us.className = 'maly'; us.textContent = '🗑️'; us.style.background = '#f3d6d2'; us.style.color = '#8a2b20'; us.style.marginLeft = '6px';
+    us.onclick = () => { audio(); if (usunPyt !== i) { usunPyt = i; us.textContent = 'Na pewno?'; dzwiek('klik'); return; } const nowa = zapisy(); nowa.splice(i, 1); zapiszZapisy(nowa); dzwiek('zniszcz'); pokazZapisy(); };
+    w.appendChild(wcz); w.appendChild(us); el.appendChild(w);
+  });
+  pokazOkno('o-zapisy');
+}
+$('pa-zapisz').onclick = () => { audio(); zapiszGre(); zapiszDoListy(); };
+$('pa-wczytaj').onclick = () => { audio(); dzwiek('klik'); zapiszGre(); pokazZapisy('o-pauza'); };
+$('m-wczytaj').onclick = () => { audio(); dzwiek('klik'); pokazZapisy('o-menu'); };
+$('zs-wroc').onclick = () => { dzwiek('klik'); if (zapisyPowrot === 'o-pauza') pokazOkno('o-pauza'); else pokazMenu(); };
 $('pa-nowa').onclick = () => { dzwiek('klik'); $('m-nowa').onclick(); };
 function koniecGry() {
   if (symulacja) return;

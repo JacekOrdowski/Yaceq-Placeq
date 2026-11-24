@@ -159,6 +159,8 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
 - Ulepszenia wzmacniające jednostki mają pole `wzmocni` (liczy `wzm` w `polanie/gra.js`); ulepszenia od bogów mają `bog`.
   Nowa era: w panelu Grodu (czego brakuje: `brakiEry`), wybór boga w oknie `o-bogowie` (`pokazWyborBoga`) z portretami z `polanie/portrety.js`.
   W budynkach widać tylko to, co już dostępne.
+- Zapisane gry (oprócz samoczynnego zapisu bieżącej gry): lista do 8 zapisów w `age-of-polan-1-zapisy` (`zapiszDoListy`, `pokazZapisy`).
+  Mury i bramy ulepsza się osobno (`poziomMuru(strona, typ)`; ulepszenia z `z: 'mur'` i `z: 'brama'`).
 - Test: `window.__polan` (to samo co `__haskap`, do tego `uzyjMocy`). Gry komputer kontra komputer trwają około 30–50 minut.
 - Nowa wersja: podnieś `WERSJA` w `polanie/gra.js`, dopisz sekcję w `polanie/ZMIANY.md` (te same zasady co wyżej).
   Poprzednią wersję zapisz jako kopię: `python narzedzia/polanie-wersja.py NUMER SKROT_COMMITA` i dopisz ją w `WERSJE`

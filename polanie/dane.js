@@ -175,8 +175,11 @@ export const ULEPSZENIA = {
   pila: { nazwa: 'Piła ramowa', emoji: '🪚', z: 'tartak', era: 3, wymaga: 'siekiera_z', koszt: { jagody: 250, zelazo: 100 }, czas: 40, opis: 'Drewno: jeszcze o 20% szybciej' },
   // Kamieniołom
   kilof: { nazwa: 'Kilof', emoji: '⛏️', z: 'szopa', era: 1, koszt: { jagody: 100, drewno: 75 }, czas: 20, opis: 'Kamień zbiera się o 20% szybciej' },
-  mur_cegla: { nazwa: 'Wał grodowy', emoji: '⛰️', z: 'szopa', era: 3, koszt: { kamien: 200, drewno: 100 }, czas: 45, opis: 'Wszystkie częstokoły i bramy stają się wałem z ziemi i drewna' },
-  mur_stal: { nazwa: 'Wał z kamieniem', emoji: '🪨', z: 'szopa', era: 4, wymaga: 'mur_cegla', koszt: { kamien: 300, zelazo: 150 }, czas: 60, opis: 'Wały obłożone kamieniem, bramy okute żelazem: najmocniejsze' },
+  // mur (robi się po dotknięciu dowolnego kawałka częstokołu) i brama (po dotknięciu bramy): wszystkie naraz
+  mur_cegla: { nazwa: 'Wał grodowy', emoji: '⛰️', z: 'mur', era: 3, koszt: { kamien: 200, drewno: 100 }, czas: 45, opis: 'Wszystkie częstokoły stają się wałem z ziemi i drewna' },
+  mur_stal: { nazwa: 'Wał z kamieniem', emoji: '🪨', z: 'mur', era: 4, wymaga: 'mur_cegla', koszt: { kamien: 300, zelazo: 150 }, czas: 60, opis: 'Wały obłożone kamieniem: najmocniejsze' },
+  brama_wal: { nazwa: 'Brama w wale', emoji: '🚪', z: 'brama', era: 3, koszt: { kamien: 100, drewno: 100 }, czas: 35, opis: 'Wszystkie bramy: grubsze, w wale z ziemi i drewna' },
+  brama_kamien: { nazwa: 'Brama okuta żelazem', emoji: '⛓️', z: 'brama', era: 4, wymaga: 'brama_wal', koszt: { kamien: 150, zelazo: 100 }, czas: 45, opis: 'Wszystkie bramy okute żelazem: najmocniejsze' },
   szyb: { nazwa: 'Szyb z drabinami', emoji: '🕳️', z: 'szopa', era: 3, wymaga: 'kilof_z', koszt: { jagody: 250, drewno: 150, zelazo: 75 }, czas: 40, opis: 'Kamień, ruda i srebro: jeszcze o 20% szybciej' },
   kilof_z: { nazwa: 'Żelazny kilof', emoji: '⛏️', z: 'szopa', era: 2, wymaga: 'kilof', koszt: { jagody: 150, zelazo: 50 }, czas: 30, opis: 'Kamień, ruda i srebro o 20% szybciej' },
   // Kuźnia: broń, zbroje, pociski (po 3 stopnie)

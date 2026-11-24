@@ -235,6 +235,7 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
     <div class="przelacz">Muzyka <button id="m-muz">wł.</button></div>
     <div class="przelacz">Dźwięki <button id="m-dzw">wł.</button></div>
     <button class="przycisk drugi" data-inne-gry>Inne gry</button>
+    <button class="przycisk drugi" id="m-wczytaj">📂 Wczytaj zapisaną grę</button>
     <button class="przycisk drugi" id="m-wersje" hidden>Inne wersje gry</button>
     <div class="drobne" id="m-wersja"></div>
   </div>
@@ -260,6 +261,8 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
     <h2>Pauza</h2>
     <p id="pa-info"></p>
     <button class="przycisk" id="pa-dalej">Graj dalej</button>
+    <button class="przycisk" id="pa-zapisz" style="background:#3fa0d8;box-shadow:0 5px 0 #2a6ea0">💾 Zapisz grę</button>
+    <button class="przycisk drugi" id="pa-wczytaj">📂 Wczytaj grę</button>
     <div class="przelacz">Muzyka <button id="p-muz">wł.</button></div>
     <div class="przelacz">Dźwięki <button id="p-dzw">wł.</button></div>
     <button class="przycisk pomar" id="pa-nowa">Nowa gra</button>
@@ -284,6 +287,15 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
     <p id="bg-opis">Wybierz boga, który poprowadzi twoje plemię</p>
     <div class="bg-lista" id="bg-lista"></div>
     <button class="przycisk drugi" id="bg-wroc" style="margin-top:12px">Jeszcze nie: wróć do gry</button>
+  </div>
+</div>
+
+<div class="okno" id="o-zapisy" hidden>
+  <div class="karta">
+    <h2>Zapisane gry</h2>
+    <p id="zs-opis">Dotknij „Wczytaj”, żeby grać dalej od tego miejsca.</p>
+    <div class="lista" id="zs-lista"></div>
+    <button class="przycisk drugi" id="zs-wroc" style="margin-top:12px">Wróć</button>
   </div>
 </div>
 

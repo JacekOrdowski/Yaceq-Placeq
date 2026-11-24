@@ -7,6 +7,19 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 19 (24.11.2026)
+
+**Dodane**
+- Zapisywanie gry: w pauzie (⏸) przycisk „💾 Zapisz grę”. Mieści się do 8 zapisów, najnowszy na górze; gdy zabraknie miejsca
+  w pamięci telefonu, najstarsze same znikają.
+- Wczytywanie gry: „📂 Wczytaj grę” w pauzie i „📂 Wczytaj zapisaną grę” w menu. Lista pokazuje datę i godzinę, krainę, erę,
+  boga i czas gry; zapis można usunąć (🗑️, dwa dotknięcia). Bieżąca gra dalej zapisuje się sama, jak dotąd („Graj dalej”).
+- Ulepszenia bram: Brama w wale (era 3) i Brama okuta żelazem (era 4), robione po dotknięciu bramy.
+
+**Zmienione**
+- Ulepszenia muru (Wał grodowy, Wał z kamieniem) robi się po dotknięciu muru, a nie w Kamieniołomie. Zmieniają już tylko mury;
+  bramy mają swoje ulepszenia. Stare zapisy: bramy dostają ulepszenia, które miały razem z murem.
+
 ## Wersja 18 (24.11.2026)
 
 **Zmienione**
