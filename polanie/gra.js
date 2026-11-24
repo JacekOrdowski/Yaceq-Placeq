@@ -7,10 +7,11 @@ import * as MOD from './modele.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 2;
+const WERSJA = 3;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 2, opis: 'Nowa era na przycisku u góry ekranu (pisze, czego brakuje), w budynkach tylko to, co już można zrobić, czasy szkolenia jak w grach o bogach i erach, 27 nowych ulepszeń (od bogów, tarcze, mistrzowie linii), bohaterowie rosną z erami. Do tego wszystko z wersji 1.' },
+  { nr: 3, opis: 'Modlitwa w Gontynie wygląda jak trening boksera (bieg w miejscu i ciosy); wstążki przy Gontynie i skrzydła stworów nie odlatują już od nich. Do tego wszystko z wersji 2.' },
+  { nr: 2, opis: 'Nowa era na przycisku u góry ekranu (pisze, czego brakuje), w budynkach tylko to, co już można zrobić, czasy szkolenia jak w grach o bogach i erach, 27 nowych ulepszeń (od bogów, tarcze, mistrzowie linii), bohaterowie rosną z erami. Do tego wszystko z wersji 1.', adres: 'wersje/2/' },
   { nr: 1, opis: 'Pierwsza wersja: Polanie, 3 bogów głównych i 9 pomniejszych, łaska z modlitwy w Gontynie, 12 mocy bogów, 9 stworów, 3 bohaterów, 9 krain z ziem polskich.', adres: 'wersje/1/' },
 ];
 const KLUCZ = 'age-of-polan-1';
@@ -2684,7 +2685,10 @@ function ruszReka(u, dt) {
   if (kosz && !u.koszBok) { u.koszBok = new THREE.Mesh(MOD.koszBok(), MAT); u.koszBok.position.set(-0.31, 0.34, 0.06); u.mesh.add(u.koszBok); }
   if (u.koszBok) u.koszBok.visible = kosz;
   let rx = 0, rz = 0;
-  if (u.pracuje) {
+  if (u.pracuje && z && z.typ === 'modl') {
+    // szybkie proste ciosy przed siebie
+    const p = (u.t * 2.8 + (u.id % 5) * 0.2) % 1; rx = p < 0.25 ? lerp(-0.4, -1.6, p / 0.25) : lerp(-1.6, -0.4, (p - 0.25) / 0.75); rz = -0.15;
+  } else if (u.pracuje) {
     if (narz === 'siekiera') { const p = (u.t * 1.5) % 1; rx = p < 0.22 ? lerp(-2.4, -0.25, p / 0.22) : lerp(-0.25, -2.4, (p - 0.22) / 0.78); rz = -0.45; if (u.pp < 0.22 && p >= 0.22 && naEkranie(u)) { EF.wiory(u.x + Math.sin(u.ry) * 0.5, 0.6, u.z + Math.cos(u.ry) * 0.5, '#e0c08a'); odglos('siekiera', u.x, u.z, 0.55, 40); } u.pp = p; }
     else if (narz === 'kilof') { const p = (u.t * 1.2) % 1; rx = p < 0.2 ? lerp(-2.8, 0.05, p / 0.2) : lerp(0.05, -2.8, (p - 0.2) / 0.8); if (u.pp < 0.2 && p >= 0.2 && naEkranie(u)) { const k = u.zad && u.zad.sur === 'zloto' ? '#ffd84a' : u.zad && u.zad.sur === 'zelazo' ? '#c4622d' : '#b3ada3'; EF.wiory(u.x + Math.sin(u.ry) * 0.55, 0.3, u.z + Math.cos(u.ry) * 0.55, k, 5); EF.iskry(u.x + Math.sin(u.ry) * 0.55, 0.3, u.z + Math.cos(u.ry) * 0.55, 2); odglos('kilof', u.x, u.z, 0.55, 40); } u.pp = p; }
     else if (narz === 'mlotek') { const p = (u.t * 2.4) % 1; rx = p < 0.3 ? lerp(-1.9, -0.55, p / 0.3) : lerp(-0.55, -1.9, (p - 0.3) / 0.7); if (u.pp < 0.3 && p >= 0.3 && naEkranie(u)) odglos('mlotek', u.x, u.z, 0.4, 60); u.pp = p; }
@@ -2715,12 +2719,15 @@ function rysuj(dt) {
     // wojsko walczące wręcz: krótki wypad do przodu przy uderzeniu (bez kiwania całym ciałem)
     let wypad = 0;
     if (u.pracuje && u.d.wojsko && !u.d.zasieg) { const f = (u.d.odstep - u.cd) / 0.3; if (f >= 0 && f <= 1) wypad = Math.sin(f * Math.PI) * (u.d.tylkoBudynki ? 0.3 : 0.16); }
-    m.position.set(u.x + Math.sin(m.rotation.y) * wypad, u.d.lata ? u.d.lata + Math.sin(u.t * 3) * 0.12 : u.idzie && !u.d.kupiec ? Math.abs(Math.sin(u.t * 11)) * 0.05 : 0, u.z + Math.cos(m.rotation.y) * wypad);
+    // modlitwa w Gontynie wygląda jak trening boksera: bieg w miejscu i ciosy w powietrze
+    const trening = u.pracuje && u.zad && u.zad.typ === 'modl';
+    m.position.set(u.x + Math.sin(m.rotation.y) * wypad, u.d.lata ? u.d.lata + Math.sin(u.t * 3) * 0.12 : trening ? Math.abs(Math.sin(u.t * 9)) * 0.09 : u.idzie && !u.d.kupiec ? Math.abs(Math.sin(u.t * 11)) * 0.05 : 0, u.z + Math.cos(m.rotation.y) * wypad);
     if (u.typ === 'osadnik' || u.d.naprawia) ruszReka(u, dt);
     // krok: nogi i ręce chodzą w rytm szybkości, koła wozów się kręcą
     const v = u.d.szybkosc;
     if (u.idzie) { u.faza += dt * v * (u.d.linia === 'renifer' || u.d.kupiec ? 4.2 : 6.5); u.kolo -= dt * v / 0.21; }
-    u.amp += ((u.idzie ? 1 : 0) - u.amp) * Math.min(1, dt * 8);
+    else if (trening) u.faza += dt * 9;
+    u.amp += ((u.idzie || trening ? 1 : 0) - u.amp) * Math.min(1, dt * 8);
     // co niesie osadnik
     if (u.typ === 'osadnik') {
       // stosik na plecach: jedna sztuka na każde 3 niesione (najwyżej 8), więc po ulepszeniu plecaka stos jest wyższy

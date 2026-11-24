@@ -157,7 +157,7 @@ function kon(s, sierc, grzywa, kapa = null) {
     cz(stozek(0.035 * s, 0.12 * s, 5), sierc, -0.06 * s, 1.45 * s, 0.52 * s, -0.2, 0, 0.2), cz(stozek(0.035 * s, 0.12 * s, 5), sierc, 0.06 * s, 1.45 * s, 0.52 * s, -0.2, 0, -0.2),
     // grzywa i ogon
     cz(box(0.06 * s, 0.1 * s, 0.42 * s), grzywa, 0, 1.2 * s, 0.32 * s, -0.75, 0, 0), cz(box(0.07 * s, 0.07 * s, 0.1 * s), grzywa, 0, 1.4 * s, 0.56 * s),
-    st(cz(kaps(0.06 * s, 0.38 * s, 6), grzywa, 0, 0.72 * s, -0.55 * s, 0.5, 0, 0), 2, 0, 0.6),
+    st(cz(kaps(0.06 * s, 0.38 * s, 6), grzywa, 0, 0.72 * s, -0.55 * s, 0.5, 0, 0), 2, 0, 0.08),
   ];
   for (const sx of [-0.12, 0.12]) for (const sz of [-0.34, 0.34]) { const zn = sx * sz > 0 ? 1 : -1; c.push(st(cz(cyl(0.05 * s, 0.04 * s, 0.6 * s, 8), nogi, sx * s, 0.32 * s, sz * s), 1, 0.62 * s, zn, sz * s), st(cz(cyl(0.055 * s, 0.055 * s, 0.07, 8), kopyto, sx * s, 0.035, sz * s), 1, 0.62 * s, zn, sz * s)); }
   if (kapa) c.push(cz(box(0.52 * s, 0.34 * s, 0.75 * s), kapa, 0, 0.78 * s, -0.05 * s), cz(box(0.53 * s, 0.05 * s, 0.76 * s), '#f2c94c', 0, 0.62 * s, -0.05 * s));
@@ -242,7 +242,7 @@ export const rarog = cache(strona => {
     cz(stozek(0.05, 0.22, 5), '#ff3a1a', 0, 0.86, 0.2, -0.4, 0, 0), cz(stozek(0.04, 0.18, 5), '#ffd84a', -0.06, 0.82, 0.16, -0.6, 0, 0.3), cz(stozek(0.04, 0.18, 5), '#ffd84a', 0.06, 0.82, 0.16, -0.6, 0, -0.3),
     cz(cyl(0.2, 0.2, 0.05, 10), k, 0, 0.58, 0.05, 0.3, 0, 0)];
   for (const sx of [-1, 1]) {
-    c.push(st(cz(box(0.6, 0.04, 0.3), '#ff6a10', sx * 0.45, 0.55, -0.02, 0, 0, sx * -0.35), 2, 0, 1.4), st(cz(box(0.4, 0.035, 0.22), '#ffd84a', sx * 0.78, 0.66, -0.06, 0, 0, sx * -0.5), 2, 0, 1.8));
+    c.push(st(cz(box(0.6, 0.04, 0.3), '#ff6a10', sx * 0.45, 0.55, -0.02, 0, 0, sx * -0.35), 2, 0, 0.14), st(cz(box(0.4, 0.035, 0.22), '#ffd84a', sx * 0.78, 0.66, -0.06, 0, 0, sx * -0.5), 2, 0, 0.16));
     c.push(cz(stozek(0.06, 0.5, 4), sx > 0 ? '#ff3a1a' : '#ffb347', sx * 0.06, 0.42, -0.45, -Math.PI / 2 - 0.3, 0, 0));
   }
   c.push(cz(stozek(0.07, 0.6, 4), '#ffd84a', 0, 0.45, -0.5, -Math.PI / 2 - 0.2, 0, 0));
@@ -272,7 +272,7 @@ export const wilkolak = cache(strona => {
     cz(kulaG(0.17, 10, 8), SIERSC, 0, 1.18, 0.3), cz(box(0.14, 0.12, 0.24), SIERSC, 0, 1.12, 0.48), cz(kulaG(0.04, 6, 4), '#1a1a1a', 0, 1.14, 0.6),
     cz(box(0.1, 0.03, 0.12), '#f4f4f4', 0, 1.06, 0.5), cz(kulaG(0.03, 6, 4), OCZY_ZAR, -0.07, 1.24, 0.43), cz(kulaG(0.03, 6, 4), OCZY_ZAR, 0.07, 1.24, 0.43),
     cz(stozek(0.06, 0.16, 4), SIERSC2, -0.1, 1.38, 0.26), cz(stozek(0.06, 0.16, 4), SIERSC2, 0.1, 1.38, 0.26),
-    st(cz(kaps(0.07, 0.4, 6), SIERSC, 0, 0.55, -0.38, -0.9, 0, 0), 2, 0, 0.8),
+    st(cz(kaps(0.07, 0.4, 6), SIERSC, 0, 0.55, -0.38, -0.9, 0, 0), 2, 0, 0.1),
   ];
   for (const sx of [-1, 1]) c.push(st(cz(kaps(0.06, 0.35, 6), SIERSC, sx * 0.26, 0.82, 0.2, -0.5, 0, sx * -0.2), 1, 1.0, sx * 0.7), st(cz(stozek(0.04, 0.1, 4), '#f4f4f4', sx * 0.28, 0.62, 0.4, Math.PI / 2, 0, 0), 1, 1.0, sx * 0.7));
   return polacz(c);
@@ -283,20 +283,20 @@ export const planetnik = cache(strona => {
   const c = [cz(stozek(0.32, 0.95, 12), PLASZCZ, 0, 0.47, 0), cz(kaps(0.16, 0.2, 10), PLASZCZ, 0, 0.95, 0), cz(cyl(0.2, 0.22, 0.06, 12), k, 0, 0.72, 0),
     ...glowaZ(0, 1.22, 0, '#d8dde3', 0.15), ...nakrycie('kaptur', PLASZCZ, '#4a5563', 1.22, 0), cz(stozek(0.1, 0.3, 6), '#eef2f6', 0, 1.0, 0.13, Math.PI, 0, 0),
     cz(cyl(0.025, 0.025, 1.5, 6), BRAZ, 0.3, 0.8, 0.12), cz(kulaG(0.08, 8, 6), '#bfe6ff', 0.3, 1.58, 0.12)];
-  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; c.push(st(cz(kulaG(0.17 + (i % 2) * 0.05, 8, 6), CHMURA, Math.cos(a) * 0.42, 1.55 + (i % 3) * 0.08, Math.sin(a) * 0.42), 2, 0, 1.2)); }
+  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; c.push(st(cz(kulaG(0.17 + (i % 2) * 0.05, 8, 6), CHMURA, Math.cos(a) * 0.42, 1.55 + (i % 3) * 0.08, Math.sin(a) * 0.42), 2, 0, 0.04)); }
   return polacz(c);
 });
 // Żmij: ognisty skrzydlaty wąż (unosi się nad ziemią)
 export const zmij = cache(strona => {
   const k = KOLORY_STRON[strona], LUSKA = '#3f7a3a', LUSKA2 = '#c9a227', BRZUCH = '#e0a040';
   const c = [];
-  for (let i = 0; i < 7; i++) { const t = i / 6, r = 0.2 - t * 0.12; c.push(st(cz(kulaG(r, 10, 8), i % 2 ? LUSKA : '#4f8a3a', Math.sin(t * 5) * 0.12, 0.45 - t * 0.15, 0.25 - t * 1.1), 2, 0, 0.8 + t)); }
+  for (let i = 0; i < 7; i++) { const t = i / 6, r = 0.2 - t * 0.12; c.push(st(cz(kulaG(r, 10, 8), i % 2 ? LUSKA : '#4f8a3a', Math.sin(t * 5) * 0.12, 0.45 - t * 0.15, 0.25 - t * 1.1), 2, 0, 0.05 + t * 0.05)); }
   c.push(cz(kulaG(0.2, 10, 8), BRZUCH, 0, 0.4, 0.25, 0, 0, 0, 0.9, 0.7, 1.1),
     cz(kaps(0.1, 0.3, 8), LUSKA, 0, 0.62, 0.45, -0.6, 0, 0), cz(kulaG(0.16, 10, 8), LUSKA, 0, 0.82, 0.62, 0, 0, 0, 0.9, 0.8, 1.3), cz(box(0.16, 0.08, 0.2), LUSKA2, 0, 0.76, 0.8),
     cz(kulaG(0.03, 6, 4), OCZY_ZAR, -0.08, 0.9, 0.72), cz(kulaG(0.03, 6, 4), OCZY_ZAR, 0.08, 0.9, 0.72),
     cz(stozek(0.03, 0.18, 5), LUSKA2, -0.08, 1.0, 0.55, -0.6, 0, 0.3), cz(stozek(0.03, 0.18, 5), LUSKA2, 0.08, 1.0, 0.55, -0.6, 0, -0.3),
     cz(stozek(0.05, 0.16, 4), k, 0, 0.98, 0.62, -0.3, 0, 0), cz(stozek(0.05, 0.14, 4), k, 0, 0.7, 0.1, -0.3, 0, 0));
-  for (const sx of [-1, 1]) c.push(st(cz(box(0.75, 0.035, 0.45), LUSKA2, sx * 0.5, 0.62, 0.15, 0, 0, sx * -0.4), 2, 0, 1.6), st(cz(box(0.04, 0.04, 0.5), LUSKA, sx * 0.8, 0.78, 0.15, 0, 0, sx * -0.4), 2, 0, 1.6));
+  for (const sx of [-1, 1]) c.push(st(cz(box(0.75, 0.035, 0.45), LUSKA2, sx * 0.5, 0.62, 0.15, 0, 0, sx * -0.4), 2, 0, 0.12), st(cz(box(0.04, 0.04, 0.5), LUSKA, sx * 0.8, 0.78, 0.15, 0, 0, sx * -0.4), 2, 0, 0.12));
   return polacz(c);
 });
 // Rusałka: wodna panna w jasnozielonej sukni, z długimi włosami i wiankiem
@@ -334,7 +334,7 @@ export const bies = cache(strona => {
     cz(kaps(0.36, 0.45, 12), FUTRO, 0, 1.05, 0, 0.15, 0, 0), cz(box(0.7, 0.14, 0.5), k, 0, 0.82, 0),
     cz(kulaG(0.25, 10, 8), FUTRO, 0, 1.68, 0.12), cz(box(0.22, 0.14, 0.16), '#5a3d2e', 0, 1.6, 0.32),
     cz(kulaG(0.045, 6, 4), OCZY_CZ, -0.1, 1.74, 0.32), cz(kulaG(0.045, 6, 4), OCZY_CZ, 0.1, 1.74, 0.32), cz(box(0.14, 0.03, 0.02), '#f4f4f4', 0, 1.52, 0.4),
-    st(cz(kaps(0.05, 0.5, 6), FUTRO2, 0, 0.75, -0.42, -1.0, 0, 0), 2, 0, 0.8), cz(stozek(0.07, 0.14, 4), FUTRO2, 0, 0.6, -0.72, -1.6, 0, 0)];
+    st(cz(kaps(0.05, 0.5, 6), FUTRO2, 0, 0.75, -0.42, -1.0, 0, 0), 2, 0, 0.1), cz(stozek(0.07, 0.14, 4), FUTRO2, 0, 0.6, -0.72, -1.6, 0, 0)];
   for (const sx of [-1, 1]) {
     c.push(cz(stozek(0.06, 0.38, 6), ROG, sx * 0.2, 1.98, 0.08, -0.2, 0, sx * -0.5), cz(stozek(0.035, 0.2, 5), ROG, sx * 0.35, 2.15, 0.02, -0.5, 0, sx * -1.1));
     c.push(st(cz(kaps(0.09, 0.45, 7), FUTRO, sx * 0.45, 1.1, 0.1, -0.4, 0, sx * -0.2), 1, 1.35, sx * 0.7), st(cz(kulaG(0.1, 6, 4), FUTRO2, sx * 0.5, 0.78, 0.3), 1, 1.35, sx * 0.7));
@@ -840,7 +840,7 @@ const BUD = {
     for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; c.push(cz(kula(0.07, 5), KAMIEN, fx + Math.cos(a) * 0.22, 0.05, fz + Math.sin(a) * 0.22)); }
     c.push(cz(box(0.3, 0.05, 0.06), '#6b4527', fx, 0.05, fz, 0, 0.6, 0), cz(box(0.3, 0.05, 0.06), '#6b4527', fx, 0.05, fz, 0, -0.6, 0), cz(stozek(0.12, 0.3, 6), OGIEN, fx, 0.2, fz), cz(stozek(0.06, 0.2, 5), '#ffd36b', fx, 0.2, fz));
     // słupy ze wstążkami w kolorze strony
-    for (const [x, z] of [[-1.15, -1.2], [1.15, -1.2], [-1.15, 0.45]]) c.push(cz(cyl(0.04, 0.05, 1.3, 6), BAL, x, 0.65, z), st(cz(box(0.03, 0.4, 0.08), k, x + 0.04, 1.1, z), 2, 0, 1), cz(kula(0.05, 5), '#f2c94c', x, 1.33, z));
+    for (const [x, z] of [[-1.15, -1.2], [1.15, -1.2], [-1.15, 0.45]]) c.push(cz(cyl(0.04, 0.05, 1.3, 6), BAL, x, 0.65, z), st(cz(box(0.03, 0.4, 0.08), k, x + 0.04, 1.1, z), 2, 0, 0.06), cz(kula(0.05, 5), '#f2c94c', x, 1.33, z));
     return c;
   },
   warsztat(k, d) {
