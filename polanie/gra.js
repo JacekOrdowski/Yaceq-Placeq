@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 23;
+const WERSJA = 24;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 23, opis: 'Nowa muzyka słowiańsko-pogańska: pieśni obrzędowe, fujarki, mroczny las i bębny wojenne w bitwie. Do tego wszystko z wersji 22.' },
+  { nr: 24, opis: 'Mapka w lewym górnym rogu: schowana, pokazuje się po dotknięciu 🗺️ i jest o połowę większa. Do tego wszystko z wersji 23.' },
+  { nr: 23, opis: 'Nowa muzyka słowiańsko-pogańska: pieśni obrzędowe, fujarki, mroczny las i bębny wojenne w bitwie. Do tego wszystko z wersji 22.', adres: 'wersje/23/' },
   { nr: 22, opis: 'W zaznaczonej grupie można dotknąć rodzaju wojska (jednego albo kilku), żeby dowodzić tylko nimi. Do tego wszystko z wersji 21.', adres: 'wersje/22/' },
   { nr: 21, opis: 'Leszy jak prawdziwy drzewny olbrzym: kora, mech i korzenie, biega, uderza, grozi i pada z prawdziwym ruchem. Do tego wszystko z wersji 20.', adres: 'wersje/21/' },
   { nr: 20, opis: 'Nowy Leszy: wysoki olbrzym z kory i korzeni, z gałęziami jak poroże, świecącymi oczami i brodą z mchu. Do tego wszystko z wersji 19.', adres: 'wersje/20/' },
@@ -2953,7 +2954,8 @@ let miniBrud = true, miniTlo = null;
 const MINI = 120; let MK = (MINI / 2) / (POL * Math.SQRT2);
 const naMini = (x, z) => [MINI / 2 + (x - z) / Math.SQRT2 * MK, MINI / 2 + (x + z) / Math.SQRT2 * MK];
 function rysujMini() {
-  const cv = $('mini'), dpr = 2;
+  const cv = $('mini'), dpr = 3;
+  if (cv.hidden) return;
   if (cv.width !== MINI * dpr) { cv.width = cv.height = MINI * dpr; }
   const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
   if (miniBrud || !miniTlo) {
@@ -3463,6 +3465,9 @@ function aktualizujPanel() {
 }
 let zburzPyt = 0, zburzPytT = 0;
 // mapka i przyciski z boku stoją zawsze nad okienkiem na dole (okienko rośnie, gdy jest kolejka albo wysokie przyciski)
+// mapka schowana; przycisk 🗺️ ją pokazuje i chowa, a pasek u góry mówi, od jakiej wysokości zaczyna się miejsce na nią
+$('b-mapa').onclick = () => { dzwiek('klik'); const m = $('mini'); m.hidden = !m.hidden; $('b-mapa').classList.toggle('wl', !m.hidden); if (!m.hidden) { miniBrud = true; rysujMini(); } };
+if (window.ResizeObserver) new ResizeObserver(() => document.documentElement.style.setProperty('--hud-h', $('hud').offsetHeight + 'px')).observe($('hud'));
 if (window.ResizeObserver) { const ro = new ResizeObserver(() => { const p = $('panel').hidden ? $('stawianie') : $('panel'); document.documentElement.style.setProperty('--panel-h', p.offsetHeight + 'px'); }); ro.observe($('panel')); ro.observe($('stawianie')); }
 $('panel').addEventListener('click', e => {
   const b = e.target.closest('[data-a]'); if (!b || !S) return;

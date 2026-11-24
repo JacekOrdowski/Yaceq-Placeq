@@ -55,8 +55,11 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .akcja.bog { min-width: 230px; }
 .okr.wl { background: #c9f7d5; box-shadow: 0 4px 0 #7fcf95; }
 @keyframes puls { 50% { transform: scale(1.18); } }
-#mini { position: fixed; left: max(8px, env(safe-area-inset-left, 0px)); bottom: calc(var(--panel-h, 200px) + 14px); z-index: 10;
-  width: 120px; height: 120px; border-radius: 14px; background: rgba(33, 48, 71, 0.55); box-shadow: 0 3px 10px rgba(0,0,0,0.25); touch-action: none; }
+/* mapka: w lewym górnym rogu pod paskiem, schowana; pokazuje ją przycisk 🗺️ */
+#b-mapa { position: fixed; left: max(8px, env(safe-area-inset-left, 0px)); top: calc(var(--hud-h, 100px) + 6px); z-index: 10;
+  width: 44px; height: 44px; border-radius: 14px; font-size: 21px; }
+#mini { position: fixed; left: max(8px, env(safe-area-inset-left, 0px)); top: calc(var(--hud-h, 100px) + 58px); z-index: 10;
+  width: 180px; height: 180px; border-radius: 14px; background: rgba(33, 48, 71, 0.55); box-shadow: 0 3px 10px rgba(0,0,0,0.25); touch-action: none; }
 
 /* ---------- panel na dole ---------- */
 #panel, #stawianie { position: fixed; left: 0; right: 0; bottom: 0; z-index: 11; background: rgba(255, 255, 255, 0.96);
@@ -210,7 +213,8 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
     <button class="okr" id="b-obszar" aria-label="Zaznacz ramką">⬚</button>
     <button class="okr" id="b-dom" aria-label="Do Grodu">🏯</button>
   </div>
-  <canvas id="mini"></canvas>
+  <button class="okr" id="b-mapa" aria-label="Mapa">🗺️</button>
+  <canvas id="mini" hidden></canvas>
   <div id="panel">
     <div id="p-info"></div>
     <div id="p-akcje"></div>
