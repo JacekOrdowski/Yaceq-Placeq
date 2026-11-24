@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 13;
+const WERSJA = 14;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 13, opis: 'Prawdziwy bieg bokserski przy Gontynie: trucht w miejscu i ciosy pięściami w powietrze na zmianę. Do tego wszystko z wersji 12.' },
+  { nr: 14, opis: 'Bieg bokserski dookoła Gontyny: osadnicy biegną jeden za drugim w kółko wokół budynku i w biegu na zmianę biją pięściami powietrze. Do tego wszystko z wersji 13.' },
+  { nr: 13, opis: 'Prawdziwy bieg bokserski przy Gontynie: trucht w miejscu i ciosy pięściami w powietrze na zmianę. Do tego wszystko z wersji 12.', adres: 'wersje/13/' },
   { nr: 12, opis: 'Portrety 12 bogów; wybór boga przy nowej erze w dużym oknie na środku ekranu (dwa portrety, moc, stwór i dar), portrety też przy wyborze boga na początek gry. Do tego wszystko z wersji 11.', adres: 'wersje/12/' },
   { nr: 11, opis: 'Modlitwa w Gontynie to teraz bieg bokserski: osadnicy biegają tam i z powrotem przy Gontynie zamiast okładać powietrze pięściami. Do tego wszystko z wersji 10.', adres: 'wersje/11/' },
   { nr: 10, opis: 'Kolor strony na stroju (koszule chłopów, kaptury i kurtki łuczników) zamiast niebieskiej szarfy wyglądającej jak deska. Do tego wszystko z wersji 9.', adres: 'wersje/10/' },
@@ -1245,15 +1246,37 @@ function handel(u, dt) {
 function rozkazModl(u, b) { if (u.typ !== 'osadnik') return; u.zad = { typ: 'modl', bid: b.id }; u.sciezka = null; }
 function dodajLaske(strona, ile) { const z = S.zas[strona]; z.laska = Math.min(LASKA.maks, (z.laska || 0) + ile); }
 const tempoLaski = strona => LASKA.modlitwa * (bogMa(strona, 'weles') ? 1.25 : 1) * (bogMa(strona, 'lada') ? 1.2 : 1) * (S.ul[strona].kupala ? 1.2 : 1);
+const BIEG_MODL = 1.4; // jak szybko biegają dookoła Gontyny
+// pętla biegu dookoła Gontyny: punkty na okręgu przy budynku; gdzie stoi skała albo drzewo, punkt odsuwa się dalej (albo wypada)
+function petlaGontyny(b) {
+  if (b.petla && S.czas - b.petla.t < 15) return b.petla.p;
+  const p = [], N = 28, R0 = b.w / 2 + 0.9;
+  for (let i = 0; i < N; i++) {
+    const a = i / N * Math.PI * 2;
+    for (const R of [R0, R0 + 0.6, R0 + 1.2, R0 + 1.8]) { const x = b.x + Math.sin(a) * R, z = b.z + Math.cos(a) * R; if (wolneXZ(x, z)) { p.push([x, z]); break; } }
+  }
+  b.petla = { t: S.czas, p };
+  return p;
+}
 function modl(u, dt) {
   const b = E.get(u.zad.bid);
   if (!b || b.hp <= 0 || !b.gotowy) { u.zad = null; return; }
-  // osadnicy dochodzą do Gontyny i stają w kręgu wokół niej (bieg bokserski w miejscu)
+  // osadnicy dochodzą do Gontyny i biegają dookoła niej (bieg bokserski)
   const a = (u.id * 2.39996) % (Math.PI * 2), r = b.w / 2 + 0.75, px = b.x + Math.sin(a) * r, pz = b.z + Math.cos(a) * r;
   if (Math.hypot(px - u.x, pz - u.z) < 0.9 || u.zad.stoi) {
     const z = u.zad; z.stoi = true; u.sciezka = null; u.pracuje = true;
-    // bieg bokserski: stoją przy Gontynie twarzą do posągu, truchtają w miejscu i na zmianę biją pięściami powietrze
-    u.ry = Math.atan2(b.x - u.x, b.z - u.z);
+    // bieg bokserski dookoła Gontyny: biegną jeden za drugim po pętli wokół budynku (omija skały i drzewa),
+    // a rękami na zmianę biją pięściami powietrze; gdy utkną, zawracają
+    const p = petlaGontyny(b);
+    if (p.length > 2) {
+      if (z.i == null) { let naj = 0, nd = Infinity; p.forEach(([x, zz], i) => { const d = (x - u.x) ** 2 + (zz - u.z) ** 2; if (d < nd) { nd = d; naj = i; } }); z.i = naj; z.kier = 1; z.st = 0; z.sx = u.x; z.sz = u.z; }
+      if (z.i >= p.length) z.i = 0;
+      const [tx, tz] = p[z.i], dx = tx - u.x, dz = tz - u.z, d = Math.hypot(dx, dz);
+      if (d < 0.35) z.i = (z.i + z.kier + p.length) % p.length;
+      else { const k = Math.min(d, BIEG_MODL * dt); u.ry = Math.atan2(dx, dz); RUCH = u.strona; przesun(u, u.x + dx / d * k, u.z + dz / d * k); }
+      // utknął (ktoś albo coś stoi na drodze): po chwili zawraca
+      if ((z.st += dt) > 1) { if (Math.hypot(u.x - z.sx, u.z - z.sz) < 0.25) { z.kier = -z.kier; z.i = (z.i + z.kier + p.length) % p.length; } z.st = 0; z.sx = u.x; z.sz = u.z; }
+    } else u.ry = Math.atan2(b.x - u.x, b.z - u.z);
     b.modlacy = (b.modlacy || 0) + 1;
     if (b.modlacy <= LASKA.modlacychNaGontyne) dodajLaske(u.strona, tempoLaski(u.strona) * dt);
     return;
