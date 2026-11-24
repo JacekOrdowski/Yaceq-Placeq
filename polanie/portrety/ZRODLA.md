@@ -9,3 +9,8 @@ Stare rysowane portrety (SVG w `../portrety.js`) zostają na zapas.
 
 Wygenerowane tego samego dnia w Google Gemini, w tym samym stylu, jako 5 arkuszy po 9 ikon (siatka 3 × 3), pocięte na
 kwadraty 160 × 160. Z trzech arkuszy odcięte dopisane przez Gemini podpisy.
+
+## Ikony ulepszeń i mocy bogów (od wersji 27)
+
+Tak samo: 8 arkuszy po 9 ikon z Gemini (`ul_...`, `moc_...`), pocięte na 160 × 160; z jednego arkusza odcięte podpisy.
+Ikona „Arkońskiej drużyny” (koń w hełmie z rogami, za bardzo nordycka) odrzucona: to ulepszenie bierze ikonę Pancernego.

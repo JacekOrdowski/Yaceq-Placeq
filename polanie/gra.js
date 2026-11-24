@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 26;
+const WERSJA = 27;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 26, opis: 'Malowane ikony wszystkich jednostek, stworów, bohaterów i budynków w tym samym nocnym stylu co portrety bogów. Do tego wszystko z wersji 25.' },
+  { nr: 27, opis: 'Malowane ikony wszystkich ulepszeń i 12 mocy bogów w nocnym stylu. Do tego wszystko z wersji 26.' },
+  { nr: 26, opis: 'Malowane ikony wszystkich jednostek, stworów, bohaterów i budynków w tym samym nocnym stylu co portrety bogów. Do tego wszystko z wersji 25.', adres: 'wersje/26/' },
   { nr: 25, opis: 'Malowane portrety 12 bogów w mrocznym, nocnym stylu i gród nocą na ekranie startowym. Do tego wszystko z wersji 24.', adres: 'wersje/25/' },
   { nr: 24, opis: 'Mapka w lewym górnym rogu: schowana, pokazuje się po dotknięciu 🗺️ i jest o połowę większa. Do tego wszystko z wersji 23.', adres: 'wersje/24/' },
   { nr: 23, opis: 'Nowa muzyka słowiańsko-pogańska: pieśni obrzędowe, fujarki, mroczny las i bębny wojenne w bitwie. Do tego wszystko z wersji 22.', adres: 'wersje/23/' },
@@ -1134,6 +1135,13 @@ const nazwaBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].nazwa : b
 const IKONY = new Set(['osadnik', 'wojownik', 'tarczownik', 'obronca', 'wlocznik', 'pikinier', 'procarz', 'procarz2', 'kusznik', 'zwiadowca', 'jezdziec', 'rycerz',
   'taran', 'katapulta', 'woz', 'rzemieslnik', 'krak', 'waligora', 'lech', 'rarog', 'leszy', 'wilkolak', 'planetnik', 'zmij', 'rusalka', 'kon', 'strzyga', 'bies',
   'ratusz', 'dom', 'spichlerz', 'tartak', 'szopa', 'kopalnia', 'jarmark', 'pole', 'koszary', 'strzelnica', 'stajnia', 'kuznia', 'wieza', 'mur', 'brama', 'gontyna', 'warsztat']);
+// od wersji 27: ikony ulepszeń (ul_...) i mocy bogów (moc_...); awanse i dary dla stworów biorą ikonę jednostki
+for (const n of ['balistyka', 'bartnictwo', 'blanki', 'brama_kamien', 'brama_wal', 'bron1', 'bron2', 'bron3', 'budowniczowie', 'dar_slonca', 'deski', 'inzynierowie', 'jare_zboze', 'kilof', 'kilof_z', 'kosz', 'kupala', 'kuznia_swaroga', 'len_mokoszy', 'lunety', 'mistrz', 'monety', 'mrozoodporne', 'mur_cegla', 'mur_stal', 'murarze', 'nawadnianie', 'ogniste', 'pila', 'plecak1', 'plecak2', 'plecak3', 'pobor', 'poborcy', 'pociski1', 'pociski2', 'pociski3', 'rekawice', 'sciolka', 'siekiera_z', 'stada_welesa', 'swiety_zar', 'szyb', 'taczka', 'tarcze1', 'tarcze2', 'tarcze3', 'topor_peruna', 'trzy_swiaty', 'umocnienie', 'wagi', 'wiatr_w_plecy', 'wozek', 'wrzatek', 'zaprzeg', 'zbroja1', 'zbroja2', 'zbroja3', 'zimowe_futra']) IKONY.add('ul_' + n);
+for (const n of ['czady', 'drzenie', 'grom', 'mroz', 'ogien', 'rog', 'slonce', 'swietyOgien', 'urodzaj', 'wichura', 'wiosna', 'zgoda']) IKONY.add('moc_' + n);
+const IKONA_ULEPSZENIA = { zlote_piora: 'rarog', prastary_leszy: 'leszy', wilcza_wataha: 'wilkolak', gradowe_chmury: 'planetnik', ognisty_oddech: 'zmij',
+  piesn_rusalek: 'rusalka', wrozba_konia: 'kon', upiorna_noc: 'strzyga', bies_z_nawii: 'bies', arkonska_druzyna: 'rycerz',
+  mistrz_piechoty: 'ul_mistrz', mistrz_strzelcow: 'ul_mistrz', mistrz_jazdy: 'ul_mistrz' };
+const ikUl = id => IKONA_ULEPSZENIA[id] || (id.startsWith('aw_') ? id.slice(3) : 'ul_' + id);
 const ik = (typ, zapas) => IKONY.has(typ) ? `<img class="ik" src="ikony/${typ}.jpg" alt="" draggable="false">` : zapas;
 const emojiBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].emoji : (b.d.mur || b.d.brama) && poziomMuru(b.strona, b.typ) > 1 ? '🧱' : b.d.emoji;
 function modelBud(typ, poziom, strona, zamk = false) {
@@ -3354,7 +3362,7 @@ function odswiezPanel(wymus = false) {
     h = `<div class="p-glowa"><span class="p-ik">⚡</span><div><b>Moce bogów</b><small>Każdej mocy możesz użyć tylko raz w grze</small></div><button class="p-x" data-a="moce-zamknij">✖</button></div>`;
     for (const m of S.moce[0]) {
       const d = MOCE[m.id], bg = Object.values(BOGOWIE).find(b => b.moc === m.id);
-      a += `<button class="akcja${m.uzyta ? ' zablok' : ''}" data-a="moc:${m.id}"><span class="ak-ik">${d.emoji}</span><b>${d.nazwa}</b><small>${m.uzyta ? '✓ już użyta' : d.opis + (d.cel ? ' · potem dotknij miejsca na mapie' : '')}${bg ? ' · ' + bg.emoji + ' ' + bg.nazwa : ''}</small></button>`;
+      a += `<button class="akcja${m.uzyta ? ' zablok' : ''}" data-a="moc:${m.id}"><span class="ak-ik">${ik('moc_' + m.id, d.emoji)}</span><b>${d.nazwa}</b><small>${m.uzyta ? '✓ już użyta' : d.opis + (d.cel ? ' · potem dotknij miejsca na mapie' : '')}${bg ? ' · ' + bg.emoji + ' ' + bg.nazwa : ''}</small></button>`;
     }
   } else if (!sel.length) {
     // nic nie wybrane: panel zwinięty do jednego paska (podpowiedź o sterowaniu tylko przez pierwsze 3 minuty gry)
@@ -3410,10 +3418,10 @@ function odswiezPanel(wymus = false) {
       for (const [id, d] of Object.entries(ULEPSZENIA)) if (d.z === b.typ) {
         // pokazujemy tylko ulepszenia, które można zrobić teraz: następne w kolejce (np. drugi plecak) pojawia się dopiero po poprzednim, późniejsze ery dopiero w swojej erze
         const br = brakUlepszenia(0, id); if (br === 'gotowe' || br === 'w trakcie' || br && br.startsWith('🔒')) continue;
-        a += `<button class="akcja${br ? ' zablok' : ''}" data-a="ul:${id}" data-koszt='${JSON.stringify(d.koszt)}'><span class="ak-ik">${d.emoji}</span><b>${d.nazwa}</b><small>${br || d.opis}</small><span class="ak-koszt">${kosztHTML(d.koszt)}</span></button>`;
+        a += `<button class="akcja${br ? ' zablok' : ''}" data-a="ul:${id}" data-koszt='${JSON.stringify(d.koszt)}'><span class="ak-ik">${ik(ikUl(id), d.emoji)}</span><b>${d.nazwa}</b><small>${br || d.opis}</small><span class="ak-koszt">${kosztHTML(d.koszt)}</span></button>`;
       }
       if (b.kolejka.length) {
-        h += `<div class="p-kolejka">` + b.kolejka.map((q, i) => `<button class="kol" data-a="anuluj:${i}" title="Anuluj"><span>${q.rodzaj === 'j' ? ik(q.typ, JEDNOSTKI[q.typ].emoji) : q.rodzaj === 'u' ? ULEPSZENIA[q.typ].emoji : q.rodzaj === 'rozb' ? WIEZA_POZIOMY[(b.poziom || 1) + 1].emoji : BOGOWIE[q.typ] ? BOGOWIE[q.typ].emoji : EMOJI_ERY[S.era[0] + 1]}</span><i data-kol="${i}" style="width:${q.t / q.czas * 100}%"></i></button>`).join('') + `<small data-czeka></small></div>`;
+        h += `<div class="p-kolejka">` + b.kolejka.map((q, i) => `<button class="kol" data-a="anuluj:${i}" title="Anuluj"><span>${q.rodzaj === 'j' ? ik(q.typ, JEDNOSTKI[q.typ].emoji) : q.rodzaj === 'u' ? ik(ikUl(q.typ), ULEPSZENIA[q.typ].emoji) : q.rodzaj === 'rozb' ? WIEZA_POZIOMY[(b.poziom || 1) + 1].emoji : BOGOWIE[q.typ] ? BOGOWIE[q.typ].emoji : EMOJI_ERY[S.era[0] + 1]}</span><i data-kol="${i}" style="width:${q.t / q.czas * 100}%"></i></button>`).join('') + `<small data-czeka></small></div>`;
       }
     }
   } else {

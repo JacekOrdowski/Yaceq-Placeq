@@ -7,6 +7,16 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 27 (24.11.2026)
+
+**Dodane**
+- Malowane ikony 12 mocy bogów (`ikony/moc_...`): pioruny Peruna, trujące czady, ogień z nieba, złote słońce, urodzaj,
+  wiosenne kiełki, wichura, święty ogień, wianek zgody, biały koń z rogiem, mróz i pękająca ziemia.
+- Malowane ikony wszystkich 78 ulepszeń (`ikony/ul_...`): wyposażenie osadników (rękawice, kosze, taczka, plecaki, wózek),
+  zagony, drwalnia i kamieniołom, wały i bramy, broń, zbroje, pociski i tarcze z kuźni, strażnice, handel i dary bogów.
+  Awanse (np. „Awans: Łucznik”) i dary dla stworów pokazują ikonę tej jednostki albo stwora, a trzy ulepszenia
+  „Mistrzowie...” wspólny dębowy wieniec. Ikony są na przyciskach ulepszeń, w kolejce i w oknie mocy bogów.
+
 ## Wersja 26 (24.11.2026)
 
 **Dodane**
