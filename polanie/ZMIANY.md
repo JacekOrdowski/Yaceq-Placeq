@@ -7,6 +7,13 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 7 (24.11.2026)
+
+**Naprawione**
+- Ludzie idący naprzeciw siebie długo się przepychali. Teraz ten, komu ktoś stoi na drodze, schodzi w prawo (jak na chodniku),
+  więc mijają się od razu: dwóch osadników na 8 kratek idzie 4,2 s (bez nikogo na drodze 4 s), sześciu naraz 5,3 s.
+- Przy zagonach (i przy płotach Stajni i Spichlerza) żerdzie płotu sterczały w poprzek jako długie linie. Teraz leżą wzdłuż płotu.
+
 ## Wersja 6 (24.11.2026)
 
 **Dodane**

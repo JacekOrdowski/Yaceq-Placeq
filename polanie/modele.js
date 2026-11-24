@@ -470,7 +470,8 @@ function flaga(k, x, y, z, h = 1.0) { return [cz(cyl(0.03, 0.03, h), BRAZ, x, y 
 function plot(x0, z0, x1, z1, h = 0.4, kol = BAL2) {
   const c = [], d = Math.hypot(x1 - x0, z1 - z0), n = Math.max(2, Math.round(d / 0.32)), ry = Math.atan2(x1 - x0, z1 - z0);
   for (let i = 0; i <= n; i++) { const t = i / n; c.push(cz(cyl(0.03, 0.035, h, 5), kol, x0 + (x1 - x0) * t, h / 2, z0 + (z1 - z0) * t)); }
-  for (const y of [h * 0.4, h * 0.8]) c.push(cz(cyl(0.02, 0.02, d, 5), kol, (x0 + x1) / 2, y, (z0 + z1) / 2, Math.PI / 2, ry, 0));
+  // żerdzie wzdłuż płotu (cienka belka wzdłuż osi z obrócona do kierunku płotu)
+  for (const y of [h * 0.4, h * 0.8]) c.push(cz(box(0.035, 0.035, d), kol, (x0 + x1) / 2, y, (z0 + z1) / 2, 0, ry, 0));
   return c;
 }
 function palisada(x0, z0, x1, z1, h = 0.8) {

@@ -8,10 +8,11 @@ import * as LUDZ from './postacie.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 6;
+const WERSJA = 7;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 6, opis: 'Realistyczne postacie z prawdziwym ruchem (osadnicy, piechota, łucznicy): rąbią, żną, budują na klęczkach, noszą, walczą, trenują boks przy Gontynie i padają; szarfa w kolorze strony, hełmy, tarcze. Do tego wszystko z wersji 5.' },
+  { nr: 7, opis: 'Ludzie idący naprzeciw siebie mijają się od razu (schodzą w prawo), płoty przy zagonach i budynkach bez dziwnych linii. Do tego wszystko z wersji 6.' },
+  { nr: 6, opis: 'Realistyczne postacie z prawdziwym ruchem (osadnicy, piechota, łucznicy): rąbią, żną, budują na klęczkach, noszą, walczą, trenują boks przy Gontynie i padają; szarfa w kolorze strony, hełmy, tarcze. Do tego wszystko z wersji 5.', adres: 'wersje/6/' },
   { nr: 5, opis: 'Mniej napisów u góry: o nowej erze mówi tylko Gród (czego brakuje albo wybór boga), krótsze podpowiedzi. Do tego wszystko z wersji 4.', adres: 'wersje/5/' },
   { nr: 4, opis: 'Nowe, dokładniejsze postacie: prawdziwe proporcje, twarze z brwiami, nosem i ustami, brody, lniane koszule z haftem, onuce, hełmy z nosalem; przy Gontynie osadnicy trenują jak bokserzy (garda i ciosy). Do tego wszystko z wersji 3.', adres: 'wersje/4/' },
   { nr: 3, opis: 'Modlitwa w Gontynie wygląda jak trening boksera (bieg w miejscu i ciosy); wstążki przy Gontynie i skrzydła stworów nie odlatują już od nich. Do tego wszystko z wersji 2.', adres: 'wersje/3/' },
@@ -2346,6 +2347,14 @@ function rozpychaj() {
       const wa = a.pracuje ? 0.3 : 1, wb = b.pracuje ? 0.3 : 1, s = wa + wb;
       przesun(a, a.x - ux * p * wa / s * 2, a.z - uz * p * wa / s * 2);
       przesun(b, b.x + ux * p * wb / s * 2, b.z + uz * p * wb / s * 2);
+      // idący, któremu ktoś stoi na drodze, schodzi w prawo (jak na chodniku): dwaj idący naprzeciw siebie mijają się od razu
+      for (const [u, kx, kz] of [[a, ux, uz], [b, -ux, -uz]]) {
+        if (!u.idzie) continue;
+        const hx = Math.sin(u.ry), hz = Math.cos(u.ry);
+        if (hx * kx + hz * kz < 0.35) continue; // ten drugi nie jest przed nim
+        const bok = p * 0.9 + 0.025;
+        przesun(u, u.x + hz * bok, u.z - hx * bok);
+      }
     }
   }
 }
