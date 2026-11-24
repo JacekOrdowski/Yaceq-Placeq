@@ -11,6 +11,8 @@ ale nazwy, budynki, wygląd i liczby są nasze. Haskap to po japońsku jagoda ka
 - Gra nazywa się teraz Age of Haskap (bez „II”): w menu, w tytule strony, na ikonie w telefonie i na liście naszych gier.
 - Przycisk „Inne gry” jest teraz także w pauzie (w menu był już wcześniej). Na liście gier jest nowa gra Age of Polan.
 
+Zapis w repozytorium: `584ca20`
+
 ## Wersja 29 (23.11.2026)
 
 **Dodane**
