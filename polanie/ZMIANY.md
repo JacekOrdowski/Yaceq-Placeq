@@ -7,6 +7,29 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 6 (24.11.2026)
+
+**Dodane**
+- Realistyczne postacie z prawdziwym ruchem (darmowe modele Quaternius, CC0; skąd są: `postacie/ZRODLA.md`):
+  osadnicy (chłopi z brodami i bez, chłopki z długimi włosami), wojacy, tarczownicy, drużynnicy, włócznicy, łucznicy i rzemieślnicy.
+  Normalne proporcje, twarze, włosy i brody, lniane koszule, kamizelki, buty z cholewami, kaptury.
+- Ruchy: rąbanie drzewa (z siekierą), kopanie kamienia i rudy (z kilofem), zbieranie jagód i żęcie zagonów, budowanie i naprawa
+  na klęczkach (z młotkiem), noszenie surowców przed sobą, marsz i bieg, walka mieczem, maczugą, toporem i włócznią,
+  rzut z procy, trening boksera przy Gontynie (proste ciosy na zmianę), padanie po śmierci.
+- Po czym poznać stronę: szarfa w kolorze strony przez pierś, tarcze w kolorze strony; wojsko w stożkowych hełmach.
+
+**Zmienione**
+- Realistyczne postacie są rysowane, gdy kamera jest blisko, i tylko 70 najbliżej środka widoku naraz; dalej i przy oddaleniu
+  zostają proste bryły (żeby telefon nie zwalniał). Jeźdźcy, stwory, bohaterowie, machiny i wozy są na razie jak dotąd.
+- Postacie wczytują się w tle po otwarciu gry (około 11 MB); do tego czasu widać proste bryły.
+
+**Naprawione**
+- Rzadki błąd przy treningu w Gontynie, który mógł na chwilę zatrzymać rysowanie.
+
+**Do sprawdzenia**
+- Płynność na iPhonie 13 przy dużych bitwach (w podglądzie na komputerze różnica była mała). Gdyby zwalniało: mniejsze `LUDZ_MAKS`
+  albo `LUDZ_D` w `gra.js`.
+
 ## Wersja 5 (24.11.2026)
 
 **Zmienione**

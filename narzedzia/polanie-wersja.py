@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 
 PLIKI_TEKST = ['index.html', 'gra.js', 'dane.js', 'modele.js', 'manifest.webmanifest']
+PLIKI_TEKST.append('postacie.js')  # od wersji 6: realistyczne postacie
 PLIKI_BIN = ['ikona-180.png', 'ikona-192.png', 'ikona-512.png']
 
 
@@ -37,7 +38,14 @@ def main():
     for p in PLIKI_BIN:
         (cel / p).write_bytes(z_repo(commit, p))
     for p in PLIKI_TEKST:
-        t = z_repo(commit, p).decode('utf-8').replace('\r\n', '\n')
+        try:
+            t = z_repo(commit, p).decode('utf-8').replace('\r\n', '\n')
+        except subprocess.CalledProcessError:
+            continue  # tego pliku w starszej wersji nie było (postacie.js jest od wersji 6)
+        if p == 'postacie.js':
+            # pliki postaci (modele i ruchy) są tylko w głównym folderze gry
+            t = zamien(t, "'../survival/three.module.min.js'", "'../../../survival/three.module.min.js'", p)
+            t = t.replace("from './postacie/", "from '../../postacie/").replace("L.load('postacie/' + n", "L.load('../../postacie/' + n")
         if p in ('gra.js', 'modele.js'):
             t = zamien(t, "'../survival/three.module.min.js'", "'../../../survival/three.module.min.js'", p)
         if p == 'gra.js':

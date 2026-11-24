@@ -4,13 +4,15 @@
 // Silnik wyrósł z Age of Haskap (folder age2/).
 import * as THREE from '../survival/three.module.min.js';
 import * as MOD from './modele.js';
+import * as LUDZ from './postacie.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 5;
+const WERSJA = 6;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 5, opis: 'Mniej napisów u góry: o nowej erze mówi tylko Gród (czego brakuje albo wybór boga), krótsze podpowiedzi. Do tego wszystko z wersji 4.' },
+  { nr: 6, opis: 'Realistyczne postacie z prawdziwym ruchem (osadnicy, piechota, łucznicy): rąbią, żną, budują na klęczkach, noszą, walczą, trenują boks przy Gontynie i padają; szarfa w kolorze strony, hełmy, tarcze. Do tego wszystko z wersji 5.' },
+  { nr: 5, opis: 'Mniej napisów u góry: o nowej erze mówi tylko Gród (czego brakuje albo wybór boga), krótsze podpowiedzi. Do tego wszystko z wersji 4.', adres: 'wersje/5/' },
   { nr: 4, opis: 'Nowe, dokładniejsze postacie: prawdziwe proporcje, twarze z brwiami, nosem i ustami, brody, lniane koszule z haftem, onuce, hełmy z nosalem; przy Gontynie osadnicy trenują jak bokserzy (garda i ciosy). Do tego wszystko z wersji 3.', adres: 'wersje/4/' },
   { nr: 3, opis: 'Modlitwa w Gontynie wygląda jak trening boksera (bieg w miejscu i ciosy); wstążki przy Gontynie i skrzydła stworów nie odlatują już od nich. Do tego wszystko z wersji 2.', adres: 'wersje/3/' },
   { nr: 2, opis: 'Nowa era na przycisku u góry ekranu (pisze, czego brakuje), w budynkach tylko to, co już można zrobić, czasy szkolenia jak w grach o bogach i erach, 27 nowych ulepszeń (od bogów, tarcze, mistrzowie linii), bohaterowie rosną z erami. Do tego wszystko z wersji 1.', adres: 'wersje/2/' },
@@ -438,6 +440,7 @@ function grajMuzyke() { odblokujMuzyke(); muzOst = performance.now(); muzykaKrok
 // ================= tworzenie mapy =================
 function wyczyscSwiat() {
   for (const e of [...JED, ...BUD]) scena.remove(e.mesh);
+  for (const u of JED) if (u.ludz) scena.remove(u.ludz.obj);
   for (const p of POC) scena.remove(p.mesh);
   for (const u of UMIERA) scena.remove(u.mesh);
   for (const k in INST) { scena.remove(INST[k]); delete INST[k]; }
@@ -1139,6 +1142,7 @@ function awansuj(strona, nowy) {
   for (const u of JED) if (u.strona === strona && u.d.linia === d.linia && (u.d.st || 1) < d.st) {
     const p = u.hp / u.max; u.typ = nowy; u.d = d; u.max = maxHpJ(strona, nowy); u.hp = u.max * p;
     u.mesh.geometry = MOD.JEDNOSTKI3D[nowy](strona);
+    if (u.ludz) { scena.remove(u.ludz.obj); u.ludz = null; } // nowy wygląd zrobi się przy rysowaniu
   }
 }
 
@@ -1330,7 +1334,9 @@ function rzut(od, cel, atak) {
 function zabij(u, od) {
   E.delete(u.id); JED.splice(JED.indexOf(u), 1);
   wybrane = wybrane.filter(e => e !== u);
-  UMIERA.push({ mesh: u.mesh, t: 0, j: true, ry: u.ry });
+  // realistyczna postać pada z prawdziwym ruchem, prosta bryła przewraca się jak dotąd
+  if (u.ludz && u.ludz.obj.visible) { scena.remove(u.mesh); u.ludz.graj('Death01', 1, true); UMIERA.push({ mesh: u.ludz.obj, ludz: u.ludz, t: 0, j: 2 }); }
+  else { if (u.ludz) scena.remove(u.ludz.obj); UMIERA.push({ mesh: u.mesh, t: 0, j: true, ry: u.ry }); }
   if (od && S.stat[od.strona]) S.stat[od.strona].pokonani++;
   if (od && u.d.wojsko && bogMa(od.strona, 'perun')) dodajLaske(od.strona, LASKA.zaWroga);
 }
@@ -2678,7 +2684,7 @@ function ruszReka(u, dt) {
   if (u.koszBok) u.koszBok.visible = kosz;
   let rx = 0, rz = 0;
   // trening boksera przy Gontynie: obie ręce w gardzie, na zmianę szybki prosty cios przed siebie
-  const trening = u.typ === 'osadnik' && u.pracuje && z && z.typ === 'modl';
+  const trening = !!(u.typ === 'osadnik' && u.pracuje && z && z.typ === 'modl');
   if (trening !== !!u.piesci) {
     if (trening) {
       u.mesh.geometry = MOD.osadnik(u.strona, u.id % 6, 1); u.piesci = [];
@@ -2707,8 +2713,47 @@ function ruszReka(u, dt) {
   u.ramie.rotation.x += (rx - u.ramie.rotation.x) * k; u.ramie.rotation.z += (rz - u.ramie.rotation.z) * k;
 }
 const M_CIEN = new THREE.Matrix4();
+// ================= realistyczne postacie (postacie.js) =================
+const LUDZ_D = 42, LUDZ_MAKS = 70; // do jakiej odległości kamery i ilu naraz
+let ileLudzi = 0;
+const MAT_UKRYTY = new THREE.MeshBasicMaterial({ visible: false });
+const NARZ_LUDZ = ['siekiera', 'kilof', 'mlotek', 'sierp'];
+// który ruch gra postać: praca, walka, chodzenie (szybkość nóg dopasowana do szybkości jednostki), stanie
+function ruchLudzia(u, dt) {
+  const L = u.ludz, z = u.zad, os = u.typ === 'osadnik';
+  L.obj.position.set(u.mesh.position.x, 0, u.mesh.position.z); L.obj.rotation.y = u.mesh.rotation.y;
+  let nazwa = 'Idle_Loop', szyb = 1, narz = null;
+  if (u.pracuje && z) {
+    if (z.typ === 'zbieraj') { if (z.sur === 'drewno') { nazwa = 'TreeChopping_Loop'; narz = 'siekiera'; } else if (z.sur === 'jagody') nazwa = 'Farm_Harvest'; else { nazwa = 'TreeChopping_Loop'; narz = 'kilof'; } }
+    else if (z.typ === 'farma') { nazwa = 'Farm_Harvest'; narz = 'sierp'; }
+    else if (z.typ === 'buduj' || z.typ === 'naprawiaj') { nazwa = 'Fixing_Kneeling'; narz = 'mlotek'; }
+    else if (z.typ === 'modl') nazwa = Math.floor(u.t / LUDZ.dlugosc('Punch_Jab')) % 2 ? 'Punch_Cross' : 'Punch_Jab';
+    else if (z.typ === 'atakuj') { nazwa = u.d.zasieg ? 'OverhandThrow' : L.opis.tarcza ? 'Sword_Regular_A' : 'Sword_Attack'; szyb = Math.min(2, Math.max(0.7, LUDZ.dlugosc(nazwa) / Math.max(0.6, u.d.odstep))); }
+  } else if (u.idzie) {
+    const v = predkosc(u);
+    if (os && u.niesie.ile > 0.5) { nazwa = 'Walk_Carry_Loop'; szyb = Math.min(1.9, v / 1.15); }
+    else if (v > 1.6) { nazwa = 'Jog_Fwd_Loop'; szyb = v / 2.3; }
+    else { nazwa = 'Walk_Loop'; szyb = v / 1.1; }
+  } else if (u.d.wojsko && !u.d.zasieg) nazwa = L.opis.tarcza ? 'Idle_Shield_Loop' : 'Sword_Idle';
+  if (u.zamarz > S.czas || u.spokoj > S.czas) szyb = u.zamarz > S.czas ? 0 : 0.4;
+  L.graj(nazwa, szyb);
+  if (os) for (const n of NARZ_LUDZ) if (L.przedmioty[n]) L.przedmioty[n].visible = n === narz;
+  L.mixer.update(dt);
+}
+// co chwilę wybieramy ludzi najbliżej środka widoku: tylko oni są realistycznymi postaciami
+const LUDZ_WYBRANI = new Set(); let ludzT = 0;
+function wybierzLudzi(dt) {
+  if ((ludzT -= dt) > 0) return; ludzT = 0.4;
+  LUDZ_WYBRANI.clear();
+  if (!LUDZ.sa() || kam.d >= LUDZ_D) return;
+  const kand = [];
+  for (const u of JED) if (LUDZ.ma(u.typ) && naEkranie(u)) kand.push([(u.x - kam.x) ** 2 + (u.z - kam.z) ** 2, u]);
+  kand.sort((a, b) => a[0] - b[0]);
+  for (let i = 0; i < Math.min(LUDZ_MAKS, kand.length); i++) LUDZ_WYBRANI.add(kand[i][1]);
+}
 function rysuj(dt) {
   czasRys += dt;
+  ileLudzi = 0; wybierzLudzi(dt);
   rysujCzary(dt);
   ustawKamere();
   if (!CIENIE.parent) scena.add(CIENIE);
@@ -2726,6 +2771,15 @@ function rysuj(dt) {
     const trening = u.pracuje && u.zad && u.zad.typ === 'modl';
     m.position.set(u.x + Math.sin(m.rotation.y) * wypad, u.d.lata ? u.d.lata + Math.sin(u.t * 3) * 0.12 : trening ? Math.abs(Math.sin(u.t * 9)) * 0.09 : u.idzie && !u.d.kupiec ? Math.abs(Math.sin(u.t * 11)) * 0.05 : 0, u.z + Math.cos(m.rotation.y) * wypad);
     if (u.typ === 'osadnik' || u.d.naprawia) ruszReka(u, dt);
+    // blisko kamery: realistyczna postać z ruchem (najwyżej LUDZ_MAKS naraz), dalej prosta bryła
+    const blisko = LUDZ_WYBRANI.has(u) && naEkranie(u);
+    if (blisko && !u.ludz) { u.ludz = LUDZ.stworz(u.typ, u.strona, u.id % 12); if (u.ludz) scena.add(u.ludz.obj); }
+    const realna = blisko && !!u.ludz;
+    if (u.ludz) u.ludz.obj.visible = realna;
+    m.material = realna ? MAT_UKRYTY : MAT;
+    if (u.ramie) u.ramie.visible = u.ramie.visible && !realna; if (u.koszBok) u.koszBok.visible = u.koszBok.visible && !realna;
+    if (u.piesci) for (const g of u.piesci) g.visible = !realna;
+    if (realna) { ileLudzi++; ruchLudzia(u, dt); }
     // krok: nogi i ręce chodzą w rytm szybkości, koła wozów się kręcą
     const v = u.d.szybkosc;
     if (u.idzie) { u.faza += dt * v * (u.d.linia === 'renifer' || u.d.kupiec ? 4.2 : 6.5); u.kolo -= dt * v / 0.21; }
@@ -2737,9 +2791,11 @@ function rysuj(dt) {
       const n = u.niesie.ile > 0.5 ? Math.min(8, Math.ceil(u.niesie.ile / 3)) : 0, s = n ? u.niesie.sur + n : null;
       if (s !== u.pokazane) {
         if (u.koszyk) { m.remove(u.koszyk); u.koszyk = null; }
-        if (s) { u.koszyk = new THREE.Mesh(MOD.stos(u.niesie.sur, n), MAT); u.koszyk.position.set(0, 0.55, -0.2); m.add(u.koszyk); }
+        if (s) { u.koszyk = new THREE.Mesh(MOD.stos(u.niesie.sur, n), MAT); m.add(u.koszyk); }
         u.pokazane = s;
       }
+      // realistyczny osadnik niesie stosik przed sobą (w rękach), prosta bryła na plecach
+      if (u.koszyk) { if (u.ludz && u.ludz.obj.visible) u.koszyk.position.set(0, 0.62, 0.24); else u.koszyk.position.set(0, 0.55, -0.2); }
     }
     if (u.pierscien) { u.pierscien.position.set(u.x, 0.04, u.z); u.pierscien.visible = wybrane.includes(u); }
   }
@@ -2761,6 +2817,7 @@ function rysuj(dt) {
   }
   for (let i = UMIERA.length - 1; i >= 0; i--) {
     const u = UMIERA[i]; u.t += dt;
+    if (u.j === 2) { u.ludz.mixer.update(dt); if (u.t > 2.2) u.mesh.position.y = -(u.t - 2.2) * 0.5; if (u.t > 3.6) { scena.remove(u.mesh); UMIERA.splice(i, 1); } continue; }
     if (u.j) { u.mesh.rotation.z = Math.min(1, u.t / 0.4) * 1.45; u.mesh.position.y = u.t > 1.2 ? -(u.t - 1.2) * 0.6 : 0; }
     else u.mesh.position.y = -u.t * 1.6;
     if (u.t > (u.j ? 2.4 : 2.5)) { scena.remove(u.mesh); UMIERA.splice(i, 1); }
@@ -3571,6 +3628,7 @@ function klatka(t) {
 
 // ================= start =================
 rozmiar(); rysujLogo();
+LUDZ.wczytaj(); // realistyczne postacie wczytują się w tle; do tego czasu ludzie są prostymi bryłami
 (function start() {
   if (zapis.gra) { try { wczytajGre(zapis.gra); } catch (e) { console.error(e); zapis.gra = null; nowaGra(zapis.opcje || zapis.trudnosc); } }
   else nowaGra(zapis.opcje || zapis.trudnosc);
