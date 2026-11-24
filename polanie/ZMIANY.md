@@ -20,6 +20,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
 - Ulepszenia muru (Wał grodowy, Wał z kamieniem) robi się po dotknięciu muru, a nie w Kamieniołomie. Zmieniają już tylko mury;
   bramy mają swoje ulepszenia. Stare zapisy: bramy dostają ulepszenia, które miały razem z murem.
 
+Zapis w repozytorium: `790ab65`
+
 ## Wersja 18 (24.11.2026)
 
 **Zmienione**
