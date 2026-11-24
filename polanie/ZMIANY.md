@@ -17,6 +17,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
     przycisk nowej ery złoty, „Zburz” ciemnoczerwony, wybrany tryb walki zielony, „Stój” w kolorze żaru;
   - panel stawiania budynku („Anuluj”, „Postaw tutaj”) i krótkie komunikaty też w tym stylu.
 
+Zapis w repozytorium: `5040a9a`
+
 ## Wersja 31 (24.11.2026)
 
 **Zmienione**
