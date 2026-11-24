@@ -201,6 +201,9 @@ export function stworz(typ, strona, w = 0) {
       a.reset().fadeIn(0.22).play();
       return a;
     });
+    // zgranie w czasie: w biegu lewa stopa staje na ziemi przy 0,04 powtórzenia, prawa przy 0,54; lewy cios jest najdalej przy 0,25,
+    // prawy przy 0,75, więc ciosy przesuwamy o 0,21 powtórzenia: lewa pięść wychodzi razem z krokiem lewej nogi, prawa z prawą
+    if (nazwa === 'TRENING') nowe[1].time = 0.21 * nowe[1].getClip().duration;
     for (const a of teraz) if (!nowe.includes(a)) a.fadeOut(0.22);
     teraz = nowe; terazNazwa = nazwa;
   }

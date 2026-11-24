@@ -7,6 +7,15 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 17 (24.11.2026)
+
+**Naprawione**
+- Niesione surowce przepadały, gdy osadnik dostawał inną pracę (np. z rąbania do modlitwy albo z kamienia do drewna).
+  Teraz najpierw odnosi to, co niesie, do najbliższego spichlerza, drwalni, kamieniołomu albo Grodu, a potem sam idzie do nowej pracy
+  (`najpierwOdnies`). Dlatego nie biegają już dookoła Gontyny z polanami na klacie. Tak samo robi komputer.
+- Bieg bokserski: krok zgrany z ciosem. Lewa pięść wychodzi w chwili, gdy lewa stopa staje na ziemi, prawa z prawą
+  (zmierzone: różnica najwyżej 0,02 s), 3 kroki i 3 ciosy na sekundę.
+
 ## Wersja 16 (24.11.2026)
 
 **Zmienione**

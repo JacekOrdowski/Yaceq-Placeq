@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 16;
+const WERSJA = 17;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 16, opis: 'Ciosy w biegu bokserskim równo na zmianę: lewa, prawa, lewa, prawa (każdy krok jeden cios). Do tego wszystko z wersji 15.' },
+  { nr: 17, opis: 'Surowce nie przepadają przy zmianie pracy (osadnik najpierw je odnosi), krok zgrany z ciosem w biegu bokserskim. Do tego wszystko z wersji 16.' },
+  { nr: 16, opis: 'Ciosy w biegu bokserskim równo na zmianę: lewa, prawa, lewa, prawa (każdy krok jeden cios). Do tego wszystko z wersji 15.', adres: 'wersje/16/' },
   { nr: 15, opis: 'Bieg bokserski w równym rytmie: jeden krok to jedno uderzenie, 3 kroki i 3 uderzenia na sekundę. Do tego wszystko z wersji 14.', adres: 'wersje/15/' },
   { nr: 14, opis: 'Bieg bokserski dookoła Gontyny: osadnicy biegną jeden za drugim w kółko wokół budynku i w biegu na zmianę biją pięściami powietrze. Do tego wszystko z wersji 13.', adres: 'wersje/14/' },
   { nr: 13, opis: 'Prawdziwy bieg bokserski przy Gontynie: trucht w miejscu i ciosy pięściami w powietrze na zmianę. Do tego wszystko z wersji 12.', adres: 'wersje/13/' },
@@ -1204,8 +1205,14 @@ function sprzatnijListy() { for (const k in ZAS_TYP) ZAS_TYP[k] = ZAS_TYP[k].fil
 function rozkazIdz(u, x, z) { u.zad = { typ: 'idz', x, z }; ustawDroge(u, celePunkt(x, z), x, z, true); }
 function rozkazZbieraj(u, z0) {
   if (u.typ !== 'osadnik') return rozkazIdz(u, z0.x, z0.z);
-  if (u.niesie.sur && u.niesie.sur !== z0.sur) u.niesie = { sur: null, ile: 0 };
-  u.zad = { typ: 'zbieraj', zid: z0.id, sur: z0.sur, faza: 'idz', ox: z0.x, oz: z0.z }; u.sciezka = null;
+  const nowe = { typ: 'zbieraj', zid: z0.id, sur: z0.sur, faza: 'idz', ox: z0.x, oz: z0.z };
+  if (!najpierwOdnies(u, nowe, z0.sur)) { u.zad = nowe; u.sciezka = null; }
+}
+// zanim osadnik weźmie się za inną pracę, odnosi to, co niesie (nic nie przepada); potem sam idzie do nowej pracy
+function najpierwOdnies(u, nowe, sur = null) {
+  if (u.typ !== 'osadnik' || u.niesie.ile < 1 || u.niesie.sur === sur || !najblizszySkup(u.strona, u.niesie.sur, u.x, u.z)) return false;
+  u.zad = { typ: 'odnies', skup: 0, potem: nowe }; u.sciezka = null;
+  return true;
 }
 function rozkazBuduj(u, b) {
   if (u.typ !== 'osadnik' && !u.d.naprawia) return rozkazIdz(u, b.x, b.z);
@@ -1213,7 +1220,7 @@ function rozkazBuduj(u, b) {
   const pop = u.zad && (u.zad.typ === 'zbieraj' || u.zad.typ === 'farma') ? { ...u.zad, faza: u.zad.faza === 'niesie' ? 'niesie' : 'idz' } : u.zad && u.zad.typ === 'buduj' ? u.zad.potem : null;
   u.zad = { typ: 'buduj', bid: b.id, potem: pop || null }; u.sciezka = null;
 }
-function rozkazFarma(u, b) { if (u.typ !== 'osadnik') return; for (const o of JED) if (o !== u && o.zad && o.zad.typ === 'farma' && o.zad.bid === b.id) stop(o); u.zad = { typ: 'farma', bid: b.id, faza: 'idz' }; u.sciezka = null; }
+function rozkazFarma(u, b) { if (u.typ !== 'osadnik') return; for (const o of JED) if (o !== u && o.zad && o.zad.typ === 'farma' && o.zad.bid === b.id) stop(o); const nowe = { typ: 'farma', bid: b.id, faza: 'idz' }; if (!najpierwOdnies(u, nowe, 'jagody')) { u.zad = nowe; u.sciezka = null; } }
 function rozkazAtak(u, c, potem = null) {
   if (u.d.tylkoBudynki && !jestBudynkiem(c)) return;
   u.zad = { typ: 'atakuj', cid: c.id, potem }; u.sciezka = null; u.przelicz = 0;
@@ -1245,7 +1252,7 @@ function handel(u, dt) {
   if (!u.sciezka && !ustawDroge(u, celeBudynku(cel), cel.x, cel.z) && !u.sciezka) { u.zad = null; return; }
   ruch(u, dt);
 }
-function rozkazModl(u, b) { if (u.typ !== 'osadnik') return; u.zad = { typ: 'modl', bid: b.id }; u.sciezka = null; }
+function rozkazModl(u, b) { if (u.typ !== 'osadnik') return; const nowe = { typ: 'modl', bid: b.id }; if (!najpierwOdnies(u, nowe)) { u.zad = nowe; u.sciezka = null; } }
 function dodajLaske(strona, ile) { const z = S.zas[strona]; z.laska = Math.min(LASKA.maks, (z.laska || 0) + ile); }
 const tempoLaski = strona => LASKA.modlitwa * (bogMa(strona, 'weles') ? 1.25 : 1) * (bogMa(strona, 'lada') ? 1.2 : 1) * (S.ul[strona].kupala ? 1.2 : 1);
 const BIEG_MODL = 1.4; // jak szybko biegają dookoła Gontyny
@@ -1437,6 +1444,7 @@ function aktualizujJednostke(u, dt) {
     case 'atakuj': atakuj(u, dt); break;
     case 'handel': handel(u, dt); break;
     case 'modl': modl(u, dt); break;
+    case 'odnies': odnies(u, dt, () => { u.zad = z.potem || null; u.sciezka = null; }); break;
     default: u.zad = null;
   }
 }
