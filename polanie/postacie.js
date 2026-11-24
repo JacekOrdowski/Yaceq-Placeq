@@ -83,8 +83,32 @@ const PRZEDMIOTY = {
 function tarcza(strona) { const g = new THREE.Group(); g.add(bryla(new THREE.CylinderGeometry(0.24, 0.24, 0.03, 16), KOLORY_STRON[strona], 0, 0, 0, 0, 0, Math.PI / 2), bryla(new THREE.CylinderGeometry(0.06, 0.06, 0.05, 10), MET, -0.02, 0, 0, 0, 0, Math.PI / 2), bryla(new THREE.TorusGeometry(0.24, 0.015, 4, 20), DRZ, 0, 0, 0, 0, Math.PI / 2, 0)); return g; }
 // stożkowy hełm z nosalem
 function helm() { const g = new THREE.Group(); g.add(bryla(new THREE.ConeGeometry(0.115, 0.2, 12), MET, 0, 0.14, -0.01), bryla(new THREE.CylinderGeometry(0.117, 0.117, 0.03, 12), MET2, 0, 0.045, -0.01), bryla(new THREE.BoxGeometry(0.02, 0.09, 0.015), MET2, 0, -0.01, 0.105), bryla(new THREE.SphereGeometry(0.02, 6, 4), MET, 0, 0.25, -0.01)); return g; }
-// szarfa w kolorze strony (przez pierś) i opaska na ramieniu: po tym widać, czyj to człowiek
-function szarfa(strona) { const g = new THREE.Group(); g.add(bryla(new THREE.BoxGeometry(0.06, 0.62, 0.3), KOLORY_STRON[strona], 0, 0, 0, 0, 0, 0.62)); return g; }
+// stroje w kolorze strony: w fakturze przefarbowujemy jasną lnianą koszulę chłopa i zielone części stroju myśliwego
+// (cieniowanie zostaje, zmienia się tylko barwa), po tym widać, czyj to człowiek
+const MAT_STRONY = new Map();
+function farbuj(obraz, mysliwy, kolor) {
+  const W = 512, cv = document.createElement('canvas'); cv.width = cv.height = W;
+  const c = cv.getContext('2d'); c.drawImage(obraz, 0, 0, W, W);
+  const d = c.getImageData(0, 0, W, W), px = d.data, k = new THREE.Color(kolor);
+  for (let i = 0; i < px.length; i += 4) {
+    const r = px[i] / 255, g = px[i + 1] / 255, b = px[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
+    const s = mx === mn ? 0 : (mx - mn) / (1 - Math.abs(2 * l - 1));
+    let h = 0; if (mx !== mn) { h = mx === r ? ((g - b) / (mx - mn)) % 6 : mx === g ? (b - r) / (mx - mn) + 2 : (r - g) / (mx - mn) + 4; h = (h * 60 + 360) % 360; }
+    if (!(mysliwy ? h > 70 && h < 170 && s > 0.12 : l > 0.36 && s < 0.32)) continue;
+    const jas = Math.min(1.6, l / 0.5) * (mysliwy ? 1.15 : 0.95);
+    px[i] = Math.min(255, k.r * 255 * jas); px[i + 1] = Math.min(255, k.g * 255 * jas); px[i + 2] = Math.min(255, k.b * 255 * jas);
+  }
+  c.putImageData(d, 0, 0);
+  const t = new THREE.CanvasTexture(cv); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+function materialStrony(m, strona) {
+  const klucz = m.uuid + '|' + strona;
+  if (!MAT_STRONY.has(klucz)) {
+    const mapa = farbuj(m.map.image, /ranger/i.test(m.map.name), KOLORY_STRON[strona]);
+    MAT_STRONY.set(klucz, new THREE.MeshLambertMaterial({ map: mapa, color: m.color.clone(), side: THREE.DoubleSide }));
+  }
+  return MAT_STRONY.get(klucz);
+}
 
 // ---------- wygląd jednostek ----------
 // stroj, glowa, wlosy, broda; prawa / lewa: przedmiot w dłoni; helm; tarcza; ruchy: atak, chodzenie
@@ -156,10 +180,8 @@ export function stworz(typ, strona, w = 0) {
     const h = helm(), m = wModelu(kosci.Head), p = new THREE.Vector3().setFromMatrixPosition(m);
     h.position.set(p.x, p.y + 0.07, p.z + 0.01); h.scale.setScalar(1.12); h.updateMatrix(); h.applyMatrix4(new THREE.Matrix4().copy(m).invert()); kosci.Head.add(h);
   }
-  if (kosci.spine_03) {
-    const s = szarfa(strona), m = wModelu(kosci.spine_03), p = new THREE.Vector3().setFromMatrixPosition(m);
-    s.position.set(p.x, p.y - 0.02, p.z); s.scale.set(1, 1, opis.kobieta ? 0.85 : 1); s.updateMatrix(); s.applyMatrix4(new THREE.Matrix4().copy(m).invert()); kosci.spine_03.add(s);
-  }
+  // kolor strony: koszula chłopa albo zielone części stroju myśliwego są przefarbowane na kolor strony
+  cialo.traverse(m => { if (m.isMesh && m.material.map && /peasant|ranger/i.test(m.material.map.name || '')) m.material = materialStrony(m.material, strona); });
   const mixer = new THREE.AnimationMixer(cialo);
   const akcje = {};
   let teraz = null;

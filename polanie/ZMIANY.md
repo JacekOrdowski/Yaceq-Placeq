@@ -7,6 +7,13 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 10 (24.11.2026)
+
+**Zmienione**
+- Zamiast szarfy w kolorze strony (wyglądała jak deska przyklejona do pleców) kolor strony jest na samym stroju, jak w grach o bogach
+  i erach: lniane koszule osadników i wojaków oraz zielone kaptury i kurtki łuczników są przefarbowane na niebiesko, czerwono, żółto
+  albo fioletowo. Fałdy i cienie stroju zostają, zmienia się tylko barwa. Tarcze nadal są w kolorze strony.
+
 ## Wersja 9 (24.11.2026)
 
 **Zmienione**
