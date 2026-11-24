@@ -7,6 +7,12 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 15 (24.11.2026)
+
+**Zmienione**
+- Bieg bokserski przy Gontynie w równym rytmie: jeden krok to jedno uderzenie pięścią. Na początek 3 kroki na sekundę
+  i 3 uderzenia na sekundę (lewa, prawa, lewa…), zmierzone w podglądzie. Rytm ustawia `KROKI_NA_SEKUNDE` w `postacie.js`.
+
 ## Wersja 14 (24.11.2026)
 
 **Zmienione**

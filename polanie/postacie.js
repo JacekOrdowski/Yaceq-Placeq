@@ -7,6 +7,8 @@ import * as SU from './postacie/SkeletonUtils.js';
 import { KOLORY_STRON } from './modele.js';
 
 export const SKALA = 0.72;
+// bieg bokserski przy Gontynie: ile kroków (i tyle samo uderzeń pięścią) na sekundę
+export const KROKI_NA_SEKUNDE = 3;
 const P = {}; // wczytane pliki
 let gotowe = false, wczytywanie = null;
 export const sa = () => gotowe;
@@ -193,7 +195,8 @@ export function stworz(typ, strona, w = 0) {
     const nowe = klipy.map((k, i) => {
       let a = akcje[k.name];
       if (!a) { a = akcje[k.name] = mixer.clipAction(k); if (raz) { a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; } }
-      a.timeScale = nazwa === 'TRENING' ? (i ? 1.15 : 0.75) : szybkosc;
+      // bieg bokserski: jeden krok = jedno uderzenie; w biegu są 2 kroki na powtórzenie, w ciosach 2 uderzenia (lewa, prawa)
+      a.timeScale = nazwa === 'TRENING' ? KROKI_NA_SEKUNDE / 2 * k.duration : szybkosc;
       a.userData = { stala: nazwa === 'TRENING' };
       a.reset().fadeIn(0.22).play();
       return a;
