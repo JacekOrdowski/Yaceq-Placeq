@@ -14,6 +14,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
   truchtają w miejscu (nogi z ruchu biegu) i jednocześnie na zmianę biją pięściami powietrze (prosty lewą, prosty prawą).
   Dwa ruchy grają naraz: nogi z biegu, góra ciała z ciosów (`czescRuchu`, `ciosyNaZmiane` w `postacie.js`).
 
+Zapis w repozytorium: `736b566`
+
 ## Wersja 12 (24.11.2026)
 
 **Dodane**
