@@ -7,6 +7,20 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 30 (24.11.2026)
+
+**Dodane**
+- Kopiowanie budynku: zaznacz osadnika (albo kilku), potem przytrzymaj palec przez 2 sekundy na swoim budynku.
+  Pojawia się półprzezroczysta kopia tego budynku obok niego, tak jak po wybraniu go z menu budowania:
+  przesuń palcem i „Postaw tutaj”, a zaznaczeni osadnicy idą go budować. Działa też dla częstokołu i bramy.
+  Podpowiedź jest w panelu osadnika.
+
+**Zmienione**
+- Okno pauzy w nowym stylu: w tle gród nocą (jak w menu), na przyciskach malowane ikonki (pochodnia „Graj dalej”,
+  tabliczka z piórem „Zapisz grę”, skrzynia ze zwojami „Wczytaj grę”, gęśle przy muzyce, dzwonek przy dźwiękach,
+  kiełek „Nowa gra”, pionki i kości „Inne gry”, drzwi chaty „Menu”). Te same ikonki są w menu głównym.
+- Przycisk „Zburz”: malowana ikona rozwalonej chaty z młotem i czytelny ciemnoczerwony napis (był prawie niewidoczny).
+
 ## Wersja 29 (24.11.2026)
 
 **Dodane**

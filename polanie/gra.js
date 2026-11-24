@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 29;
+const WERSJA = 30;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 29, opis: 'Malowane ikony er, przycisku mocy bogów i przycisków z boku ekranu (wojsko, wolni osadnicy, ramka, gród, mapa). Do tego wszystko z wersji 28.' },
+  { nr: 30, opis: 'Kopiowanie budynku: zaznacz osadnika i przytrzymaj palec 2 s na swoim budynku. Nowy wygląd pauzy, menu i przycisku Zburz. Do tego wszystko z wersji 29.' },
+  { nr: 29, opis: 'Malowane ikony er, przycisku mocy bogów i przycisków z boku ekranu (wojsko, wolni osadnicy, ramka, gród, mapa). Do tego wszystko z wersji 28.', adres: 'wersje/29/' },
   { nr: 28, opis: 'Malowane ikonki surowców (żywność, drewno, kamień, żelazo, srebro, łaska, ludność) w pasku u góry i w cenach. Do tego wszystko z wersji 27.', adres: 'wersje/28/' },
   { nr: 27, opis: 'Malowane ikony wszystkich ulepszeń i 12 mocy bogów w nocnym stylu. Do tego wszystko z wersji 26.', adres: 'wersje/27/' },
   { nr: 26, opis: 'Malowane ikony wszystkich jednostek, stworów, bohaterów i budynków w tym samym nocnym stylu co portrety bogów. Do tego wszystko z wersji 25.', adres: 'wersje/26/' },
@@ -1143,7 +1144,7 @@ for (const n of ['czady', 'drzenie', 'grom', 'mroz', 'ogien', 'rog', 'slonce', '
 const IKONA_ULEPSZENIA = { zlote_piora: 'rarog', prastary_leszy: 'leszy', wilcza_wataha: 'wilkolak', gradowe_chmury: 'planetnik', ognisty_oddech: 'zmij',
   piesn_rusalek: 'rusalka', wrozba_konia: 'kon', upiorna_noc: 'strzyga', bies_z_nawii: 'bies', arkonska_druzyna: 'rycerz',
   mistrz_piechoty: 'ul_mistrz', mistrz_strzelcow: 'ul_mistrz', mistrz_jazdy: 'ul_mistrz' };
-IKONY.add('ui_moce');
+IKONY.add('ui_moce'); IKONY.add('ui_zburz');
 const ikUl = id => IKONA_ULEPSZENIA[id] || (id.startsWith('aw_') ? id.slice(3) : 'ul_' + id);
 const ikSur = s => `<img class="ik ik-sur" src="ikony/sur_${s}.jpg" alt="" draggable="false">`;
 const ikEra = n => `<img class="ik" src="ikony/ui_era${n}.jpg" alt="" draggable="false">`;
@@ -3133,6 +3134,18 @@ plotno.addEventListener('pointerdown', e => {
     // przytrzymanie palca przez 1 sekundę bez ruchu: ramka zaznaczania od tego miejsca
     const g0 = gest;
     clearTimeout(trzymanieT);
+    // zaznaczony osadnik + przytrzymanie palca na swoim budynku przez 2 sekundy: kopia budynku do postawienia (jak z menu)
+    const wzor = !tryb && !trybMocy && wybrane.some(u => u.strona === STRONA_GRACZA && u.typ === 'osadnik') ? wskaz(e.clientX, e.clientY) : null;
+    if (wzor && jestBudynkiem(wzor) && wzor.strona === STRONA_GRACZA && BUDYNKI[wzor.typ]) {
+      trzymanieT = setTimeout(() => {
+        if (gest !== g0 || g0.ruch || palce.size !== 1 || tryb) return;
+        g0.ruch = true;
+        try { navigator.vibrate && navigator.vibrate(40); } catch (er) { /* bez wibracji */ }
+        zacznijStawianie(wzor.typ);
+        if (tryb) { toast(`${BUDYNKI[wzor.typ].emoji} Kopia: ${BUDYNKI[wzor.typ].nazwa}. Przesuń palcem i postaw`); if (!tryb.mur) { g0.duch = true; przesunDucha(wzor.x + (wzor.w || BUDYNKI[wzor.typ].w) + 0.5, wzor.z); } }
+      }, 2000);
+      return;
+    }
     trzymanieT = setTimeout(() => {
       if (gest !== g0 || g0.ruch || palce.size !== 1 || tryb) return;
       g0.ruch = true; g0.ramka = { x0: g0.x0, y0: g0.y0, x1: g0.x0 + 1, y1: g0.y0 + 1 };
@@ -3378,7 +3391,7 @@ function odswiezPanel(wymus = false) {
     const b = pierwszy, moj = b.strona === STRONA_GRACZA;
     h = `<div class="p-glowa"><span class="p-ik">${ik(b.typ, emojiBud(b))}</span><div><b>${nazwaBud(b)}${moj ? '' : ' (komputer)'}</b><small data-hp>❤️ ${Math.ceil(b.hp)} / ${b.max}</small><div class="p-hp"><i data-hpb style="width:${b.hp / b.max * 100}%"></i></div></div><button class="p-x" data-a="odznacz">✖</button></div>`;
     zburzHTML = moj && !(b.typ === 'ratusz' && BUD.filter(o => o.strona === 0 && o.typ === 'ratusz').length < 2)
-      ? `<button class="akcja maly zburz" data-a="zburz"><span class="ak-ik">💥</span><b>Zburz</b><small>${!b.gotowy && b.postep < 0.02 ? 'wraca całość' : 'wraca połowa'}</small></button>` : '';
+      ? `<button class="akcja maly zburz" data-a="zburz"><span class="ak-ik">${ik('ui_zburz', '💥')}</span><b>Zburz</b><small>${!b.gotowy && b.postep < 0.02 ? 'wraca całość' : 'wraca połowa'}</small></button>` : '';
     if (moj && !b.gotowy) h += `<div class="p-opis">Plac budowy: zaznacz osadników i dotknij go, żeby budowali.</div>`;
     else if (moj) {
       h += `<div class="p-opis">${b.d.opis}${b.d.pole ? (wolnePole(b) ? ' · nikt tu nie pracuje' : ' · pracuje tu osadnik') : ''}${produkuje(b) ? ' · dotknij ziemi, żeby wskazać, dokąd mają iść nowi' : ''}</div>`;
@@ -3447,7 +3460,7 @@ function odswiezPanel(wymus = false) {
     }
     if (!wrogi) {
       if (moje.some(u => u.typ === 'osadnik')) {
-        h += `<div class="p-opis">Dotknij krzaka, drzewa albo skały. Albo postaw:</div>`;
+        h += `<div class="p-opis">Dotknij krzaka, drzewa albo skały. Albo postaw (albo przytrzymaj palec 2 s na swoim budynku: taki sam):</div>`;
         for (const t of KOLEJNOSC_BUDYNKOW) {
           const d = BUDYNKI[t], br = brakBudynku(0, t);
           a += `<button class="akcja${br ? ' zablok' : ''}" data-a="bud:${t}" data-koszt='${JSON.stringify(d.koszt)}'><span class="ak-ik">${ik(t, d.emoji)}</span><b>${d.nazwa}</b><small>${br || d.opis}</small><span class="ak-koszt">${kosztHTML(d.koszt)}</span></button>`;
@@ -3610,7 +3623,7 @@ function pokazMenu() {
   pauza = true; ciszaMuzyki();
   const jest = zapis.gra && !zapis.gra.wynik;
   $('m-dalej').hidden = !jest; $('m-stara').hidden = !zapis.malaMapa;
-  if (jest) $('m-dalej').textContent = `Graj dalej (${TRUDNOSC[zapis.gra.trudnosc].nazwa.toLowerCase()}, ${Math.floor(zapis.gra.czas / 60)} min)`;
+  if (jest) $('m-dalej').innerHTML = `<img class="ik ik-przycisk" src="ikony/ui_dalej.jpg" alt="">Graj dalej (${TRUDNOSC[zapis.gra.trudnosc].nazwa.toLowerCase()}, ${Math.floor(zapis.gra.czas / 60)} min)`;
   const w = zapis.wygrane, ile = Object.values(w).reduce((a, b) => a + b, 0);
   $('m-wygrane').textContent = ile ? `🏆 Wygrane: ${Object.entries(w).filter(([, n]) => n).map(([k, n]) => `${TRUDNOSC[k].nazwa.toLowerCase()} ${n}`).join(', ')}` : '';
   $('m-wersja').textContent = `Age of Polan, wersja ${WERSJA}`;

@@ -22,3 +22,7 @@ Jeden arkusz 3 × 3 z Gemini, pocięty na 128 × 128, ciaśniej przycięty i lek
 ## Ikony er i przycisków (od wersji 29)
 
 Jeden arkusz 3 × 3 z Gemini (`ui_...`), pocięty na 128 × 128 i lekko rozjaśniony.
+
+## Ikony pauzy, menu i burzenia (od wersji 30)
+
+Jeden arkusz 3 × 3 z Gemini (`ui_zburz`, `ui_dalej`, `ui_zapisz`, `ui_wczytaj`, `ui_muzyka`, `ui_dzwieki`, `ui_nowa`, `ui_inne`, `ui_menu`).
