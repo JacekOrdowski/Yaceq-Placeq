@@ -54,7 +54,7 @@ def main():
         if p in ('gra.js', 'modele.js'):
             t = zamien(t, "'../survival/three.module.min.js'", "'../../../survival/three.module.min.js'", p)
         if p == 'gra.js':
-            t = t.replace('src="ikony/', 'src="../../ikony/').replace('src=\\"ikony/', 'src=\\"../../ikony/')  # malowane ikony (od wersji 26)
+            t = t.replace('src="ikony/', 'src="../../ikony/').replace('src=\\"ikony/', 'src=\\"../../ikony/').replace('src=\\"portrety/', 'src=\\"../../portrety/')  # malowane ikony (od wersji 26), portrety w kolejce (od 29)
             if "'../age2/muzyka/' +" in t:  # do wersji 22 muzyka z Age of Haskap, potem własna (polanie/muzyka/)
                 t = zamien(t, "'../age2/muzyka/' +", "'../../../age2/muzyka/' +", p)
             else:

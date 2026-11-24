@@ -9,10 +9,11 @@ import { portret } from './portrety.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 28;
+const WERSJA = 29;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 28, opis: 'Malowane ikonki surowców (żywność, drewno, kamień, żelazo, srebro, łaska, ludność) w pasku u góry i w cenach. Do tego wszystko z wersji 27.' },
+  { nr: 29, opis: 'Malowane ikony er, przycisku mocy bogów i przycisków z boku ekranu (wojsko, wolni osadnicy, ramka, gród, mapa). Do tego wszystko z wersji 28.' },
+  { nr: 28, opis: 'Malowane ikonki surowców (żywność, drewno, kamień, żelazo, srebro, łaska, ludność) w pasku u góry i w cenach. Do tego wszystko z wersji 27.', adres: 'wersje/28/' },
   { nr: 27, opis: 'Malowane ikony wszystkich ulepszeń i 12 mocy bogów w nocnym stylu. Do tego wszystko z wersji 26.', adres: 'wersje/27/' },
   { nr: 26, opis: 'Malowane ikony wszystkich jednostek, stworów, bohaterów i budynków w tym samym nocnym stylu co portrety bogów. Do tego wszystko z wersji 25.', adres: 'wersje/26/' },
   { nr: 25, opis: 'Malowane portrety 12 bogów w mrocznym, nocnym stylu i gród nocą na ekranie startowym. Do tego wszystko z wersji 24.', adres: 'wersje/25/' },
@@ -1142,8 +1143,10 @@ for (const n of ['czady', 'drzenie', 'grom', 'mroz', 'ogien', 'rog', 'slonce', '
 const IKONA_ULEPSZENIA = { zlote_piora: 'rarog', prastary_leszy: 'leszy', wilcza_wataha: 'wilkolak', gradowe_chmury: 'planetnik', ognisty_oddech: 'zmij',
   piesn_rusalek: 'rusalka', wrozba_konia: 'kon', upiorna_noc: 'strzyga', bies_z_nawii: 'bies', arkonska_druzyna: 'rycerz',
   mistrz_piechoty: 'ul_mistrz', mistrz_strzelcow: 'ul_mistrz', mistrz_jazdy: 'ul_mistrz' };
+IKONY.add('ui_moce');
 const ikUl = id => IKONA_ULEPSZENIA[id] || (id.startsWith('aw_') ? id.slice(3) : 'ul_' + id);
 const ikSur = s => `<img class="ik ik-sur" src="ikony/sur_${s}.jpg" alt="" draggable="false">`;
+const ikEra = n => `<img class="ik" src="ikony/ui_era${n}.jpg" alt="" draggable="false">`;
 const ik = (typ, zapas) => IKONY.has(typ) ? `<img class="ik" src="ikony/${typ}.jpg" alt="" draggable="false">` : zapas;
 const emojiBud = b => b.typ === 'wieza' ? WIEZA_POZIOMY[b.poziom || 1].emoji : (b.d.mur || b.d.brama) && poziomMuru(b.strona, b.typ) > 1 ? '🧱' : b.d.emoji;
 function modelBud(typ, poziom, strona, zamk = false) {
@@ -3361,7 +3364,7 @@ function odswiezPanel(wymus = false) {
   panelKlucz = klucz;
   let h = '', a = '', zburzHTML = '';
   if (!sel.length && pokazMoce) {
-    h = `<div class="p-glowa"><span class="p-ik">⚡</span><div><b>Moce bogów</b><small>Każdej mocy możesz użyć tylko raz w grze</small></div><button class="p-x" data-a="moce-zamknij">✖</button></div>`;
+    h = `<div class="p-glowa"><span class="p-ik">${ik('ui_moce', '⚡')}</span><div><b>Moce bogów</b><small>Każdej mocy możesz użyć tylko raz w grze</small></div><button class="p-x" data-a="moce-zamknij">✖</button></div>`;
     for (const m of S.moce[0]) {
       const d = MOCE[m.id], bg = Object.values(BOGOWIE).find(b => b.moc === m.id);
       a += `<button class="akcja${m.uzyta ? ' zablok' : ''}" data-a="moc:${m.id}"><span class="ak-ik">${ik('moc_' + m.id, d.emoji)}</span><b>${d.nazwa}</b><small>${m.uzyta ? '✓ już użyta' : d.opis + (d.cel ? ' · potem dotknij miejsca na mapie' : '')}${bg ? ' · ' + bg.emoji + ' ' + bg.nazwa : ''}</small></button>`;
@@ -3392,10 +3395,10 @@ function odswiezPanel(wymus = false) {
         if (trwa) h += `<div class="p-opis">⏳ ${BOGOWIE[trwa.typ] ? BOGOWIE[trwa.typ].emoji + ' ' + BOGOWIE[trwa.typ].nazwa + ': ' : ''}przechodzisz do ery ${nast}: ${ERY[nast]}</div>`;
         else if (braki.length) {
           h += `<div class="p-opis">🔒 Do ery ${nast} (${ERY[nast]}) brakuje: ${braki.join(', ')}</div>`;
-          a += `<button class="akcja era zablok" data-a="era-brak"><span class="ak-ik">${EMOJI_ERY[nast]}</span><b>Era ${nast}: ${ERY[nast]}</b><small>Brakuje: ${braki.join(', ')}</small><span class="ak-koszt">${kosztHTML(ne.koszt)}</span></button>`;
+          a += `<button class="akcja era zablok" data-a="era-brak"><span class="ak-ik">${ikEra(nast)}</span><b>Era ${nast}: ${ERY[nast]}</b><small>Brakuje: ${braki.join(', ')}</small><span class="ak-koszt">${kosztHTML(ne.koszt)}</span></button>`;
         } else {
           h += `<div class="p-opis">⬆️ Możesz przejść do ery ${nast}: ${ERY[nast]}</div>`;
-          a += `<button class="akcja era" data-a="era-wybor" data-koszt='${JSON.stringify(ne.koszt)}'><span class="ak-ik">${EMOJI_ERY[nast]}</span><b>Era ${nast}: ${ERY[nast]}</b><small>Dotknij i wybierz boga (${bogowieEry(0).map(i => BOGOWIE[i].emoji + ' ' + BOGOWIE[i].nazwa).join(' albo ')})</small><span class="ak-koszt">${kosztHTML(ne.koszt)}</span></button>`;
+          a += `<button class="akcja era" data-a="era-wybor" data-koszt='${JSON.stringify(ne.koszt)}'><span class="ak-ik">${ikEra(nast)}</span><b>Era ${nast}: ${ERY[nast]}</b><small>Dotknij i wybierz boga (${bogowieEry(0).map(i => BOGOWIE[i].emoji + ' ' + BOGOWIE[i].nazwa).join(' albo ')})</small><span class="ak-koszt">${kosztHTML(ne.koszt)}</span></button>`;
         }
       }
       a += aJ; }
@@ -3423,7 +3426,7 @@ function odswiezPanel(wymus = false) {
         a += `<button class="akcja${br ? ' zablok' : ''}" data-a="ul:${id}" data-koszt='${JSON.stringify(d.koszt)}'><span class="ak-ik">${ik(ikUl(id), d.emoji)}</span><b>${d.nazwa}</b><small>${br || d.opis}</small><span class="ak-koszt">${kosztHTML(d.koszt)}</span></button>`;
       }
       if (b.kolejka.length) {
-        h += `<div class="p-kolejka">` + b.kolejka.map((q, i) => `<button class="kol" data-a="anuluj:${i}" title="Anuluj"><span>${q.rodzaj === 'j' ? ik(q.typ, JEDNOSTKI[q.typ].emoji) : q.rodzaj === 'u' ? ik(ikUl(q.typ), ULEPSZENIA[q.typ].emoji) : q.rodzaj === 'rozb' ? WIEZA_POZIOMY[(b.poziom || 1) + 1].emoji : BOGOWIE[q.typ] ? BOGOWIE[q.typ].emoji : EMOJI_ERY[S.era[0] + 1]}</span><i data-kol="${i}" style="width:${q.t / q.czas * 100}%"></i></button>`).join('') + `<small data-czeka></small></div>`;
+        h += `<div class="p-kolejka">` + b.kolejka.map((q, i) => `<button class="kol" data-a="anuluj:${i}" title="Anuluj"><span>${q.rodzaj === 'j' ? ik(q.typ, JEDNOSTKI[q.typ].emoji) : q.rodzaj === 'u' ? ik(ikUl(q.typ), ULEPSZENIA[q.typ].emoji) : q.rodzaj === 'rozb' ? WIEZA_POZIOMY[(b.poziom || 1) + 1].emoji : BOGOWIE[q.typ] ? `<img class="ik" src="portrety/${q.typ}.jpg" alt="">` : ikEra(S.era[0] + 1)}</span><i data-kol="${i}" style="width:${q.t / q.czas * 100}%"></i></button>`).join('') + `<small data-czeka></small></div>`;
       }
     }
   } else {
@@ -3545,7 +3548,7 @@ function odswiezHud() {
   $('z-laska').textContent = Math.floor(z.laska || 0);
   const lud = ludnosc(0), lim = limitLudnosci(0);
   $('z-lud').textContent = `${lud}/${lim}`; $('c-lud').classList.toggle('pelno', lud >= lim && lim < MAKS_LUDNOSC);
-  $('h-era').textContent = `${EMOJI_ERY[S.era[0]]} Era ${S.era[0]}: ${ERY[S.era[0]]} · ${S.bogowie[0].map(b => BOGOWIE[b].emoji).join('')}`;
+  $('h-era').innerHTML = `${ikEra(S.era[0])}Era ${S.era[0]}: ${ERY[S.era[0]]} · ${S.bogowie[0].map(b => BOGOWIE[b].emoji).join('')}`;
   const wolneMoce = S.moce[0].filter(m => !m.uzyta).length;
   $('b-moce').querySelector('b').textContent = wolneMoce; $('b-moce').classList.toggle('jest', wolneMoce > 0); $('b-moce').classList.toggle('wl', pokazMoce || !!trybMocy);
   const bezcz = JED.filter(u => u.strona === 0 && u.typ === 'osadnik' && !u.zad).length;
@@ -3674,7 +3677,7 @@ $('m-wersje').onclick = () => { dzwiek('klik'); pokazWersje(); };
 // ---------- wybór boga przy nowej erze: okno na środku ekranu z portretami (gra stoi, dopóki nie wybierzesz) ----------
 function pokazWyborBoga() {
   const nast = S.era[0] + 1, ne = NOWA_ERA[nast]; if (!ne) return;
-  $('bg-tytul').textContent = `${EMOJI_ERY[nast]} Era ${nast}: ${ERY[nast]}`;
+  $('bg-tytul').innerHTML = `${ikEra(nast)}Era ${nast}: ${ERY[nast]}`;
   $('bg-opis').textContent = 'Wybierz boga, który poprowadzi twoje plemię. Da ci moc, stwora i dar.';
   $('bg-lista').innerHTML = bogowieEry(0).map(id => {
     const bg = BOGOWIE[id], st = JEDNOSTKI[bg.stwor], mc = MOCE[bg.moc];

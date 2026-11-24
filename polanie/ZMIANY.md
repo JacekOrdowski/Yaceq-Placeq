@@ -7,6 +7,17 @@ Słowiańska gra strategiczna o erach i bogach. Gatunek i zasady działania jak 
 a treść pochodzi z dawnych wierzeń i podań z ziem polskich. Co czemu odpowiada: `MITOLOGIA.md`.
 Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age2/`); muzykę i dźwięki gra bierze stamtąd.
 
+## Wersja 29 (24.11.2026)
+
+**Dodane**
+- Malowane ikony 4 er (`ikony/ui_era1..4`): szałas z ogniskiem (Czasy Plemion), gród na wale (Czasy Grodów),
+  tarcza z mieczem (Czasy Bohaterów), posąg o czterech twarzach (Czasy Bogów). Są przy erze na pasku u góry,
+  na przycisku nowej ery w Grodzie, w tytule okna wyboru boga i w kolejce Grodu (tam przy przechodzeniu do ery
+  widać też portret wybranego boga).
+- Malowana ikona mocy bogów (złoty amulet z błyskawicą) na przycisku z boku i w nagłówku okna mocy.
+- Pozostałe przyciski z boku ekranu też w tym stylu: wolni osadnicy (drzemiący osadnik), całe wojsko (topór i włócznia),
+  zaznacz ramką (rama z palików), do Grodu (ikona Grodu) i mapa (skórzana mapa). Włączony przycisk ma zieloną obwódkę.
+
 ## Wersja 28 (24.11.2026)
 
 **Dodane**

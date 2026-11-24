@@ -41,6 +41,12 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .chip.pelno { background: rgba(216, 56, 47, 0.9); }
 .hud-row2 { display: flex; gap: 6px; margin-top: 5px; align-items: flex-start; }
 #h-era { font-size: 13px; height: 24px; font-family: var(--body); font-weight: 900; }
+#h-era img.ik, #bg-tytul img.ik { display: inline-block; vertical-align: middle; border-radius: 50%; }
+#h-era img.ik { width: 20px; height: 20px; margin-right: 2px; }
+#bg-tytul img.ik { width: 34px; height: 34px; margin-right: 4px; vertical-align: -6px; }
+/* przyciski z boku i mapy: malowane ikonki zamiast emoji */
+.okr img.ik-btn { display: block; width: 42px; height: 42px; margin: 4px auto; border-radius: 11px; }
+.okr.wl img.ik-btn { box-shadow: 0 0 0 3px #4fc46b; }
 #zadanie { flex: 1; background: rgba(255, 255, 255, 0.92); border-radius: 12px; padding: 4px 9px; font-size: 13px; font-weight: 800; line-height: 1.25;
   box-shadow: 0 2px 0 rgba(0,0,0,0.12); }
 
@@ -225,13 +231,13 @@ img.ik.ik-sur { display: inline-block; vertical-align: middle; border-radius: 50
     </div>
   </div>
   <div id="boczne">
-    <button class="okr" id="b-moce" aria-label="Moce bogów">⚡<b>0</b></button>
-    <button class="okr" id="b-bezczynni" aria-label="Wolni osadnicy">🧑‍🌾<b>0</b></button>
-    <button class="okr" id="b-wojsko" aria-label="Całe wojsko">⚔️<b>0</b></button>
-    <button class="okr" id="b-obszar" aria-label="Zaznacz ramką">⬚</button>
-    <button class="okr" id="b-dom" aria-label="Do Grodu">🏯</button>
+    <button class="okr" id="b-moce" aria-label="Moce bogów"><img class="ik ik-btn" src="ikony/ui_moce.jpg" alt=""><b>0</b></button>
+    <button class="okr" id="b-bezczynni" aria-label="Wolni osadnicy"><img class="ik ik-btn" src="ikony/ui_bezczynni.jpg" alt=""><b>0</b></button>
+    <button class="okr" id="b-wojsko" aria-label="Całe wojsko"><img class="ik ik-btn" src="ikony/ui_wojsko.jpg" alt=""><b>0</b></button>
+    <button class="okr" id="b-obszar" aria-label="Zaznacz ramką"><img class="ik ik-btn" src="ikony/ui_obszar.jpg" alt=""></button>
+    <button class="okr" id="b-dom" aria-label="Do Grodu"><img class="ik ik-btn" src="ikony/ratusz.jpg" alt=""></button>
   </div>
-  <button class="okr" id="b-mapa" aria-label="Mapa">🗺️</button>
+  <button class="okr" id="b-mapa" aria-label="Mapa"><img class="ik ik-btn" src="ikony/ui_mapa.jpg" alt=""></button>
   <canvas id="mini" hidden></canvas>
   <div id="panel">
     <div id="p-info"></div>

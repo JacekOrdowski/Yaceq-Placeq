@@ -18,3 +18,7 @@ Ikona „Arkońskiej drużyny” (koń w hełmie z rogami, za bardzo nordycka) o
 ## Ikonki surowców (od wersji 28)
 
 Jeden arkusz 3 × 3 z Gemini, pocięty na 128 × 128, ciaśniej przycięty i lekko rozjaśniony (żeby był czytelny w małym rozmiarze).
+
+## Ikony er i przycisków (od wersji 29)
+
+Jeden arkusz 3 × 3 z Gemini (`ui_...`), pocięty na 128 × 128 i lekko rozjaśniony.
