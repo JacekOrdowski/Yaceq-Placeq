@@ -16,6 +16,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
   - przy dużym oddaleniu nie ma ich wcale. Postęp widać też w okienku na dole po dotknięciu budowy.
   Odległości ustawia `PROC_BUD` i `PROC_MUR` w `gra.js`.
 
+Zapis w repozytorium: `a3eff66`
+
 ## Wersja 17 (24.11.2026)
 
 **Naprawione**
