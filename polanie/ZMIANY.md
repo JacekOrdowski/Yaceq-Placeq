@@ -21,6 +21,8 @@ Silnik (mapa, budowanie, wojsko, komputer) wyrósł z Age of Haskap (folder `age
 **Do sprawdzenia**
 - Postacie mają około 1,5 razy więcej trójkątów niż wcześniej: sprawdzić, czy na telefonie gra nie zwalnia przy dużych bitwach.
 
+Zapis w repozytorium: `0eaeb70`
+
 ## Wersja 3 (24.11.2026)
 
 **Zmienione**
