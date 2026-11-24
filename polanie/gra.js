@@ -8,10 +8,11 @@ import * as LUDZ from './postacie.js';
 import { SUROWCE, EMOJI_SUR, NAZWY_SUR, ERY, EMOJI_ERY, START, MAKS_LUDNOSC, JEDNOSTKI, BUDYNKI, KOLEJNOSC_BUDYNKOW, NOWA_ERA, LICZA_DO_ERY,
   ULEPSZENIA, ZBIERANIE, UDZWIG, ZAPAS, TRUDNOSC, WIEZA_POZIOMY, MUR_POZIOMY, HANDEL, NAPRAWA, MAPY, EFEKTY, BOGOWIE, BOGOWIE_GLOWNI, MOCE, LASKA, BOHATER_ERA } from './dane.js';
 
-const WERSJA = 8;
+const WERSJA = 9;
 // wersje do wyboru przy uruchamianiu (najnowsza = ta gra, starsze = kopie w folderze wersje/)
 const WERSJE = [
-  { nr: 8, opis: 'Zagon prosa wygląda jak prawdziwe proso: gęste źdźbła z liśćmi i zwisającymi złotymi wiechami, które kołyszą się na wietrze. Do tego wszystko z wersji 7.' },
+  { nr: 9, opis: 'Realistyczne postacie także po oddaleniu kamery (do 120 naraz), bez powrotu do starych ludzików. Do tego wszystko z wersji 8.' },
+  { nr: 8, opis: 'Zagon prosa wygląda jak prawdziwe proso: gęste źdźbła z liśćmi i zwisającymi złotymi wiechami, które kołyszą się na wietrze. Do tego wszystko z wersji 7.', adres: 'wersje/8/' },
   { nr: 7, opis: 'Ludzie idący naprzeciw siebie mijają się od razu (schodzą w prawo), płoty przy zagonach i budynkach bez dziwnych linii. Do tego wszystko z wersji 6.', adres: 'wersje/7/' },
   { nr: 6, opis: 'Realistyczne postacie z prawdziwym ruchem (osadnicy, piechota, łucznicy): rąbią, żną, budują na klęczkach, noszą, walczą, trenują boks przy Gontynie i padają; szarfa w kolorze strony, hełmy, tarcze. Do tego wszystko z wersji 5.', adres: 'wersje/6/' },
   { nr: 5, opis: 'Mniej napisów u góry: o nowej erze mówi tylko Gród (czego brakuje albo wybór boga), krótsze podpowiedzi. Do tego wszystko z wersji 4.', adres: 'wersje/5/' },
@@ -2724,7 +2725,8 @@ function ruszReka(u, dt) {
 }
 const M_CIEN = new THREE.Matrix4();
 // ================= realistyczne postacie (postacie.js) =================
-const LUDZ_D = 42, LUDZ_MAKS = 70; // do jakiej odległości kamery i ilu naraz
+const LUDZ_MAKS = 120; // ilu ludzi naraz jest realistycznymi postaciami (najbliżej środka widoku); z daleka ruch liczymy co drugą klatkę
+let klatkaNr = 0;
 let ileLudzi = 0;
 const MAT_UKRYTY = new THREE.MeshBasicMaterial({ visible: false });
 const NARZ_LUDZ = ['siekiera', 'kilof', 'mlotek', 'sierp'];
@@ -2748,14 +2750,17 @@ function ruchLudzia(u, dt) {
   if (u.zamarz > S.czas || u.spokoj > S.czas) szyb = u.zamarz > S.czas ? 0 : 0.4;
   L.graj(nazwa, szyb);
   if (os) for (const n of NARZ_LUDZ) if (L.przedmioty[n]) L.przedmioty[n].visible = n === narz;
-  L.mixer.update(dt);
+  // z daleka (małe postacie) ruch liczymy co drugą klatkę: oszczędza telefon, a wygląda tak samo
+  L.zaleg = (L.zaleg || 0) + dt;
+  if (kam.d > 36 && (klatkaNr + u.id) % 2) return;
+  L.mixer.update(L.zaleg); L.zaleg = 0;
 }
 // co chwilę wybieramy ludzi najbliżej środka widoku: tylko oni są realistycznymi postaciami
 const LUDZ_WYBRANI = new Set(); let ludzT = 0;
 function wybierzLudzi(dt) {
   if ((ludzT -= dt) > 0) return; ludzT = 0.4;
   LUDZ_WYBRANI.clear();
-  if (!LUDZ.sa() || kam.d >= LUDZ_D) return;
+  if (!LUDZ.sa()) return;
   const kand = [];
   for (const u of JED) if (LUDZ.ma(u.typ) && naEkranie(u)) kand.push([(u.x - kam.x) ** 2 + (u.z - kam.z) ** 2, u]);
   kand.sort((a, b) => a[0] - b[0]);
@@ -2763,7 +2768,7 @@ function wybierzLudzi(dt) {
 }
 function rysuj(dt) {
   czasRys += dt;
-  ileLudzi = 0; wybierzLudzi(dt);
+  ileLudzi = 0; klatkaNr++; wybierzLudzi(dt);
   rysujCzary(dt);
   ustawKamere();
   if (!CIENIE.parent) scena.add(CIENIE);

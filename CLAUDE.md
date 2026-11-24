@@ -154,8 +154,8 @@ Gdy zmiany w grze są gotowe i zapisywane w repozytorium:
 - Muzyka i dźwięki są brane z `age2/` (`../age2/muzyka/`, `../age2/dzwieki/`).
 - Realistyczne postacie (Quaternius, CC0): `polanie/postacie.js` (wygląd jednostek `WYGLAD`, przedmioty w rękach, szarfa w kolorze strony)
   i pliki w `polanie/postacie/` (robi je `python narzedzia/polanie-postacie.py FOLDER_Z_PACZKAMI` z darmowych paczek itch.io).
-  W `gra.js`: `u.ludz` (postać z ruchem), `ruchLudzia` (który ruch), `LUDZ_D` i `LUDZ_MAKS` (blisko kamery, najwyżej tyle naraz),
-  dalej proste bryły z `modele.js`. Jednostki bez wpisu w `WYGLAD` (jeźdźcy, stwory, bohaterowie) są jeszcze bryłami.
+  W `gra.js`: `u.ludz` (postać z ruchem), `ruchLudzia` (który ruch), `LUDZ_MAKS` (najwyżej tyle naraz, najbliżej środka widoku),
+  ponad to proste bryły z `modele.js`. Jednostki bez wpisu w `WYGLAD` (jeźdźcy, stwory, bohaterowie) są jeszcze bryłami.
 - Ulepszenia wzmacniające jednostki mają pole `wzmocni` (liczy `wzm` w `polanie/gra.js`); ulepszenia od bogów mają `bog`.
   Nowa era: tylko w panelu Grodu (czego brakuje: `brakiEry`, albo przyciski z bogami). W budynkach widać tylko to, co już dostępne.
 - Test: `window.__polan` (to samo co `__haskap`, do tego `uzyjMocy`). Gry komputer kontra komputer trwają około 30–50 minut.
